@@ -73,6 +73,10 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.language-switcher'),
             )
             ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn () => view('filament.topbar-notifications'),
+            )
+            ->renderHook(
                 PanelsRenderHook::FOOTER,
                 fn () => view('filament.footer'),
             )
