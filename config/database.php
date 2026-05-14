@@ -64,6 +64,25 @@ return [
             ]) : [],
         ],
 
+        'warehouse' => [
+            'driver' => env('WAREHOUSE_DB_CONNECTION', 'mysql'),
+            'host' => env('WAREHOUSE_DB_HOST', '127.0.0.1'),
+            'port' => env('WAREHOUSE_DB_PORT', '3306'),
+            'database' => env('WAREHOUSE_DB_DATABASE', 'aho_azure_database'),
+            'username' => env('WAREHOUSE_DB_USERNAME', 'root'),
+            'password' => env('WAREHOUSE_DB_PASSWORD', ''),
+            'unix_socket' => env('WAREHOUSE_DB_SOCKET', ''),
+            'charset' => env('WAREHOUSE_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('WAREHOUSE_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => false,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('WAREHOUSE_MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

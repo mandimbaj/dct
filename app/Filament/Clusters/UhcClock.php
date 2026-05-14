@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Filament\Clusters;
+
+use BackedEnum;
+use Filament\Clusters\Cluster;
+use Filament\Support\Icons\Heroicon;
+
+class UhcClock extends Cluster
+{
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClock;
+
+    protected static ?int $navigationSort = 12;
+
+    protected static ?string $slug = 'uhc-clock';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('aho.menus.uhc_clock');
+    }
+
+    public static function getClusterBreadcrumb(): ?string
+    {
+        return __('aho.menus.uhc_clock');
+    }
+}
