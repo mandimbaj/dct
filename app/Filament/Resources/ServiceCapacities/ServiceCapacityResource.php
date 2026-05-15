@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServiceCapacities;
 
 use App\Filament\Clusters\Facilities;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\ScopesFacilityCountryAccess;
 use App\Filament\Resources\ServiceCapacities\Pages\CreateServiceCapacity;
 use App\Filament\Resources\ServiceCapacities\Pages\EditServiceCapacity;
@@ -15,7 +16,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

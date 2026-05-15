@@ -4,7 +4,7 @@ namespace App\Filament\Resources\DataElementValues\Pages;
 
 use App\Filament\Resources\DataElementValues\DataElementValueResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditDataElementValue extends EditRecord
 {

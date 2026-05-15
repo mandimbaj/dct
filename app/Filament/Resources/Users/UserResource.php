@@ -3,25 +3,25 @@
 namespace App\Filament\Resources\Users;
 
 use App\Filament\Clusters\Authentication;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Models\Role;
 use App\Models\User;
-use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rules\Password;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -104,7 +104,8 @@ class UserResource extends Resource
                     ->revealable()
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->required(fn (string $operation): bool => $operation === 'create')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->rule(Password::min(12)->mixedCase()->numbers()->symbols(), fn (?string $state): bool => filled($state)),
                 Checkbox::make('is_super_admin')
                     ->label(__('aho.fields.super_admin'))
                     ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
@@ -126,10 +127,18 @@ class UserResource extends Resource
                     ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
                     ->dehydrated(fn (): bool => (bool) auth()->user()?->canViewAllCountries())
                     ->helperText(__('aho.help.assigned_country')),
-                Section::make(__('aho.permissions.section'))
-                    ->description(__('aho.permissions.section_help'))
-                    ->schema(UserPermissions::formFields())
-                    ->columns(1),
+                Select::make('role_id')
+                    ->label(__('aho.fields.role'))
+                    ->options(fn (): array => Role::query()
+                        ->with('location.translations')
+                        ->orderBy('name')
+                        ->get()
+                        ->filter(fn (Role $role): bool => $role->canBeAssignedBy(auth()->user()))
+                        ->mapWithKeys(fn (Role $role): array => [$role->getKey() => $role->displayName()])
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->helperText(__('aho.help.role')),
             ]);
     }
 
@@ -141,6 +150,7 @@ class UserResource extends Resource
                 TextColumn::make('name')->label(__('aho.fields.name'))->searchable()->sortable(),
                 TextColumn::make('email')->label(__('aho.fields.email'))->searchable()->sortable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.assigned_country'))->placeholder(__('aho.fields.all_countries'))->toggleable(),
+                TextColumn::make('role.name')->label(__('aho.fields.role'))->placeholder(__('aho.fields.no_role'))->searchable()->sortable()->toggleable(),
                 TextColumn::make('location_assignments_count')
                     ->label(__('aho.fields.level2_locations'))
                     ->counts('locationAssignments')
@@ -173,12 +183,13 @@ class UserResource extends Resource
         $user = auth()->user();
 
         if ($user?->canViewAllCountries()) {
-            return $query->with(['location.translations']);
+            return $query->with(['location.translations', 'role']);
         }
 
         if ($user?->is_country_admin && filled($user->location_id)) {
             return $query
                 ->with(['location.translations'])
+                ->with('role')
                 ->where('location_id', $user->location_id)
                 ->where('is_super_admin', false)
                 ->where('is_country_admin', false);

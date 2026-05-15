@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MeasureMethods;
 
 use App\Filament\Clusters\Indicators;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\SearchesTranslatedRecords;
 use App\Filament\Resources\MeasureMethods\Pages\CreateMeasureMethod;
 use App\Filament\Resources\MeasureMethods\Pages\EditMeasureMethod;
@@ -11,7 +12,6 @@ use App\Filament\Resources\MeasureMethods\Schemas\MeasureMethodForm;
 use App\Filament\Resources\MeasureMethods\Tables\MeasureMethodsTable;
 use App\Models\MeasureMethod;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LocationLevels;
 
 use App\Filament\Clusters\Regions;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\SearchesTranslatedRecords;
 use App\Filament\Resources\LocationLevels\Pages\CreateLocationLevel;
 use App\Filament\Resources\LocationLevels\Pages\EditLocationLevel;
@@ -11,7 +12,6 @@ use App\Filament\Resources\LocationLevels\Schemas\LocationLevelForm;
 use App\Filament\Resources\LocationLevels\Tables\LocationLevelsTable;
 use App\Models\LocationLevel;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\MeasureMethods\Pages;
 
 use App\Filament\Resources\MeasureMethods\MeasureMethodResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditMeasureMethod extends EditRecord
 {

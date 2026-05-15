@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FacilityTypes;
 
 use App\Filament\Clusters\Facilities;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\FacilityTypes\Pages\CreateFacilityType;
 use App\Filament\Resources\FacilityTypes\Pages\EditFacilityType;
 use App\Filament\Resources\FacilityTypes\Pages\ListFacilityTypes;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

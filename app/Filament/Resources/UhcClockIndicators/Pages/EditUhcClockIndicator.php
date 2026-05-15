@@ -4,7 +4,7 @@ namespace App\Filament\Resources\UhcClockIndicators\Pages;
 
 use App\Filament\Resources\UhcClockIndicators\UhcClockIndicatorResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditUhcClockIndicator extends EditRecord
 {

@@ -4,6 +4,7 @@ namespace App\Services\DataQuality;
 
 use App\Models\HealthIndicatorValue;
 use App\Models\Indicator;
+use App\Support\DataQuality\DqaIssueResolver;
 use App\Support\TextEncoding;
 use App\Support\UserCountryAccess;
 use Illuminate\Support\Collection;
@@ -117,6 +118,7 @@ class DataQualityService
                 return array_map(fn (array $issue): array => [
                     ...$issue,
                     'fact_id' => $record->fact_id,
+                    'edit_url' => DqaIssueResolver::correctionUrlForFactId((int) $record->fact_id),
                     'indicator' => $record->indicator?->display_name,
                     'location' => $record->location?->display_name,
                     'period' => $record->period,

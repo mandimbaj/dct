@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\IndicatorReferences;
 
 use App\Filament\Clusters\Indicators;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\SearchesTranslatedRecords;
 use App\Filament\Resources\IndicatorReferences\Pages\CreateIndicatorReference;
 use App\Filament\Resources\IndicatorReferences\Pages\EditIndicatorReference;
@@ -11,7 +12,6 @@ use App\Filament\Resources\IndicatorReferences\Schemas\IndicatorReferenceForm;
 use App\Filament\Resources\IndicatorReferences\Tables\IndicatorReferencesTable;
 use App\Models\IndicatorReference;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

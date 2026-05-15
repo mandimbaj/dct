@@ -4,7 +4,7 @@ namespace App\Filament\Resources\UhcPriorityIndicators\Pages;
 
 use App\Filament\Resources\UhcPriorityIndicators\UhcPriorityIndicatorResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditUhcPriorityIndicator extends EditRecord
 {

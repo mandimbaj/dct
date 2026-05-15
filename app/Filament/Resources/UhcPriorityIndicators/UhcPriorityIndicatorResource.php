@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UhcPriorityIndicators;
 
 use App\Filament\Clusters\UhcClock;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\UhcPriorityIndicators\Pages\CreateUhcPriorityIndicator;
 use App\Filament\Resources\UhcPriorityIndicators\Pages\EditUhcPriorityIndicator;
 use App\Filament\Resources\UhcPriorityIndicators\Pages\ListUhcPriorityIndicators;
@@ -15,7 +16,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

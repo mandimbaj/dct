@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ImportRecords\Pages;
 
 use App\Filament\Resources\ImportRecords\ImportRecordResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditImportRecord extends EditRecord
 {

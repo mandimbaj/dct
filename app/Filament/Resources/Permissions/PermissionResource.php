@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Permissions;
 
 use App\Filament\Clusters\Authentication;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Permissions\Pages\EditPermission;
 use App\Filament\Resources\Permissions\Pages\ListPermissions;
 use App\Models\User;
@@ -12,7 +13,6 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -34,7 +34,7 @@ class PermissionResource extends Resource
 
     protected static ?string $slug = 'permissions';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {

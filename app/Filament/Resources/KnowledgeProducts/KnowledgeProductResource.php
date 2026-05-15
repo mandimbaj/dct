@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\KnowledgeProducts;
 
 use App\Filament\Clusters\Publications;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\KnowledgeProducts\Pages\CreateKnowledgeProduct;
 use App\Filament\Resources\KnowledgeProducts\Pages\EditKnowledgeProduct;
 use App\Filament\Resources\KnowledgeProducts\Pages\ListKnowledgeProducts;
@@ -18,7 +19,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

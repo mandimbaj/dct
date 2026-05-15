@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Countries\Pages;
 
 use App\Filament\Resources\Countries\CountryResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditCountry extends EditRecord
 {

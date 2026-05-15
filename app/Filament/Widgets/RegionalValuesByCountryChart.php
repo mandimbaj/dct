@@ -4,11 +4,11 @@ namespace App\Filament\Widgets;
 
 use App\Models\Country;
 use App\Models\HealthIndicatorValue;
-use App\Support\ApprovalWorkflow;
+use App\Models\KnowledgeProduct;
 use App\Support\DashboardCache;
-use App\Support\MortalityIndicators;
 use App\Support\UserCountryAccess;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class RegionalValuesByCountryChart extends ChartWidget
@@ -33,32 +33,79 @@ class RegionalValuesByCountryChart extends ChartWidget
 
     protected function getData(): array
     {
-        return DashboardCache::remember('mortality-by-country', function (): array {
-            $query = HealthIndicatorValue::query()
-                ->select('location_id', DB::raw('round(avg(value_received), 2) as average_value'))
-                ->whereNotNull('value_received')
-                ->where(ApprovalWorkflow::STATUS_COLUMN, ApprovalWorkflow::STATUS_APPROVED)
-                ->groupBy('location_id')
-                ->orderByDesc('average_value')
-                ->limit(8);
+        return DashboardCache::remember('recent-uploads-by-country', function (): array {
+            $indicatorQuery = HealthIndicatorValue::query()
+                ->select(
+                    'location_id',
+                    DB::raw('max(coalesce(date_lastupdated, date_created)) as latest_at'),
+                    DB::raw('count(*) as total')
+                )
+                ->whereNotNull('location_id')
+                ->groupBy('location_id');
 
-            MortalityIndicators::scopeValues($query);
-            UserCountryAccess::scopeDashboard($query);
+            UserCountryAccess::scopeDashboard($indicatorQuery);
 
-            $rows = $query->get();
-            $locations = Country::with('translations')
-                ->whereIn('location_id', $rows->pluck('location_id'))
+            $indicatorUploads = $indicatorQuery->get();
+
+            $publicationQuery = KnowledgeProduct::query()
+                ->select(
+                    'location_id',
+                    DB::raw('max(coalesce(date_lastupdated, date_created)) as latest_at'),
+                    DB::raw('count(*) as total')
+                )
+                ->whereNotNull('location_id')
+                ->groupBy('location_id');
+
+            UserCountryAccess::scopeDashboard($publicationQuery);
+
+            $publicationUploads = $publicationQuery->get();
+
+            $uploads = $indicatorUploads->concat($publicationUploads);
+            $uploadLocations = Country::with([
+                'parent.translations',
+                'parent.parent.translations',
+                'parent.parent.parent.translations',
+                'translations',
+            ])
+                ->whereIn('location_id', $uploads->pluck('location_id'))
+                ->get()
+                ->keyBy('location_id');
+
+            $rows = $uploads
+                ->map(fn ($item): object => (object) [
+                    'country_id' => self::countryIdForLocation($uploadLocations->get($item->location_id), (int) $item->location_id),
+                    'latest_at' => $item->latest_at,
+                    'total' => (int) $item->total,
+                ])
+                ->groupBy('country_id')
+                ->map(fn ($items, $countryId): object => (object) [
+                    'country_id' => (int) $countryId,
+                    'latest_at' => $items->max('latest_at'),
+                    'total' => (int) $items->sum('total'),
+                ])
+                ->filter(fn (object $row): bool => filled($row->latest_at))
+                ->sortByDesc('latest_at')
+                ->take(10)
+                ->values();
+
+            $countries = Country::with('translations')
+                ->whereIn('location_id', $rows->pluck('country_id'))
                 ->get()
                 ->keyBy('location_id');
 
             return [
                 'datasets' => [[
-                    'label' => __('aho.charts.average_value'),
-                    'data' => $rows->pluck('average_value')->map(fn ($value): float => (float) $value)->all(),
+                    'label' => __('aho.charts.records'),
+                    'data' => $rows->pluck('total')->map(fn ($value): int => (int) $value)->all(),
                     'backgroundColor' => '#009edb',
                 ]],
                 'labels' => $rows
-                    ->map(fn ($row): string => $locations->get($row->location_id)?->display_name ?? (string) $row->location_id)
+                    ->map(function (object $row) use ($countries): string {
+                        $country = $countries->get($row->country_id)?->display_name ?? (string) $row->country_id;
+                        $date = Carbon::parse($row->latest_at)->format('Y-m-d');
+
+                        return "{$country} ({$date})";
+                    })
                     ->all(),
             ];
         }, 15);
@@ -66,6 +113,19 @@ class RegionalValuesByCountryChart extends ChartWidget
 
     public function getHeading(): string
     {
-        return __('aho.charts.mortality_by_country');
+        return __('aho.charts.recent_uploads_by_country');
+    }
+
+    private static function countryIdForLocation(?Country $location, int $fallback): int
+    {
+        $candidate = $location;
+        $depth = 0;
+
+        while ($candidate?->parent && (int) $candidate->locationlevel_id > 2 && $depth < 5) {
+            $candidate = $candidate->parent;
+            $depth++;
+        }
+
+        return (int) ($candidate?->location_id ?? $fallback);
     }
 }

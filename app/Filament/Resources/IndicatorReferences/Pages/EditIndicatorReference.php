@@ -4,7 +4,7 @@ namespace App\Filament\Resources\IndicatorReferences\Pages;
 
 use App\Filament\Resources\IndicatorReferences\IndicatorReferenceResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditIndicatorReference extends EditRecord
 {

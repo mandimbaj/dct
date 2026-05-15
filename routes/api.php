@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\Api\V1\HealthDataController;
 use App\Http\Middleware\AuthenticateApiToken;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')
-    ->middleware(AuthenticateApiToken::class)
+    ->middleware([ThrottleRequests::using('api'), AuthenticateApiToken::class])
     ->group(function (): void {
         Route::get('/status', [HealthDataController::class, 'status']);
         Route::get('/schema/indicator-values', [HealthDataController::class, 'indicatorValueSchema']);

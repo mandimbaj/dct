@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Permissions\Pages;
 use App\Filament\Resources\Permissions\PermissionResource;
 use App\Filament\Resources\Users\Pages\Concerns\ManagesUserPermissions;
 use App\Models\User;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditPermission extends EditRecord
 {

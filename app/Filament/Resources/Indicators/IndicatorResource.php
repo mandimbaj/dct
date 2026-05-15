@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Indicators;
 
 use App\Filament\Clusters\Indicators as IndicatorsCluster;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Indicators\Pages\CreateIndicator;
 use App\Filament\Resources\Indicators\Pages\EditIndicator;
 use App\Filament\Resources\Indicators\Pages\ListIndicators;
@@ -10,7 +11,6 @@ use App\Filament\Resources\Indicators\Schemas\IndicatorForm;
 use App\Filament\Resources\Indicators\Tables\IndicatorsTable;
 use App\Models\Indicator;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

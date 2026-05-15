@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TimePeriods;
 
 use App\Filament\Clusters\Indicators;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\TimePeriods\Pages\CreateTimePeriod;
 use App\Filament\Resources\TimePeriods\Pages\EditTimePeriod;
 use App\Filament\Resources\TimePeriods\Pages\ListTimePeriods;
@@ -10,7 +11,6 @@ use App\Filament\Resources\TimePeriods\Schemas\TimePeriodForm;
 use App\Filament\Resources\TimePeriods\Tables\TimePeriodsTable;
 use App\Models\TimePeriod;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

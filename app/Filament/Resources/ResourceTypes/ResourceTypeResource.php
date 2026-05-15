@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ResourceTypes;
 
 use App\Filament\Clusters\Publications;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\ResourceTypes\Pages\CreateResourceType;
 use App\Filament\Resources\ResourceTypes\Pages\EditResourceType;
 use App\Filament\Resources\ResourceTypes\Pages\ListResourceTypes;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

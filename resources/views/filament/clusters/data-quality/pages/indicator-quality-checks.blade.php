@@ -75,6 +75,7 @@
                             <th>{{ __('aho.fields.period') }}</th>
                             <th>{{ __('aho.fields.value') }}</th>
                             <th>{{ __('aho.fields.message') }}</th>
+                            <th>{{ __('aho.actions.correct') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -93,7 +94,9 @@
                                     $issue['message'],
                                 ]))) }}"
                             >
-                                <td class="aho-quality-table__id">{{ $issue['fact_id'] }}</td>
+                                <td class="aho-quality-table__id">
+                                    <a href="{{ $issue['edit_url'] }}" class="aho-quality-link">#{{ $issue['fact_id'] }}</a>
+                                </td>
                                 <td>
                                     <span class="aho-quality-badge aho-quality-badge--{{ $issue['severity'] }}">
                                         {{ __("aho.quality.{$issue['severity']}") }}
@@ -105,15 +108,20 @@
                                 <td>{{ $issue['period'] }}</td>
                                 <td>{{ $issue['value'] }}</td>
                                 <td class="aho-quality-table__message">{{ $issue['message'] }}</td>
+                                <td>
+                                    <a href="{{ $issue['edit_url'] }}" class="aho-quality-link">
+                                        {{ __('aho.actions.correct') }}
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="aho-quality-empty">{{ __('aho.quality.no_issues') }}</td>
+                                <td colspan="9" class="aho-quality-empty">{{ __('aho.quality.no_issues') }}</td>
                             </tr>
                         @endforelse
 
                         <tr class="aho-quality-empty" data-quality-empty hidden>
-                            <td colspan="8">{{ __('aho.quality.no_filtered_issues') }}</td>
+                            <td colspan="9">{{ __('aho.quality.no_filtered_issues') }}</td>
                         </tr>
                     </tbody>
                 </table>

@@ -2,19 +2,25 @@
 
 namespace App\Filament\Resources\HealthIndicatorValues\Pages;
 
-use App\Models\HealthIndicatorValue;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
+use App\Models\HealthIndicatorValue;
 use App\Services\DataQuality\DataQualityService;
 use App\Support\ApprovalWorkflow;
+use App\Support\DataQuality\DqaIssueResolver;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Validation\ValidationException;
 
 class EditHealthIndicatorValue extends EditRecord
 {
     protected static string $resource = HealthIndicatorValueResource::class;
+
+    /**
+     * @var array<string, array<int, string>|string|null>|null
+     */
+    protected ?array $dqaPreviousSignature = null;
 
     protected function getHeaderActions(): array
     {
@@ -37,9 +43,21 @@ class EditHealthIndicatorValue extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        /** @var HealthIndicatorValue $record */
+        $record = $this->getRecord();
+        $this->dqaPreviousSignature = DqaIssueResolver::signatureForValue($record);
+
         $this->validateQuality($data);
 
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        /** @var HealthIndicatorValue $record */
+        $record = $this->getRecord();
+
+        DqaIssueResolver::deleteResolvedIssuesForValue($record, $this->dqaPreviousSignature);
     }
 
     private function validateQuality(array $data): void

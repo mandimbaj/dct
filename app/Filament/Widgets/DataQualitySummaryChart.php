@@ -4,9 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\HealthIndicatorValue;
 use App\Models\Indicator;
-use App\Support\ApprovalWorkflow;
 use App\Support\DashboardCache;
-use App\Support\MortalityIndicators;
 use App\Support\UserCountryAccess;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
@@ -28,20 +26,24 @@ class DataQualitySummaryChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'doughnut';
+        return 'bar';
     }
 
     protected function getData(): array
     {
-        return DashboardCache::remember('mortality-records-by-indicator', function (): array {
+        return DashboardCache::remember('top-indicators-by-country-use', function (): array {
             $query = HealthIndicatorValue::query()
-                ->select('indicator_id', DB::raw('count(*) as total'))
-                ->where(ApprovalWorkflow::STATUS_COLUMN, ApprovalWorkflow::STATUS_APPROVED)
-                ->groupBy('indicator_id')
-                ->orderByDesc('total')
-                ->limit(6);
+                ->leftJoin('stg_location as value_locations', 'value_locations.location_id', '=', 'fact_data_indicators.location_id')
+                ->select(
+                    'fact_data_indicators.indicator_id',
+                    DB::raw('count(distinct case when value_locations.locationlevel_id > 2 and value_locations.parent_id is not null then value_locations.parent_id else fact_data_indicators.location_id end) as countries_count')
+                )
+                ->whereNotNull('fact_data_indicators.indicator_id')
+                ->whereNotNull('fact_data_indicators.location_id')
+                ->groupBy('fact_data_indicators.indicator_id')
+                ->orderByDesc('countries_count')
+                ->limit(10);
 
-            MortalityIndicators::scopeValues($query);
             UserCountryAccess::scopeDashboard($query);
 
             $rows = $query->get();
@@ -52,8 +54,9 @@ class DataQualitySummaryChart extends ChartWidget
 
             return [
                 'datasets' => [[
-                    'data' => $rows->pluck('total')->all(),
-                    'backgroundColor' => ['#009edb', '#0072a0', '#009a61', '#6aa84f', '#f5a623', '#6b7280'],
+                    'label' => __('aho.charts.countries'),
+                    'data' => $rows->pluck('countries_count')->map(fn ($value): int => (int) $value)->all(),
+                    'backgroundColor' => '#0072a0',
                 ]],
                 'labels' => $rows
                     ->map(fn ($row): string => $indicators->get($row->indicator_id)?->display_name ?? (string) $row->indicator_id)
@@ -64,6 +67,6 @@ class DataQualitySummaryChart extends ChartWidget
 
     public function getHeading(): string
     {
-        return __('aho.charts.mortality_records_by_indicator');
+        return __('aho.charts.top_indicators_by_country_use');
     }
 }

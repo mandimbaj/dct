@@ -4,7 +4,7 @@ namespace App\Filament\Resources\HealthFacilities\Pages;
 
 use App\Filament\Resources\HealthFacilities\HealthFacilityResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditHealthFacility extends EditRecord
 {

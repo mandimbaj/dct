@@ -2,10 +2,11 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\RedirectAuthenticatedToCountry;
-use App\Http\Middleware\RecordUserPageVisit;
-use App\Http\Middleware\SetLocale;
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
+use App\Http\Middleware\RecordUserPageVisit;
+use App\Http\Middleware\RedirectAuthenticatedToCountry;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use App\Support\AhoBrand;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -48,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2.75rem')
             ->sidebarWidth('14rem')
             ->maxContentWidth(Width::Full)
+            ->spa()
             ->colors([
                 'primary' => Color::hex('#0093D5'),
             ])
@@ -56,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString(
                     '<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">'.
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260514-8">'.
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260515-2">'.
                     '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260512-3"></script>'
                 ),
             )
@@ -73,7 +75,7 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.language-switcher'),
             )
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                PanelsRenderHook::USER_MENU_AFTER,
                 fn () => view('filament.topbar-notifications'),
             )
             ->renderHook(
@@ -102,6 +104,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                SecurityHeaders::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

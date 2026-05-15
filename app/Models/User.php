@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_super_admin', 'is_country_admin', 'location_id', 'menu_permissions'])]
+#[Fillable(['name', 'email', 'password', 'is_super_admin', 'is_country_admin', 'location_id', 'role_id', 'menu_permissions'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -41,6 +41,11 @@ class User extends Authenticatable implements FilamentUser
     public function location(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'location_id', 'location_id');
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
     }
 
     public function locationAssignments(): HasMany

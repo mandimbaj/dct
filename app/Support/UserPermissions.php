@@ -11,11 +11,22 @@ use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class UserPermissions
 {
+    /**
+     * @var array<string, array<string, array<string, mixed>>>
+     */
+    private static array $definitionsCache = [];
+
+    /**
+     * @var array<string, array<string, string>>
+     */
+    private static array $optionsCache = [];
+
     public const ACTION_VIEW = 'view';
 
     public const ACTION_CREATE = 'create';
@@ -53,18 +64,37 @@ class UserPermissions
      */
     public static function definitions(): array
     {
-        $definitions = [
-            ...static::resourceDefinitions(),
-            ...static::pageDefinitions(),
+        $locale = app()->getLocale();
+
+        return self::$definitionsCache[$locale] ??= Cache::remember('user-permissions.definitions.'.$locale, now()->addMinutes(10), function (): array {
+            $definitions = [
+                ...static::resourceDefinitions(),
+                ...static::pageDefinitions(),
+            ];
+
+            uasort(
+                $definitions,
+                fn (array $first, array $second): int => [$first['menu_sort'], $first['sort'], $first['label']]
+                    <=> [$second['menu_sort'], $second['sort'], $second['label']]
+            );
+
+            return $definitions;
+        });
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function actions(): array
+    {
+        return [
+            static::ACTION_VIEW,
+            static::ACTION_CREATE,
+            static::ACTION_UPDATE,
+            static::ACTION_DELETE,
+            static::ACTION_IMPORT,
+            static::ACTION_APPROVE,
         ];
-
-        uasort(
-            $definitions,
-            fn (array $first, array $second): int => [$first['menu_sort'], $first['sort'], $first['label']]
-                <=> [$second['menu_sort'], $second['sort'], $second['label']]
-        );
-
-        return $definitions;
     }
 
     /**
@@ -72,7 +102,9 @@ class UserPermissions
      */
     public static function optionsForAction(string $action): array
     {
-        return collect(static::definitions())
+        $cacheKey = app()->getLocale().'.'.$action;
+
+        return self::$optionsCache[$cacheKey] ??= collect(static::definitions())
             ->filter(fn (array $definition): bool => in_array($action, $definition['actions'], true))
             ->mapWithKeys(fn (array $definition, string $key): array => [
                 $key => "{$definition['menu_label']} / {$definition['label']}",
@@ -92,7 +124,7 @@ class UserPermissions
             return $options;
         }
 
-        $permissions = static::normalize($actor->menu_permissions ?? []);
+        $permissions = static::permissionsFor($actor);
         $allowedKeys = array_flip($permissions[$action] ?? []);
 
         return array_intersect_key($options, $allowedKeys);
@@ -151,7 +183,16 @@ class UserPermissions
      */
     public static function formState(User $user): array
     {
-        $permissions = static::normalize($user->menu_permissions ?? []);
+        return static::formStateFromPermissions(static::permissionsFor($user));
+    }
+
+    /**
+     * @param  array<string, mixed>  $permissions
+     * @return array<string, array<int, string>>
+     */
+    public static function formStateFromPermissions(array $permissions): array
+    {
+        $permissions = static::normalize($permissions);
 
         return [
             'permission_view' => $permissions[static::ACTION_VIEW],
@@ -199,6 +240,36 @@ class UserPermissions
         $user->forceFill([
             'menu_permissions' => $user->is_super_admin ? null : static::normalize($permissions),
         ])->saveQuietly();
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    public static function permissionsFor(User $user): array
+    {
+        if ($user->is_super_admin) {
+            return static::allPermissions();
+        }
+
+        $rolePermissions = $user->relationLoaded('role')
+            ? $user->role?->menu_permissions
+            : $user->role()->first(['id', 'menu_permissions'])?->menu_permissions;
+
+        return static::normalize($rolePermissions ?: ($user->menu_permissions ?? []));
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    public static function allPermissions(): array
+    {
+        $all = [];
+
+        foreach (static::actions() as $action) {
+            $all[$action] = array_keys(static::optionsForAction($action));
+        }
+
+        return static::normalize($all);
     }
 
     public static function allowsModel(User $user, string|Model|null $model, string $action): ?bool
@@ -256,7 +327,7 @@ class UserPermissions
     {
         $normalized = [];
 
-        foreach ([static::ACTION_VIEW, static::ACTION_CREATE, static::ACTION_UPDATE, static::ACTION_DELETE, static::ACTION_IMPORT, static::ACTION_APPROVE] as $action) {
+        foreach (static::actions() as $action) {
             $validKeys = array_keys(static::optionsForAction($action));
             $normalized[$action] = array_values(array_unique(array_intersect((array) ($permissions[$action] ?? []), $validKeys)));
         }
@@ -285,9 +356,9 @@ class UserPermissions
             return $permissions;
         }
 
-        $actorPermissions = static::normalize($actor->menu_permissions ?? []);
+        $actorPermissions = static::permissionsFor($actor);
 
-        foreach ([static::ACTION_VIEW, static::ACTION_CREATE, static::ACTION_UPDATE, static::ACTION_DELETE, static::ACTION_IMPORT, static::ACTION_APPROVE] as $action) {
+        foreach (static::actions() as $action) {
             $permissions[$action] = array_values(array_intersect(
                 $permissions[$action] ?? [],
                 $actorPermissions[$action] ?? [],
@@ -408,7 +479,7 @@ class UserPermissions
 
     private static function allowsKey(User $user, string $key, string $action): bool
     {
-        $permissions = static::normalize($user->menu_permissions ?? []);
+        $permissions = static::permissionsFor($user);
 
         return in_array($key, $permissions[static::ACTION_VIEW], true)
             && in_array($key, $permissions[$action] ?? [], true);

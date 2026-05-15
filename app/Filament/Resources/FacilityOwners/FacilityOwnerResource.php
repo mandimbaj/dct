@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FacilityOwners;
 
 use App\Filament\Clusters\Facilities;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\FacilityOwners\Pages\CreateFacilityOwner;
 use App\Filament\Resources\FacilityOwners\Pages\EditFacilityOwner;
 use App\Filament\Resources\FacilityOwners\Pages\ListFacilityOwners;
@@ -14,7 +15,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

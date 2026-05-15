@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ProvisionUnits\Pages;
 
 use App\Filament\Resources\ProvisionUnits\ProvisionUnitResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditProvisionUnit extends EditRecord
 {

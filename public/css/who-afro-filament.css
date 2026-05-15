@@ -146,21 +146,32 @@
 }
 
 .fi-sidebar-group {
-    border: 1px solid var(--who-afro-panel-border);
-    border-radius: 8px;
-    margin-bottom: 0.625rem;
-    overflow: hidden;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--who-afro-panel-border) 74%, transparent);
+    border-radius: 0;
+    margin-bottom: 0.375rem;
+    padding-bottom: 0.375rem;
+    overflow: visible;
 }
 
 .fi-sidebar-group-btn {
-    background: color-mix(in srgb, var(--who-afro-blue) 8%, white);
-    border-radius: 8px;
+    background: transparent;
+    border-inline-start: 3px solid transparent;
+    border-radius: 6px;
     color: var(--who-afro-ink);
     min-height: 2.125rem;
+    padding-block: 0.375rem;
 }
 
 .fi-sidebar-group-btn:hover {
-    background: color-mix(in srgb, var(--who-afro-blue) 14%, white);
+    background: color-mix(in srgb, var(--who-afro-blue) 7%, white);
+    border-inline-start-color: color-mix(in srgb, var(--who-afro-blue) 62%, white);
+}
+
+.fi-sidebar-group.fi-active .fi-sidebar-group-btn,
+.fi-sidebar-group:has(.fi-sidebar-item-active) .fi-sidebar-group-btn {
+    background: color-mix(in srgb, var(--who-afro-blue) 10%, white);
+    border-inline-start-color: var(--who-afro-blue);
 }
 
 .fi-sidebar-item-btn {
@@ -580,6 +591,18 @@
     color: var(--who-afro-blue-dark);
     font-weight: 700;
     white-space: nowrap;
+}
+
+.aho-quality-link {
+    color: var(--who-afro-blue);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.aho-quality-link:hover {
+    color: var(--who-afro-blue-dark);
+    text-decoration: underline;
 }
 
 .aho-quality-table__indicator,

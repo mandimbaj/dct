@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ServiceCapacities\Pages;
 
 use App\Filament\Resources\ServiceCapacities\ServiceCapacityResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditServiceCapacity extends EditRecord
 {

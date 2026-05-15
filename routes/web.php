@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ Route::get('/admin', function () {
 
 Route::redirect('/admin/login', '/admin/global/login');
 Route::redirect('/admin/logout', '/admin/global/logout');
+
+Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
+    ->name('admin.notifications.show');
 
 Route::match(['get', 'post'], '/locale', LocaleController::class)->name('locale.switch');
 

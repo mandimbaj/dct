@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DataElementGroups;
 
 use App\Filament\Clusters\DataElements;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\DataElementGroups\Pages\CreateDataElementGroup;
 use App\Filament\Resources\DataElementGroups\Pages\EditDataElementGroup;
 use App\Filament\Resources\DataElementGroups\Pages\ListDataElementGroups;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

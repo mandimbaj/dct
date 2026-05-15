@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DataSources;
 
 use App\Filament\Clusters\Indicators;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\SearchesTranslatedRecords;
 use App\Filament\Resources\DataSources\Pages\CreateDataSource;
 use App\Filament\Resources\DataSources\Pages\EditDataSource;
@@ -11,7 +12,6 @@ use App\Filament\Resources\DataSources\Schemas\DataSourceForm;
 use App\Filament\Resources\DataSources\Tables\DataSourcesTable;
 use App\Models\DataSource;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

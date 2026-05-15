@@ -4,7 +4,7 @@ namespace App\Filament\Resources\TimePeriods\Pages;
 
 use App\Filament\Resources\TimePeriods\TimePeriodResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditTimePeriod extends EditRecord
 {

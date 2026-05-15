@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\UserPageVisits;
 
 use App\Filament\Clusters\Authentication;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\UserPageVisits\Pages\ListUserPageVisits;
 use App\Models\UserPageVisit;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

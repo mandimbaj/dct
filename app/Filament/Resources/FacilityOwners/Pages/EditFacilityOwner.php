@@ -4,7 +4,7 @@ namespace App\Filament\Resources\FacilityOwners\Pages;
 
 use App\Filament\Resources\FacilityOwners\FacilityOwnerResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditFacilityOwner extends EditRecord
 {

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\HealthServiceValues;
 
 use App\Filament\Clusters\HealthServices;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\HealthServiceValues\Pages\CreateHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\EditHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\ListHealthServiceValues;
@@ -15,7 +16,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

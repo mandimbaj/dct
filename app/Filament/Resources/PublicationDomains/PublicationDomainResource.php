@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PublicationDomains;
 
 use App\Filament\Clusters\Publications;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\PublicationDomains\Pages\CreatePublicationDomain;
 use App\Filament\Resources\PublicationDomains\Pages\EditPublicationDomain;
 use App\Filament\Resources\PublicationDomains\Pages\ListPublicationDomains;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\HealthCadres;
 
 use App\Filament\Clusters\HealthWorkforce;
+use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\HealthCadres\Pages\CreateHealthCadre;
 use App\Filament\Resources\HealthCadres\Pages\EditHealthCadre;
 use App\Filament\Resources\HealthCadres\Pages\ListHealthCadres;
@@ -13,7 +14,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

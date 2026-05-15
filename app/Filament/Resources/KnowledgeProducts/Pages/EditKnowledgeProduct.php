@@ -8,7 +8,7 @@ use App\Support\ApprovalWorkflow;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditKnowledgeProduct extends EditRecord
 {

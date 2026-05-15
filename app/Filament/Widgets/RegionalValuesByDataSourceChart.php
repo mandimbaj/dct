@@ -4,9 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\DataSource;
 use App\Models\HealthIndicatorValue;
-use App\Support\ApprovalWorkflow;
 use App\Support\DashboardCache;
-use App\Support\MortalityIndicators;
 use App\Support\UserCountryAccess;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
@@ -33,16 +31,14 @@ class RegionalValuesByDataSourceChart extends ChartWidget
 
     protected function getData(): array
     {
-        return DashboardCache::remember('mortality-by-data-source', function (): array {
+        return DashboardCache::remember('top-data-sources', function (): array {
             $query = HealthIndicatorValue::query()
                 ->select('datasource_id', DB::raw('count(*) as total'))
                 ->whereNotNull('datasource_id')
-                ->where(ApprovalWorkflow::STATUS_COLUMN, ApprovalWorkflow::STATUS_APPROVED)
                 ->groupBy('datasource_id')
                 ->orderByDesc('total')
-                ->limit(8);
+                ->limit(10);
 
-            MortalityIndicators::scopeValues($query);
             UserCountryAccess::scopeDashboard($query);
 
             $rows = $query->get();
@@ -66,6 +62,6 @@ class RegionalValuesByDataSourceChart extends ChartWidget
 
     public function getHeading(): string
     {
-        return __('aho.charts.mortality_by_data_source');
+        return __('aho.charts.top_data_sources');
     }
 }

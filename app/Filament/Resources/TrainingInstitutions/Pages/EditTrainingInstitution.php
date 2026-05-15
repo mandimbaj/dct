@@ -4,7 +4,7 @@ namespace App\Filament\Resources\TrainingInstitutions\Pages;
 
 use App\Filament\Resources\TrainingInstitutions\TrainingInstitutionResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditTrainingInstitution extends EditRecord
 {

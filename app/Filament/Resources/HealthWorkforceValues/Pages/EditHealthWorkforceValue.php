@@ -4,7 +4,7 @@ namespace App\Filament\Resources\HealthWorkforceValues\Pages;
 
 use App\Filament\Resources\HealthWorkforceValues\HealthWorkforceValueResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditHealthWorkforceValue extends EditRecord
 {

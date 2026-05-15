@@ -4,7 +4,7 @@ namespace App\Filament\Resources\DataSources\Pages;
 
 use App\Filament\Resources\DataSources\DataSourceResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditDataSource extends EditRecord
 {

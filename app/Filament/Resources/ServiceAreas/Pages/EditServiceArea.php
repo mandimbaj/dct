@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ServiceAreas\Pages;
 
 use App\Filament\Resources\ServiceAreas\ServiceAreaResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditServiceArea extends EditRecord
 {

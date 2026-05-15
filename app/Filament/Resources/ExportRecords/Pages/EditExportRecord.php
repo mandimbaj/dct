@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ExportRecords\Pages;
 
 use App\Filament\Resources\ExportRecords\ExportRecordResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditExportRecord extends EditRecord
 {

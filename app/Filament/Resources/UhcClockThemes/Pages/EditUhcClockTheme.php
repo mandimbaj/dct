@@ -4,7 +4,7 @@ namespace App\Filament\Resources\UhcClockThemes\Pages;
 
 use App\Filament\Resources\UhcClockThemes\UhcClockThemeResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditUhcClockTheme extends EditRecord
 {

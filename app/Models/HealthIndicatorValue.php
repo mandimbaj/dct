@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Notifications\SystemNotification;
 use App\Support\ApprovalWorkflow;
+use App\Support\NotificationRecipients;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -83,6 +86,34 @@ class HealthIndicatorValue extends Model
                 ApprovalWorkflow::markPending($value);
             }
         });
+
+        static::created(function (HealthIndicatorValue $value): void {
+            $value->notifyPendingValidation();
+        });
+
+        static::updated(function (HealthIndicatorValue $value): void {
+            if (
+                $value->wasChanged([ApprovalWorkflow::STATUS_COLUMN, ApprovalWorkflow::MIRROR_COLUMN])
+                && ApprovalWorkflow::status($value) === ApprovalWorkflow::STATUS_PENDING
+            ) {
+                $value->notifyPendingValidation();
+            }
+        });
+    }
+
+    private function notifyPendingValidation(): void
+    {
+        $countryCode = optional($this->location)->iso_alpha;
+        $title = __('aho.notifications.system.created_indicator_title');
+        $body = __('aho.notifications.system.created_indicator_body', [
+            'indicator' => optional($this->indicator)->display_name ?? __('aho.notifications.system.indicator_unknown'),
+            'country' => $countryCode ? strtoupper($countryCode) : __('aho.notifications.system.country_unknown'),
+        ]);
+
+        Notification::send(
+            NotificationRecipients::forCountry($this->location_id, auth()->id()),
+            new SystemNotification($title, $body, $countryCode),
+        );
     }
 
     public function indicator(): BelongsTo
