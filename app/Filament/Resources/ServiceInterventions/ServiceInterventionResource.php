@@ -89,8 +89,8 @@ class ServiceInterventionResource extends Resource
                 TextColumn::make('domain.display_name')->label(__('aho.fields.service_domain'))->wrap()->toggleable(),
                 TextColumn::make('service_areas_count')->label(__('aho.fields.service_areas_count'))->counts('serviceAreas')->sortable(),
                 TextColumn::make('service_availabilities_count')->label(__('aho.fields.availability_count'))->counts('serviceAvailabilities')->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('domain_id')

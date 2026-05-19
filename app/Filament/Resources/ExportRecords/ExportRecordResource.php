@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\ExportRecords;
 
-use App\Filament\Clusters\DataWizard;
+use App\Filament\Clusters\Indicators;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\ExportRecords\Pages\CreateExportRecord;
 use App\Filament\Resources\ExportRecords\Pages\EditExportRecord;
@@ -24,11 +24,11 @@ class ExportRecordResource extends Resource
 {
     protected static ?string $model = ExportRecord::class;
 
-    protected static ?string $cluster = DataWizard::class;
+    protected static ?string $cluster = Indicators::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowDownTray;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Data';
+    protected static string|UnitEnum|null $navigationGroup = 'Data wizard';
 
     protected static ?string $slug = 'exports';
 
@@ -36,7 +36,7 @@ class ExportRecordResource extends Resource
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('aho.navigation.data');
+        return __('aho.menus.data_wizard');
     }
 
     public static function getNavigationLabel(): string

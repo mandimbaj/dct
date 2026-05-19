@@ -60,22 +60,34 @@ class RoleResource extends Resource
 
     public static function canAccess(): bool
     {
-        return (bool) (auth()->user()?->canViewAllCountries() || auth()->user()?->is_country_admin);
+        return (bool) auth()->user()
+            && UserPermissions::allowsResource(auth()->user(), static::class, UserPermissions::ACTION_VIEW);
     }
 
     public static function canCreate(): bool
     {
-        return static::canAccess();
+        $user = auth()->user();
+
+        return (bool) $user
+            && ($user->canViewAllCountries() || filled($user->location_id))
+            && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_CREATE);
     }
 
     public static function canEdit(Model $record): bool
     {
-        return $record instanceof Role && $record->canBeManagedBy(auth()->user());
+        return $record instanceof Role
+            && (bool) auth()->user()
+            && UserPermissions::allowsResource(auth()->user(), static::class, UserPermissions::ACTION_UPDATE)
+            && $record->canBeManagedBy(auth()->user());
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canEdit($record) && $record->users()->doesntExist();
+        return $record instanceof Role
+            && (bool) auth()->user()
+            && UserPermissions::allowsResource(auth()->user(), static::class, UserPermissions::ACTION_DELETE)
+            && $record->canBeManagedBy(auth()->user())
+            && $record->users()->doesntExist();
     }
 
     public static function form(Schema $schema): Schema
@@ -160,7 +172,11 @@ class RoleResource extends Resource
             return $query;
         }
 
-        if ($user?->is_country_admin && filled($user->location_id)) {
+        if (
+            $user
+            && filled($user->location_id)
+            && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_VIEW)
+        ) {
             return $query->where('location_id', $user->location_id);
         }
 

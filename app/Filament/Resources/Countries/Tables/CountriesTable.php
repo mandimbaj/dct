@@ -56,12 +56,12 @@ class CountriesTable
                     ->label(__('aho.fields.creation'))
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
                 TextColumn::make('date_lastupdated')
                     ->label(__('aho.fields.modification'))
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('locationlevel_id')

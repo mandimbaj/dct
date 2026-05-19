@@ -89,8 +89,8 @@ class ProvisionUnitResource extends Resource
                 TextColumn::make('domain.display_name')->label(__('aho.fields.service_domain'))->wrap()->toggleable(),
                 TextColumn::make('service_capacities_count')->label(__('aho.fields.capacity_count'))->counts('serviceCapacities')->sortable(),
                 TextColumn::make('service_readiness_count')->label(__('aho.fields.readiness_count'))->counts('serviceReadiness')->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('domain_id')

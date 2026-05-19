@@ -115,8 +115,8 @@ class ServiceAvailabilityResource extends Resource
                 static::booleanColumn('infrastructure', __('aho.fields.infrastructure'))->toggleable(isToggledHiddenByDefault: true),
                 static::booleanColumn('supplies', __('aho.fields.supplies'))->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('date_assessed')->label(__('aho.fields.date_assessed'))->date()->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('facility_id')

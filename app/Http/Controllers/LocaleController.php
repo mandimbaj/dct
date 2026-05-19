@@ -5,17 +5,16 @@ namespace App\Http\Controllers;
 use App\Support\WarehouseLocale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class LocaleController extends Controller
 {
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request, string $locale): RedirectResponse
     {
-        $data = $request->validate([
-            'locale' => ['required', Rule::in(WarehouseLocale::codes())],
-        ]);
+        $locale = WarehouseLocale::normalize($locale);
 
-        $locale = WarehouseLocale::normalize($data['locale']);
+        if (! in_array($locale, WarehouseLocale::codes(), true)) {
+            abort(400);
+        }
 
         $request->session()->put('locale', $locale);
         app()->setLocale($locale);

@@ -37,8 +37,18 @@ class TableExportActions
                 ->label(__('aho.table_exports.label'))
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->button()
-                ->color('gray'),
+                ->color('gray')
+                ->visible(fn (Component $livewire): bool => self::hasExportableRecords($livewire)),
         ]);
+    }
+
+    private static function hasExportableRecords(Component $livewire): bool
+    {
+        if (! $livewire instanceof HasTable) {
+            return false;
+        }
+
+        return $livewire->getTableQueryForExport()->exists();
     }
 
     private static function downloadCsv(Component $livewire): StreamedResponse

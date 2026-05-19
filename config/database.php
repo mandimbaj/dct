@@ -79,6 +79,7 @@ return [
             'strict' => false,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_TIMEOUT => (int) env('WAREHOUSE_DB_TIMEOUT', 2),
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('WAREHOUSE_MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],

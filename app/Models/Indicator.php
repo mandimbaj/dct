@@ -37,7 +37,9 @@ class Indicator extends Model
     protected static function booted(): void
     {
         static::creating(function (Indicator $indicator): void {
-            $indicator->uuid ??= (string) Str::uuid();
+            if (blank($indicator->uuid)) {
+                $indicator->uuid = (string) Str::uuid();
+            }
         });
     }
 

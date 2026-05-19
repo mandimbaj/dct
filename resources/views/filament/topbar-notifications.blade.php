@@ -97,7 +97,7 @@
         </x-filament::dropdown.list>
 
         <div class="border-t border-gray-100 px-4 py-3 text-right">
-            <a href="{{ \App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource::getUrl('index') }}" class="text-sm font-medium text-primary-600 hover:text-primary-700">{{ __('aho.notifications.system.view_pending') }}</a>
+            <a href="{{ \App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource::getUrl('index', ['country' => $country]) }}" class="text-sm font-medium text-primary-600 hover:text-primary-700">{{ __('aho.notifications.system.view_pending') }}</a>
         </div>
     </x-filament::dropdown>
 </div>

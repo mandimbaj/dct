@@ -49,7 +49,6 @@ class UserPermissions
     ];
 
     private const EXCLUDED_RESOURCES = [
-        UserResource::class,
         UserPageVisitResource::class,
         'App\\Filament\\Resources\\Permissions\\PermissionResource',
     ];

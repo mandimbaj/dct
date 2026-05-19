@@ -3,8 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Role;
 use App\Support\UserLocationAssignments;
-use Database\Factories\UserFactory;
+use App\Support\UserPermissions;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,7 +20,7 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -61,6 +62,21 @@ class User extends Authenticatable implements FilamentUser
     public function canViewAllCountries(): bool
     {
         return (bool) $this->is_super_admin;
+    }
+
+    public function effectivePermissions(): array
+    {
+        return UserPermissions::permissionsFor($this);
+    }
+
+    public function effectiveRoleName(): string
+    {
+        return $this->role?->displayName() ?? __('aho.fields.no_role');
+    }
+
+    public function canAssignRole(Role $role): bool
+    {
+        return $role->canBeAssignedBy($this);
     }
 
     public function canAccessPanel(Panel $panel): bool

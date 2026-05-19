@@ -10,6 +10,7 @@ use App\Filament\Resources\KnowledgeProducts\Pages\ListKnowledgeProducts;
 use App\Filament\Resources\KnowledgeProducts\Schemas\KnowledgeProductForm;
 use App\Models\KnowledgeProduct;
 use App\Support\ApprovalWorkflow;
+use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
@@ -168,6 +169,7 @@ class KnowledgeProductResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                CountryTableFilter::make(),
                 SelectFilter::make('type_id')
                     ->label(__('aho.fields.type'))
                     ->relationship('type', 'code')

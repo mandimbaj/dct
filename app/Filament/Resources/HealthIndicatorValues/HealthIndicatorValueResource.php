@@ -117,7 +117,15 @@ class HealthIndicatorValueResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserCountryAccess::scope(parent::getEloquentQuery());
+        return UserCountryAccess::scope(
+            parent::getEloquentQuery()->with([
+                'indicator.translations',
+                'location.translations',
+                'categoryOption.translations',
+                'dataSource.translations',
+                'measureMethod.translations',
+            ]),
+        );
     }
 
     public static function getRelations(): array

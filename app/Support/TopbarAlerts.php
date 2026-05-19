@@ -6,7 +6,7 @@ use App\Models\HealthIndicatorValue;
 use App\Models\User;
 use App\Notifications\MessageReceived;
 use App\Notifications\SystemNotification;
-use App\Support\ApprovalWorkflow;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -21,14 +21,23 @@ class TopbarAlerts
      *     unreadMessages: int,
      *     unreadSystemNotifications: int,
      *     pendingValidationCount: int,
-     *     latestMessages: Collection<int, \Illuminate\Notifications\DatabaseNotification>,
-     *     latestSystemNotifications: Collection<int, \Illuminate\Notifications\DatabaseNotification>
+     *     latestMessages: Collection<int, DatabaseNotification>,
+     *     latestSystemNotifications: Collection<int, DatabaseNotification>
      * }
      */
     private const NOTIFICATION_TYPES = [
         MessageReceived::class,
         SystemNotification::class,
     ];
+
+    public static function forgetForUser(User $user, ?string $country): void
+    {
+        Cache::forget(sprintf(
+            'topbar-alerts.user.%s.%s.counts',
+            $user->getKey(),
+            self::normalizeCountry($country ?: optional($user->location)->iso_alpha ?: 'global'),
+        ));
+    }
 
     public static function forUser(?User $user, ?string $country): array
     {
@@ -50,7 +59,7 @@ class TopbarAlerts
         try {
             $counts = Cache::remember(
                 $cacheKey,
-                now()->addSeconds(10),
+                now()->addSeconds(15),
                 fn (): array => self::notificationsCounts($user, $country),
             );
 
@@ -125,7 +134,7 @@ class TopbarAlerts
     }
 
     /**
-     * @return Collection<int, \Illuminate\Notifications\DatabaseNotification>
+     * @return Collection<int, DatabaseNotification>
      */
     private static function latestNotifications(User $user, string $type, string $country): Collection
     {
@@ -139,7 +148,7 @@ class TopbarAlerts
         $cacheKey = 'topbar-alerts.pending-validation.'.$country;
 
         try {
-            return (int) Cache::remember($cacheKey, now()->addSeconds(30), function () use ($country): int {
+            return (int) Cache::remember($cacheKey, now()->addMinutes(5), function () use ($country): int {
                 return HealthIndicatorValue::query()
                     ->when($country !== 'global', function ($query) use ($country): void {
                         $query->whereHas('location', function ($query) use ($country): void {

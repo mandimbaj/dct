@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\TopbarAlerts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -30,6 +31,7 @@ class NotificationController extends Controller
 
         if (blank($notification->read_at)) {
             $notification->markAsRead();
+            TopbarAlerts::forgetForUser($user, $country);
         }
 
         return view('notifications.show', [

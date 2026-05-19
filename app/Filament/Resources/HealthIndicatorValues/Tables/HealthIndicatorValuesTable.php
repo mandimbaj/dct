@@ -5,6 +5,7 @@ namespace App\Filament\Resources\HealthIndicatorValues\Tables;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Models\HealthIndicatorValue;
 use App\Support\ApprovalWorkflow;
+use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
@@ -119,11 +120,7 @@ class HealthIndicatorValuesTable
                     ->relationship('indicator', 'afrocode')
                     ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->afrocode ? "{$record->afrocode} - " : '').$record->display_name))
                     ->searchable(),
-                SelectFilter::make('location_id')
-                    ->label(__('aho.fields.location'))
-                    ->relationship('location', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable(),
+                CountryTableFilter::make(),
                 SelectFilter::make('datasource_id')
                     ->label(__('aho.fields.source'))
                     ->relationship('dataSource', 'code')

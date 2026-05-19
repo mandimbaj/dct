@@ -8,6 +8,7 @@ use App\Filament\Resources\HealthWorkforceValues\Pages\CreateHealthWorkforceValu
 use App\Filament\Resources\HealthWorkforceValues\Pages\EditHealthWorkforceValue;
 use App\Filament\Resources\HealthWorkforceValues\Pages\ListHealthWorkforceValues;
 use App\Models\HealthWorkforceValue;
+use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
@@ -105,11 +106,7 @@ class HealthWorkforceValueResource extends Resource
                     ->relationship('cadre', 'code')
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                     ->searchable(),
-                SelectFilter::make('location_id')
-                    ->label(__('aho.fields.location'))
-                    ->relationship('location', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable(),
+                CountryTableFilter::make(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -124,7 +121,15 @@ class HealthWorkforceValueResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserCountryAccess::scope(parent::getEloquentQuery());
+        return UserCountryAccess::scope(
+            parent::getEloquentQuery()->with([
+                'cadre.translations',
+                'location.translations',
+                'categoryOption.translations',
+                'dataSource.translations',
+                'measureMethod.translations',
+            ]),
+        );
     }
 
     public static function getPages(): array

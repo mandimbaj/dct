@@ -6,6 +6,7 @@ use App\Support\TextEncoding;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class HealthFacility extends Model
 {
@@ -30,6 +31,31 @@ class HealthFacility extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (HealthFacility $facility): void {
+            if (blank($facility->uuid)) {
+                $facility->uuid = (string) Str::uuid();
+            }
+
+            $facility->user_id ??= auth()->id() ?? 1;
+            $facility->status ??= 'active';
+
+            if (blank($facility->code)) {
+                $facility->code = 'HF-'.strtoupper(Str::substr(str_replace('-', '', (string) $facility->uuid), 0, 10));
+            }
+        });
+
+        static::saving(function (HealthFacility $facility): void {
+            $facility->phone_code ??= '';
+            $facility->phone_part ??= '';
+
+            if (filled($facility->phone_part)) {
+                $facility->phone_number = trim((string) $facility->phone_code.(string) $facility->phone_part) ?: null;
+            }
+        });
     }
 
     public function location(): BelongsTo

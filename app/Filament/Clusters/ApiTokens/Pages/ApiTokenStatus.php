@@ -4,14 +4,24 @@ namespace App\Filament\Clusters\ApiTokens\Pages;
 
 use App\Filament\Clusters\ApiTokens;
 use App\Models\ApiToken;
+use App\Models\Country;
+use App\Models\DataSource;
+use App\Models\HealthIndicatorValue;
+use App\Models\Indicator;
+use App\Models\IndicatorCategory;
+use App\Models\MeasureMethod;
 use App\Support\ApprovalWorkflow;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ApiTokenStatus extends Page
 {
@@ -131,18 +141,113 @@ class ApiTokenStatus extends Page
 
     public function examplePayload(): string
     {
-        return json_encode([
-            'indicator_id' => 1,
-            'location_id' => 38,
+        $values = [
+            'numerator_value' => null,
+            'denominator_value' => null,
+            'value_received' => 72.5,
+            'min_value' => null,
+            'max_value' => null,
+            'target_value' => null,
+            'string_value' => null,
             'start_period' => 2025,
             'end_period' => 2025,
             'period' => '2025',
-            'categoryoption_id' => 1,
-            'datasource_id' => 1,
-            'measuremethod_id' => 1,
-            'value_received' => 72.5,
-            'comment' => ApprovalWorkflow::STATUS_PENDING,
-            'priority' => false,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            'categoryoption_id' => $this->firstKey(IndicatorCategory::class, 'categoryoption_id'),
+            'datasource_id' => $this->firstKey(DataSource::class, 'datasource_id'),
+            'indicator_id' => $this->firstKey(Indicator::class, 'indicator_id'),
+            'location_id' => $this->exampleCountryLocationId(),
+            'measuremethod_id' => $this->firstKey(MeasureMethod::class, 'measuremethod_id'),
+            'approved_by' => null,
+            'approved_at' => null,
+        ];
+
+        $payload = collect($this->examplePayloadFields())
+            ->mapWithKeys(fn (string $field): array => [$field => $values[$field] ?? null])
+            ->reject(fn ($value): bool => $value === null)
+            ->all();
+
+        return json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function examplePayloadFields(): array
+    {
+        return array_values(array_diff(
+            $this->tableColumnNames(HealthIndicatorValue::class),
+            ['fact_id', 'date_created', 'date_lastupdated', 'uuid', 'comment', 'user_id', 'priority', 'approval_status'],
+        ));
+    }
+
+    /**
+     * @param  class-string<Model>  $modelClass
+     */
+    private function firstKey(string $modelClass, string $key): int
+    {
+        try {
+            return (int) ($modelClass::query()->orderBy($key)->value($key) ?? 1);
+        } catch (Throwable) {
+            return 1;
+        }
+    }
+
+    private function exampleCountryLocationId(): int
+    {
+        $locationId = UserCountryAccess::locationId();
+
+        if (filled($locationId)) {
+            return (int) $locationId;
+        }
+
+        return (int) (
+            Country::query()
+                ->where('locationlevel_id', 2)
+                ->orderBy('code')
+                ->value('location_id')
+            ?? Country::query()
+                ->orderBy('location_id')
+                ->value('location_id')
+            ?? 1
+        );
+    }
+
+    /**
+     * @param  class-string<Model>  $modelClass
+     * @return array<int, string>
+     */
+    private function tableColumnNames(string $modelClass): array
+    {
+        /** @var Model $model */
+        $model = new $modelClass;
+
+        try {
+            return DatabaseSchema::connection($model->getConnectionName())->getColumnListing($model->getTable());
+        } catch (Throwable) {
+            return [
+                'uuid',
+                'numerator_value',
+                'denominator_value',
+                'value_received',
+                'min_value',
+                'max_value',
+                'target_value',
+                'string_value',
+                'start_period',
+                'end_period',
+                'period',
+                'comment',
+                'categoryoption_id',
+                'datasource_id',
+                'indicator_id',
+                'location_id',
+                'measuremethod_id',
+                'user_id',
+                'priority',
+                'approval_status',
+                'approved_by',
+                'approved_at',
+            ];
+        }
     }
 }

@@ -58,7 +58,7 @@ class PermissionResource extends Resource
 
     public static function canAccess(): bool
     {
-        return (bool) (auth()->user()?->canViewAllCountries() || auth()->user()?->is_country_admin);
+        return (bool) auth()->user()?->canViewAllCountries();
     }
 
     public static function canCreate(): bool
@@ -72,10 +72,7 @@ class PermissionResource extends Resource
             return true;
         }
 
-        return (bool) auth()->user()?->is_country_admin
-            && ! $record->is_super_admin
-            && ! $record->is_country_admin
-            && (int) $record->location_id === (int) auth()->user()?->location_id;
+        return false;
     }
 
     public static function form(Schema $schema): Schema
@@ -92,10 +89,6 @@ class PermissionResource extends Resource
                     ->dehydrated(false),
                 Checkbox::make('is_super_admin')
                     ->label(__('aho.fields.super_admin'))
-                    ->disabled()
-                    ->dehydrated(false),
-                Checkbox::make('is_country_admin')
-                    ->label(__('aho.fields.country_admin'))
                     ->disabled()
                     ->dehydrated(false),
                 Select::make('location_id')
@@ -128,10 +121,6 @@ class PermissionResource extends Resource
                     ->toggleable(),
                 TextColumn::make('is_super_admin')
                     ->label(__('aho.fields.super_admin'))
-                    ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? __('aho.fields.yes') : __('aho.fields.no')),
-                TextColumn::make('is_country_admin')
-                    ->label(__('aho.fields.country_admin'))
                     ->badge()
                     ->formatStateUsing(fn (bool $state): string => $state ? __('aho.fields.yes') : __('aho.fields.no')),
                 TextColumn::make('menu_permissions')
@@ -170,14 +159,6 @@ class PermissionResource extends Resource
 
         if ($user?->canViewAllCountries()) {
             return $query->with(['location.translations']);
-        }
-
-        if ($user?->is_country_admin && filled($user->location_id)) {
-            return $query
-                ->with(['location.translations'])
-                ->where('location_id', $user->location_id)
-                ->where('is_super_admin', false)
-                ->where('is_country_admin', false);
         }
 
         return $query->whereRaw('1 = 0');

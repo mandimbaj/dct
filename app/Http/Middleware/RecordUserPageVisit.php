@@ -9,12 +9,15 @@ use Illuminate\Support\Str;
 
 class RecordUserPageVisit
 {
+    private const RECENT_VISIT_SECONDS = 60;
+
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
 
         if ($this->shouldRecord($request, (int) $response->getStatusCode())) {
             rescue(fn () => UserPageVisit::create($this->payload($request)), report: false);
+            $this->rememberRecordedVisit($request);
         }
 
         return $response;
@@ -38,6 +41,10 @@ class RecordUserPageVisit
             return false;
         }
 
+        if ($this->wasRecentlyRecorded($request)) {
+            return false;
+        }
+
         if ($request->ajax() || $request->expectsJson() || ! $request->acceptsHtml()) {
             return false;
         }
@@ -51,7 +58,6 @@ class RecordUserPageVisit
     private function payload(Request $request): array
     {
         $user = $request->user();
-        $location = $user->location;
         $routeCountry = (string) ($request->route('country') ?: 'global');
 
         return [
@@ -60,8 +66,8 @@ class RecordUserPageVisit
             'user_email' => $user->email,
             'is_super_admin' => (bool) $user->is_super_admin,
             'location_id' => $user->location_id,
-            'country_iso' => filled($location?->iso_alpha) ? strtoupper((string) $location->iso_alpha) : null,
-            'country_name' => $location?->display_name,
+            'country_iso' => $routeCountry !== 'global' ? strtoupper($routeCountry) : null,
+            'country_name' => null,
             'country_route' => $routeCountry,
             'method' => $request->method(),
             'path' => $request->path(),
@@ -85,5 +91,22 @@ class RecordUserPageVisit
         return collect($segments)
             ->map(fn (string $segment): string => (string) Str::of($segment)->replace('-', ' ')->headline())
             ->implode(' / ');
+    }
+
+    private function wasRecentlyRecorded(Request $request): bool
+    {
+        $lastRecordedAt = (int) $request->session()->get($this->recentVisitKey($request), 0);
+
+        return $lastRecordedAt > 0 && (time() - $lastRecordedAt) < self::RECENT_VISIT_SECONDS;
+    }
+
+    private function rememberRecordedVisit(Request $request): void
+    {
+        $request->session()->put($this->recentVisitKey($request), time());
+    }
+
+    private function recentVisitKey(Request $request): string
+    {
+        return 'page-visit.'.sha1($request->user()?->getAuthIdentifier().'|'.$request->fullUrl());
     }
 }

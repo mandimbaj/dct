@@ -8,6 +8,7 @@ use App\Filament\Resources\DataElementValues\Pages\CreateDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\EditDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\ListDataElementValues;
 use App\Models\DataElementValue;
+use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
@@ -103,11 +104,7 @@ class DataElementValueResource extends Resource
                     ->relationship('dataElement', 'code')
                     ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
                     ->searchable(),
-                SelectFilter::make('location_id')
-                    ->label(__('aho.fields.location'))
-                    ->relationship('location', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable(),
+                CountryTableFilter::make(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -122,7 +119,14 @@ class DataElementValueResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserCountryAccess::scope(parent::getEloquentQuery());
+        return UserCountryAccess::scope(
+            parent::getEloquentQuery()->with([
+                'dataElement.translations',
+                'location.translations',
+                'categoryOption.translations',
+                'dataSource.translations',
+            ]),
+        );
     }
 
     public static function getPages(): array

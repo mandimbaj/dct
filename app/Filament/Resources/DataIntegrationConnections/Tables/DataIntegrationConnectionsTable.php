@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Filament\Resources\DataIntegrationConnections\Tables;
+
+use App\Models\DataIntegrationConnection;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class DataIntegrationConnectionsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->defaultSort('updated_at', 'desc')
+            ->columns([
+                TextColumn::make('name')
+                    ->label(__('aho.data_integration.fields.name'))
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
+                TextColumn::make('provider')
+                    ->label(__('aho.data_integration.fields.provider'))
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::providerOptions()[$state] ?? (string) $state)
+                    ->sortable(),
+                TextColumn::make('integration_method')
+                    ->label(__('aho.data_integration.fields.integration_method'))
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::methodOptions()[$state] ?? (string) $state)
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->label(__('aho.data_integration.fields.status'))
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        DataIntegrationConnection::STATUS_ACTIVE => 'success',
+                        DataIntegrationConnection::STATUS_PAUSED => 'warning',
+                        DataIntegrationConnection::STATUS_ERROR => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::statusOptions()[$state] ?? (string) $state)
+                    ->sortable(),
+                TextColumn::make('server_name')
+                    ->label(__('aho.data_integration.fields.server_name'))
+                    ->placeholder(__('aho.data_integration.not_applicable'))
+                    ->limit(30)
+                    ->toggleable(),
+                TextColumn::make('api_url')
+                    ->label(__('aho.data_integration.fields.api_url'))
+                    ->placeholder(__('aho.data_integration.not_applicable'))
+                    ->limit(40)
+                    ->toggleable(),
+                TextColumn::make('sync_frequency')
+                    ->label(__('aho.data_integration.fields.sync_frequency'))
+                    ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::syncFrequencyOptions()[$state] ?? (string) $state)
+                    ->toggleable(),
+                TextColumn::make('last_test_status')
+                    ->label(__('aho.data_integration.fields.last_test_status'))
+                    ->badge()
+                    ->color(fn (?string $state): string => $state === 'ready' ? 'success' : ($state === 'missing' ? 'warning' : 'gray'))
+                    ->placeholder(__('aho.data_integration.not_tested'))
+                    ->toggleable(),
+                TextColumn::make('last_synced_at')
+                    ->label(__('aho.data_integration.fields.last_synced_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('created_at')
+                    ->label(__('aho.fields.creation'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('updated_at')
+                    ->label(__('aho.fields.modification'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
+            ])
+            ->filters([
+                SelectFilter::make('provider')
+                    ->label(__('aho.data_integration.fields.provider'))
+                    ->options(fn (): array => DataIntegrationConnection::providerOptions()),
+                SelectFilter::make('integration_method')
+                    ->label(__('aho.data_integration.fields.integration_method'))
+                    ->options(fn (): array => DataIntegrationConnection::methodOptions()),
+                SelectFilter::make('status')
+                    ->label(__('aho.data_integration.fields.status'))
+                    ->options(fn (): array => DataIntegrationConnection::statusOptions()),
+            ])
+            ->recordActions([
+                Action::make('validate_configuration')
+                    ->label(__('aho.actions.validate_configuration'))
+                    ->icon('heroicon-o-check-circle')
+                    ->action(function (DataIntegrationConnection $record): void {
+                        $result = $record->validateConfiguration();
+
+                        $record->forceFill([
+                            'last_tested_at' => now(),
+                            'last_test_status' => $result['ok'] ? 'ready' : 'missing',
+                            'last_test_message' => $result['message'],
+                        ])->save();
+
+                        $notification = Notification::make()
+                            ->title(__('aho.data_integration.validation.checked'))
+                            ->body($result['message']);
+
+                        $result['ok'] ? $notification->success() : $notification->warning();
+                        $notification->send();
+                    }),
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}

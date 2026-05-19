@@ -100,8 +100,8 @@ class ServiceDomainResource extends Resource
                 TextColumn::make('parent.display_name')->label(__('aho.fields.parent'))->placeholder('-')->toggleable(),
                 TextColumn::make('provision_units_count')->label(__('aho.fields.provision_units_count'))->counts('provisionUnits')->sortable(),
                 TextColumn::make('interventions_count')->label(__('aho.fields.interventions_count'))->counts('interventions')->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('category')

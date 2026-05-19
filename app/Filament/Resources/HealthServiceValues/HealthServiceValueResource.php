@@ -8,6 +8,7 @@ use App\Filament\Resources\HealthServiceValues\Pages\CreateHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\EditHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\ListHealthServiceValues;
 use App\Models\HealthServiceValue;
+use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
@@ -105,11 +106,7 @@ class HealthServiceValueResource extends Resource
                     ->relationship('indicator', 'afrocode')
                     ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->afrocode ? "{$record->afrocode} - " : '').$record->display_name))
                     ->searchable(),
-                SelectFilter::make('location_id')
-                    ->label(__('aho.fields.location'))
-                    ->relationship('location', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable(),
+                CountryTableFilter::make(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -124,7 +121,15 @@ class HealthServiceValueResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserCountryAccess::scope(parent::getEloquentQuery());
+        return UserCountryAccess::scope(
+            parent::getEloquentQuery()->with([
+                'indicator.translations',
+                'location.translations',
+                'categoryOption.translations',
+                'dataSource.translations',
+                'measureMethod.translations',
+            ]),
+        );
     }
 
     public static function getPages(): array

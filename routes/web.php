@@ -19,7 +19,7 @@ Route::redirect('/admin/logout', '/admin/global/logout');
 Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
     ->name('admin.notifications.show');
 
-Route::match(['get', 'post'], '/locale', LocaleController::class)->name('locale.switch');
+Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 
 Route::get('/repository/{path}', function (string $path) {
     $repositoryRoot = realpath(base_path('../_reference/aho-stage-datacapture/aho-stage-datacapture-main/repository'));

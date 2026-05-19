@@ -39,8 +39,7 @@ class Role extends Model
             return true;
         }
 
-        return (bool) $actor->is_country_admin
-            && filled($actor->location_id)
+        return filled($actor->location_id)
             && (int) $this->location_id === (int) $actor->location_id
             && $this->permissionsFitWithin($actor);
     }
@@ -55,7 +54,7 @@ class Role extends Model
             return true;
         }
 
-        if (! $actor->is_country_admin || blank($actor->location_id)) {
+        if (blank($actor->location_id)) {
             return false;
         }
 

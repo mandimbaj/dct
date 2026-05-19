@@ -72,11 +72,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
-                fn () => view('filament.language-switcher'),
-            )
-            ->renderHook(
-                PanelsRenderHook::USER_MENU_AFTER,
-                fn () => view('filament.topbar-notifications'),
+                fn () => view('filament.topbar-actions'),
             )
             ->renderHook(
                 PanelsRenderHook::FOOTER,

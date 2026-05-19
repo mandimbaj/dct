@@ -91,8 +91,8 @@ class ServiceAreaResource extends Resource
                 TextColumn::make('intervention.display_name')->label(__('aho.fields.service_intervention'))->wrap()->toggleable(),
                 TextColumn::make('intervention.domain.display_name')->label(__('aho.fields.service_domain'))->wrap()->toggleable(),
                 TextColumn::make('service_availabilities_count')->label(__('aho.fields.availability_count'))->counts('serviceAvailabilities')->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('intervention_id')

@@ -108,8 +108,8 @@ class ServiceCapacityResource extends Resource
                 TextColumn::make('available')->label(__('aho.fields.available'))->numeric()->sortable(),
                 TextColumn::make('functional')->label(__('aho.fields.functional'))->numeric()->sortable(),
                 TextColumn::make('date_assessed')->label(__('aho.fields.date_assessed'))->date()->sortable(),
-                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('facility_id')

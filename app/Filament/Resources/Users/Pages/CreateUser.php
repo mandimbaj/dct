@@ -22,10 +22,11 @@ class CreateUser extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data['is_country_admin'] = false;
+
         if (! auth()->user()?->canViewAllCountries()) {
             $data['location_id'] = auth()->user()?->location_id;
             $data['is_super_admin'] = false;
-            $data['is_country_admin'] = false;
         }
 
         return $this->normalizeAssignableRole($data);

@@ -11,11 +11,15 @@ use App\Services\DataQuality\DataQualityService;
 use App\Support\ApprovalWorkflow;
 use App\Support\UserCountryAccess;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class HealthDataController extends Controller
 {
@@ -37,21 +41,14 @@ class HealthDataController extends Controller
 
     public function indicatorValueSchema(): JsonResponse
     {
+        $fields = $this->tableColumnNames(HealthIndicatorValue::class);
+
         return response()->json([
             'resource' => 'indicator-values',
             'primary_key' => 'fact_id',
-            'required_for_post' => [
-                'indicator_id',
-                'location_id',
-                'start_period',
-                'end_period',
-                'period',
-                'categoryoption_id',
-                'datasource_id',
-                'measuremethod_id',
-                'value_received',
-            ],
-            'writable_fields' => array_values($this->writableFields()),
+            'fields' => $fields,
+            'required_for_post' => $this->requiredForPostFields(),
+            'writable_fields' => $this->writableFields(),
             'filters' => [
                 'indicator_id',
                 'location_id',
@@ -66,6 +63,7 @@ class HealthDataController extends Controller
     {
         $query = Country::query()
             ->with('translations')
+            ->where('locationlevel_id', 2)
             ->orderBy('code');
 
         UserCountryAccess::scopeDashboard($query, 'location_id');
@@ -163,7 +161,6 @@ class HealthDataController extends Controller
         $this->validateQuality($data);
 
         $value = HealthIndicatorValue::create($data);
-        $value->load($this->indicatorValueRelations());
 
         return response()->json($this->serializeIndicatorValue($value), 201);
     }
@@ -190,7 +187,6 @@ class HealthDataController extends Controller
 
         $value->fill($data);
         $value->save();
-        $value->load($this->indicatorValueRelations());
 
         return response()->json($this->serializeIndicatorValue($value));
     }
@@ -213,8 +209,7 @@ class HealthDataController extends Controller
 
     private function indicatorValueQuery(bool $approvedOnly = false): Builder
     {
-        $query = HealthIndicatorValue::query()
-            ->with($this->indicatorValueRelations());
+        $query = HealthIndicatorValue::query();
 
         UserCountryAccess::scopeDashboard($query);
 
@@ -230,20 +225,6 @@ class HealthDataController extends Controller
         return $this->indicatorValueQuery(approvedOnly: $approvedOnly)
             ->whereKey($record)
             ->first();
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function indicatorValueRelations(): array
-    {
-        return [
-            'indicator.translations',
-            'location.translations',
-            'categoryOption.translations',
-            'dataSource.translations',
-            'measureMethod.translations',
-        ];
     }
 
     /**
@@ -270,12 +251,20 @@ class HealthDataController extends Controller
             'max_value' => ['sometimes', 'nullable', 'numeric'],
             'target_value' => ['sometimes', 'nullable', 'numeric'],
             'string_value' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'comment' => ['sometimes', 'nullable', Rule::in([
+            'comment' => [$required, 'string', Rule::in([
                 ApprovalWorkflow::STATUS_PENDING,
                 ApprovalWorkflow::STATUS_APPROVED,
                 ApprovalWorkflow::STATUS_REJECTED,
             ])],
             'priority' => ['sometimes', 'boolean'],
+            'user_id' => ['sometimes', 'integer'],
+            'approval_status' => ['sometimes', 'nullable', Rule::in([
+                ApprovalWorkflow::STATUS_PENDING,
+                ApprovalWorkflow::STATUS_APPROVED,
+                ApprovalWorkflow::STATUS_REJECTED,
+            ])],
+            'approved_by' => ['sometimes', 'nullable', 'integer'],
+            'approved_at' => ['sometimes', 'nullable', 'date'],
         ]);
     }
 
@@ -312,8 +301,18 @@ class HealthDataController extends Controller
      */
     private function writableFields(): array
     {
+        return array_values(array_diff(
+            $this->tableColumnNames(HealthIndicatorValue::class),
+            ['fact_id', 'date_created', 'date_lastupdated'],
+        ));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function requiredForPostFields(): array
+    {
         return [
-            'uuid',
             'indicator_id',
             'location_id',
             'start_period',
@@ -322,15 +321,8 @@ class HealthDataController extends Controller
             'categoryoption_id',
             'datasource_id',
             'measuremethod_id',
-            'numerator_value',
-            'denominator_value',
             'value_received',
-            'min_value',
-            'max_value',
-            'target_value',
-            'string_value',
             'comment',
-            'priority',
         ];
     }
 
@@ -339,43 +331,60 @@ class HealthDataController extends Controller
      */
     private function serializeIndicatorValue(HealthIndicatorValue $value): array
     {
-        return [
-            'fact_id' => $value->fact_id,
-            'uuid' => $value->uuid,
-            'indicator_id' => $value->indicator_id,
-            'indicator' => $value->indicator ? [
-                'afrocode' => $value->indicator->afrocode,
-                'name' => $value->indicator->display_name,
-            ] : null,
-            'location_id' => $value->location_id,
-            'location' => $value->location ? [
-                'code' => $value->location->code,
-                'iso_alpha' => $value->location->iso_alpha,
-                'name' => $value->location->display_name,
-            ] : null,
-            'period' => $value->period,
-            'start_period' => $value->start_period,
-            'end_period' => $value->end_period,
-            'categoryoption_id' => $value->categoryoption_id,
-            'category_option' => $value->categoryOption?->display_name,
-            'datasource_id' => $value->datasource_id,
-            'data_source' => $value->dataSource?->display_name,
-            'measuremethod_id' => $value->measuremethod_id,
-            'measure_method' => $value->measureMethod?->display_name,
-            'value_received' => $value->value_received,
-            'numerator_value' => $value->numerator_value,
-            'denominator_value' => $value->denominator_value,
-            'min_value' => $value->min_value,
-            'max_value' => $value->max_value,
-            'target_value' => $value->target_value,
-            'string_value' => $value->string_value,
-            'comment' => $value->comment,
-            'priority' => (bool) $value->priority,
-            'approval_status' => ApprovalWorkflow::status($value),
-            'approved_at' => $value->approved_at?->toISOString(),
-            'date_created' => $value->date_created?->toISOString(),
-            'date_lastupdated' => $value->date_lastupdated?->toISOString(),
-        ];
+        return collect($this->tableColumnNames(HealthIndicatorValue::class))
+            ->mapWithKeys(fn (string $field): array => [$field => $this->serializeFieldValue($value->getAttribute($field))])
+            ->all();
+    }
+
+    /**
+     * @param  class-string<Model>  $modelClass
+     * @return array<int, string>
+     */
+    private function tableColumnNames(string $modelClass): array
+    {
+        /** @var Model $model */
+        $model = new $modelClass;
+
+        try {
+            return DatabaseSchema::connection($model->getConnectionName())->getColumnListing($model->getTable());
+        } catch (Throwable) {
+            return [
+                'fact_id',
+                'uuid',
+                'numerator_value',
+                'denominator_value',
+                'value_received',
+                'min_value',
+                'max_value',
+                'target_value',
+                'string_value',
+                'start_period',
+                'end_period',
+                'period',
+                'comment',
+                'date_created',
+                'date_lastupdated',
+                'categoryoption_id',
+                'datasource_id',
+                'indicator_id',
+                'location_id',
+                'measuremethod_id',
+                'user_id',
+                'priority',
+                'approval_status',
+                'approved_by',
+                'approved_at',
+            ];
+        }
+    }
+
+    private function serializeFieldValue(mixed $value): mixed
+    {
+        if ($value instanceof Carbon) {
+            return $value->toISOString();
+        }
+
+        return $value;
     }
 
     private function notFound(): JsonResponse
