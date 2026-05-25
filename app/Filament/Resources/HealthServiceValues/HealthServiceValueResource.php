@@ -8,8 +8,10 @@ use App\Filament\Resources\HealthServiceValues\Pages\CreateHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\EditHealthServiceValue;
 use App\Filament\Resources\HealthServiceValues\Pages\ListHealthServiceValues;
 use App\Models\HealthServiceValue;
+use App\Models\Indicator;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
 use BackedEnum;
@@ -103,8 +105,9 @@ class HealthServiceValueResource extends Resource
             ->filters([
                 SelectFilter::make('indicator_id')
                     ->label(__('aho.fields.indicator'))
-                    ->relationship('indicator', 'afrocode')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->afrocode ? "{$record->afrocode} - " : '').$record->display_name))
+                    ->relationship('indicator', 'afrocode', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'afrocode'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                     ->searchable(),
                 CountryTableFilter::make(),
             ])

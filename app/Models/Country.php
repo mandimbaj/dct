@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 #[Fillable(['uuid', 'code', 'iso_alpha', 'iso_number', 'parent_id', 'locationlevel_id', 'special_id', 'wb_income_id'])]
 class Country extends Model
@@ -37,9 +37,8 @@ class Country extends Model
     protected static function booted(): void
     {
         static::creating(function (Country $country): void {
-            if (blank($country->uuid)) {
-                $country->uuid = (string) Str::uuid();
-            }
+            GeneratedCode::ensureUuid($country);
+            GeneratedCode::ensure($country, 'code', 'LOC', 15);
         });
     }
 

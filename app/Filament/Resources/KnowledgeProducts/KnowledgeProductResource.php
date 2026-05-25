@@ -9,9 +9,12 @@ use App\Filament\Resources\KnowledgeProducts\Pages\EditKnowledgeProduct;
 use App\Filament\Resources\KnowledgeProducts\Pages\ListKnowledgeProducts;
 use App\Filament\Resources\KnowledgeProducts\Schemas\KnowledgeProductForm;
 use App\Models\KnowledgeProduct;
+use App\Models\ResourceCategory;
+use App\Models\ResourceType;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
@@ -172,13 +175,15 @@ class KnowledgeProductResource extends Resource
                 CountryTableFilter::make(),
                 SelectFilter::make('type_id')
                     ->label(__('aho.fields.type'))
-                    ->relationship('type', 'code')
+                    ->relationship('type', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(ResourceType::query(), $search, 'type_id'))
                     ->searchable(),
                 SelectFilter::make('categorization_id')
                     ->label(__('aho.fields.category'))
-                    ->relationship('category', 'code')
+                    ->relationship('category', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(ResourceCategory::query(), $search, 'category_id'))
                     ->searchable(),
                 SelectFilter::make('comment')
                     ->label(__('aho.fields.approval_status'))

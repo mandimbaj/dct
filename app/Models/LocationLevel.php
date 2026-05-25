@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 #[Fillable(['uuid', 'code'])]
 class LocationLevel extends Model
@@ -36,7 +36,8 @@ class LocationLevel extends Model
     protected static function booted(): void
     {
         static::creating(function (LocationLevel $locationLevel): void {
-            $locationLevel->uuid ??= (string) Str::uuid();
+            GeneratedCode::ensureUuid($locationLevel);
+            GeneratedCode::ensure($locationLevel, 'code', 'LL', 50);
         });
     }
 

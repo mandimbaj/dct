@@ -9,7 +9,9 @@ use App\Filament\Resources\ProvisionUnits\Pages\CreateProvisionUnit;
 use App\Filament\Resources\ProvisionUnits\Pages\EditProvisionUnit;
 use App\Filament\Resources\ProvisionUnits\Pages\ListProvisionUnits;
 use App\Models\FacilityProvisionUnit;
+use App\Models\FacilityServiceDomain;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -95,8 +97,9 @@ class ProvisionUnitResource extends Resource
             ->filters([
                 SelectFilter::make('domain_id')
                     ->label(__('aho.fields.service_domain'))
-                    ->relationship('domain', 'code')
+                    ->relationship('domain', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityServiceDomain::query(), $search, 'domain_id'))
                     ->searchable(),
             ])
             ->recordActions([

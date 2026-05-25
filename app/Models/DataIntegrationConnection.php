@@ -177,6 +177,10 @@ class DataIntegrationConnection extends Model
             ];
         }
 
+        if (! $this->hasConfiguredFieldMappings()) {
+            $missing[] = __('aho.data_integration.fields.field_mapping');
+        }
+
         if ($missing !== []) {
             return [
                 'ok' => false,
@@ -209,6 +213,17 @@ class DataIntegrationConnection extends Model
     public function hasFieldMappings(): bool
     {
         return $this->fieldMappings()->exists();
+    }
+
+    public function hasConfiguredFieldMappings(): bool
+    {
+        if ($this->fieldMappings()->exists()) {
+            return true;
+        }
+
+        return collect($this->field_mapping ?? [])
+            ->filter(fn (mixed $externalField, mixed $localField): bool => filled($localField) && filled($externalField))
+            ->isNotEmpty();
     }
 
     protected static function booted(): void

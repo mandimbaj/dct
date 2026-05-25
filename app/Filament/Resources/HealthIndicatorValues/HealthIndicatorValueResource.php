@@ -42,6 +42,8 @@ class HealthIndicatorValueResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'fact_id';
 
+    protected static bool $isGloballySearchable = false;
+
     public static function getNavigationGroup(): string|UnitEnum|null
     {
         return __('aho.navigation.data');

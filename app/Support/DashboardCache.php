@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardCache
 {
-    public static function remember(string $key, Closure $callback, int $minutes = 10): mixed
+    public static function remember(string $key, Closure $callback, int $minutes = 60): mixed
     {
         return Cache::remember(
             static::key($key),
@@ -24,7 +24,7 @@ class DashboardCache
 
         return implode(':', [
             'dashboard',
-            'v8',
+            'v13',
             app()->getLocale(),
             $scope,
             $key,

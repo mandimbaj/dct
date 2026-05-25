@@ -9,7 +9,9 @@ use App\Filament\Resources\ServiceAreas\Pages\CreateServiceArea;
 use App\Filament\Resources\ServiceAreas\Pages\EditServiceArea;
 use App\Filament\Resources\ServiceAreas\Pages\ListServiceAreas;
 use App\Models\FacilityServiceArea;
+use App\Models\FacilityServiceIntervention;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -97,8 +99,9 @@ class ServiceAreaResource extends Resource
             ->filters([
                 SelectFilter::make('intervention_id')
                     ->label(__('aho.fields.service_intervention'))
-                    ->relationship('intervention', 'code')
+                    ->relationship('intervention', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityServiceIntervention::query(), $search, 'intervention_id'))
                     ->searchable(),
             ])
             ->recordActions([

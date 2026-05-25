@@ -7,9 +7,11 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\HealthWorkforceValues\Pages\CreateHealthWorkforceValue;
 use App\Filament\Resources\HealthWorkforceValues\Pages\EditHealthWorkforceValue;
 use App\Filament\Resources\HealthWorkforceValues\Pages\ListHealthWorkforceValues;
+use App\Models\HealthCadre;
 use App\Models\HealthWorkforceValue;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
 use BackedEnum;
@@ -103,8 +105,9 @@ class HealthWorkforceValueResource extends Resource
             ->filters([
                 SelectFilter::make('cadre_id')
                     ->label(__('aho.fields.cadre'))
-                    ->relationship('cadre', 'code')
+                    ->relationship('cadre', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(HealthCadre::query(), $search, 'cadre_id'))
                     ->searchable(),
                 CountryTableFilter::make(),
             ])

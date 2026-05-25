@@ -8,7 +8,6 @@ use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
 use Illuminate\Support\Number;
-use Illuminate\Validation\Rule;
 
 class HealthIndicatorValueImporter extends Importer
 {
@@ -84,13 +83,6 @@ class HealthIndicatorValueImporter extends Importer
             ImportColumn::make('string_value')
                 ->label(__('aho.fields.text_value'))
                 ->rules(['nullable', 'max:500']),
-            ImportColumn::make('comment')
-                ->label(__('aho.fields.approval_status'))
-                ->rules(['nullable', Rule::in([
-                    ApprovalWorkflow::STATUS_PENDING,
-                    ApprovalWorkflow::STATUS_APPROVED,
-                    ApprovalWorkflow::STATUS_REJECTED,
-                ])]),
             ImportColumn::make('uuid')
                 ->label(__('aho.fields.uuid'))
                 ->rules(['nullable', 'max:36']),
@@ -100,6 +92,16 @@ class HealthIndicatorValueImporter extends Importer
     public function resolveRecord(): HealthIndicatorValue
     {
         return new HealthIndicatorValue;
+    }
+
+    protected function beforeCreate(): void
+    {
+        $this->record->forceFill([
+            ApprovalWorkflow::STATUS_COLUMN => ApprovalWorkflow::STATUS_PENDING,
+            ApprovalWorkflow::MIRROR_COLUMN => ApprovalWorkflow::STATUS_PENDING,
+            'approved_by' => null,
+            'approved_at' => null,
+        ]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string

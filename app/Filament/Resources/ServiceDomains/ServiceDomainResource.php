@@ -10,6 +10,7 @@ use App\Filament\Resources\ServiceDomains\Pages\EditServiceDomain;
 use App\Filament\Resources\ServiceDomains\Pages\ListServiceDomains;
 use App\Models\FacilityServiceDomain;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -113,8 +114,9 @@ class ServiceDomainResource extends Resource
                     ]),
                 SelectFilter::make('parent_id')
                     ->label(__('aho.fields.parent'))
-                    ->relationship('parent', 'code')
+                    ->relationship('parent', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityServiceDomain::query(), $search, 'domain_id'))
                     ->searchable(),
             ])
             ->recordActions([

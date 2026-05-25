@@ -3,9 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Country;
-use App\Models\HealthIndicatorValue;
 use App\Models\KnowledgeProduct;
 use App\Support\DashboardCache;
+use App\Support\DashboardIndicatorValues;
 use App\Support\UserCountryAccess;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class RegionalValuesByCountryChart extends ChartWidget
 {
+    protected static bool $isDiscovered = true;
+
     protected ?string $heading = null;
 
     protected static ?int $sort = 20;
@@ -28,24 +30,13 @@ class RegionalValuesByCountryChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar';
+        return 'doughnut';
     }
 
     protected function getData(): array
     {
-        return DashboardCache::remember('recent-uploads-by-country', function (): array {
-            $indicatorQuery = HealthIndicatorValue::query()
-                ->select(
-                    'location_id',
-                    DB::raw('max(coalesce(date_lastupdated, date_created)) as latest_at'),
-                    DB::raw('count(*) as total')
-                )
-                ->whereNotNull('location_id')
-                ->groupBy('location_id');
-
-            UserCountryAccess::scopeDashboard($indicatorQuery);
-
-            $indicatorUploads = $indicatorQuery->get();
+        return DashboardCache::remember('recent-uploads-by-country-light', function (): array {
+            $indicatorUploads = DashboardIndicatorValues::currentRecentUploadsByLocation();
 
             $publicationQuery = KnowledgeProduct::query()
                 ->select(
@@ -85,7 +76,7 @@ class RegionalValuesByCountryChart extends ChartWidget
                 ])
                 ->filter(fn (object $row): bool => filled($row->latest_at))
                 ->sortByDesc('latest_at')
-                ->take(10)
+                ->take(5)
                 ->values();
 
             $countries = Country::with('translations')
@@ -97,7 +88,7 @@ class RegionalValuesByCountryChart extends ChartWidget
                 'datasets' => [[
                     'label' => __('aho.charts.records'),
                     'data' => $rows->pluck('total')->map(fn ($value): int => (int) $value)->all(),
-                    'backgroundColor' => '#009edb',
+                    'backgroundColor' => ['#009edb', '#0072a0', '#009a61', '#f5a623', '#6b7280'],
                 ]],
                 'labels' => $rows
                     ->map(function (object $row) use ($countries): string {
@@ -108,7 +99,7 @@ class RegionalValuesByCountryChart extends ChartWidget
                     })
                     ->all(),
             ];
-        }, 15);
+        });
     }
 
     public function getHeading(): string

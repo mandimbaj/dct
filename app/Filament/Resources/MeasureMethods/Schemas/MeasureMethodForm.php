@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\MeasureMethods\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Schema;
 
 class MeasureMethodForm
@@ -11,13 +11,8 @@ class MeasureMethodForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
-                    ->label(__('aho.fields.code'))
-                    ->maxLength(50),
-                TextInput::make('uuid')
-                    ->label(__('aho.fields.uuid'))
-                    ->maxLength(36)
-                    ->columnSpanFull(),
+                Hidden::make('code'),
+                Hidden::make('uuid'),
             ]);
     }
 }

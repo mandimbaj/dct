@@ -63,7 +63,7 @@ class ResourceTranslations
      */
     public static function sync(Model $record, array $payload): void
     {
-        if (blank($payload['name'] ?? null)) {
+        if (blank($payload['name'] ?? null) && blank($payload['title'] ?? null)) {
             return;
         }
 

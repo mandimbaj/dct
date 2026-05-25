@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Countries\Tables;
 
+use App\Models\LocationLevel;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -66,8 +68,9 @@ class CountriesTable
             ->filters([
                 SelectFilter::make('locationlevel_id')
                     ->label(__('aho.fields.level'))
-                    ->relationship('locationLevel', 'code')
+                    ->relationship('locationLevel', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(LocationLevel::query(), $search, 'locationlevel_id'))
                     ->searchable()
                     ->preload(),
             ])

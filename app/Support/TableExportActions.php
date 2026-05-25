@@ -44,11 +44,7 @@ class TableExportActions
 
     private static function hasExportableRecords(Component $livewire): bool
     {
-        if (! $livewire instanceof HasTable) {
-            return false;
-        }
-
-        return $livewire->getTableQueryForExport()->exists();
+        return $livewire instanceof HasTable;
     }
 
     private static function downloadCsv(Component $livewire): StreamedResponse

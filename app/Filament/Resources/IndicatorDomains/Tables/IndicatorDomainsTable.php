@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\IndicatorDomains\Tables;
 
+use App\Models\IndicatorDomain;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -64,8 +66,9 @@ class IndicatorDomainsTable
             ->filters([
                 SelectFilter::make('parent_id')
                     ->label(__('aho.fields.parent'))
-                    ->relationship('parent', 'code')
+                    ->relationship('parent', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorDomain::query(), $search, 'domain_id'))
                     ->searchable()
                     ->preload(),
             ])

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -90,6 +91,66 @@ class UserCountryAccess
         }
 
         return $query->whereIn($query->getModel()->qualifyColumn($column), $locationIds);
+    }
+
+    public static function scopeLocations(Builder $query, string $column = 'location_id'): Builder
+    {
+        return self::scope($query, $column);
+    }
+
+    public static function allowsLocationId(mixed $locationId): bool
+    {
+        if (self::canViewAllCountries()) {
+            return true;
+        }
+
+        if (blank($locationId)) {
+            return false;
+        }
+
+        return in_array((int) $locationId, self::allowedLocationIds(), true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function enforceLocationData(array $data, string $column = 'location_id'): array
+    {
+        if (self::canViewAllCountries()) {
+            return $data;
+        }
+
+        if (array_key_exists($column, $data) && self::allowsLocationId($data[$column])) {
+            return $data;
+        }
+
+        $locationId = self::locationId();
+
+        if (filled($locationId)) {
+            $data[$column] = (int) $locationId;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param  class-string<Model>  $modelClass
+     */
+    public static function scopedRecordExists(string $modelClass, mixed $key, string $column = 'location_id'): bool
+    {
+        if (blank($key)) {
+            return false;
+        }
+
+        if (self::canViewAllCountries()) {
+            return true;
+        }
+
+        $query = $modelClass::query()->whereKey($key);
+        self::scope($query, $column);
+
+        return $query->exists();
     }
 
     public static function scopeDashboard(Builder $query, string $column = 'location_id'): Builder

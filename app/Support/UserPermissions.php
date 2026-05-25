@@ -10,6 +10,8 @@ use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -130,50 +132,67 @@ class UserPermissions
     }
 
     /**
-     * @return array<int, CheckboxList>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     public static function formFields(?User $actor = null): array
     {
         return [
-            CheckboxList::make('permission_view')
-                ->label(__('aho.permissions.view'))
-                ->helperText(__('aho.permissions.view_help'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_VIEW, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
-            CheckboxList::make('permission_create')
-                ->label(__('aho.permissions.create'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_CREATE, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
-            CheckboxList::make('permission_import')
-                ->label(__('aho.permissions.import'))
-                ->helperText(__('aho.permissions.import_help'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_IMPORT, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
-            CheckboxList::make('permission_approve')
-                ->label(__('aho.permissions.approve'))
-                ->helperText(__('aho.permissions.approve_help'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_APPROVE, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
-            CheckboxList::make('permission_update')
-                ->label(__('aho.permissions.update'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_UPDATE, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
-            CheckboxList::make('permission_delete')
-                ->label(__('aho.permissions.delete'))
-                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_DELETE, $actor))
-                ->searchable()
-                ->bulkToggleable()
-                ->columns(2),
+            Tabs::make(__('aho.permissions.matrix'))
+                ->tabs([
+                    Tab::make(__('aho.permissions.tabs.visibility'))
+                        ->icon('heroicon-o-eye')
+                        ->schema([
+                            CheckboxList::make('permission_view')
+                                ->label(__('aho.permissions.view'))
+                                ->helperText(__('aho.permissions.view_help'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_VIEW, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                        ]),
+                    Tab::make(__('aho.permissions.tabs.contribution'))
+                        ->icon('heroicon-o-pencil-square')
+                        ->schema([
+                            CheckboxList::make('permission_create')
+                                ->label(__('aho.permissions.create'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_CREATE, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                            CheckboxList::make('permission_import')
+                                ->label(__('aho.permissions.import'))
+                                ->helperText(__('aho.permissions.import_help'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_IMPORT, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                            CheckboxList::make('permission_approve')
+                                ->label(__('aho.permissions.approve'))
+                                ->helperText(__('aho.permissions.approve_help'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_APPROVE, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                        ]),
+                    Tab::make(__('aho.permissions.tabs.administration'))
+                        ->icon('heroicon-o-shield-check')
+                        ->schema([
+                            CheckboxList::make('permission_update')
+                                ->label(__('aho.permissions.update'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_UPDATE, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                            CheckboxList::make('permission_delete')
+                                ->label(__('aho.permissions.delete'))
+                                ->options(fn (): array => static::assignableOptionsForAction(static::ACTION_DELETE, $actor))
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->columns(2),
+                        ]),
+                ])
+                ->persistTabInQueryString('permissions_tab')
+                ->columnSpanFull(),
         ];
     }
 

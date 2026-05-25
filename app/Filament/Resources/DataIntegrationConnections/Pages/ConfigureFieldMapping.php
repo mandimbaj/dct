@@ -6,22 +6,24 @@ use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionR
 use App\Models\DataIntegrationConnection;
 use App\Models\DataIntegrationFieldMapping;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\EmbeddedSchema;
+use Filament\Schemas\Components\Form;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 
 class ConfigureFieldMapping extends Page
 {
     protected static string $resource = DataIntegrationConnectionResource::class;
-
-    protected string $view = 'filament.resources.data-integration-connections.pages.configure-field-mapping';
 
     public DataIntegrationConnection $record;
 
@@ -40,9 +42,14 @@ class ConfigureFieldMapping extends Page
         $this->form->fill($this->getInitialFormData());
     }
 
-    public function form(Form $form): Form
+    public function getTitle(): string
     {
-        return $form
+        return __('aho.data_integration.sections.field_mapping_config');
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
             ->schema([
                 Section::make(__('aho.data_integration.sections.field_mapping_config'))
                     ->description(__('aho.data_integration.help.field_mapping_config_description'))
@@ -63,12 +70,13 @@ class ConfigureFieldMapping extends Page
                                             ->label(__('aho.data_integration.fields.external_field'))
                                             ->options($this->externalFields->mapWithKeys(fn (string $field): array => [$field => $field])->toArray())
                                             ->searchable()
-                                            ->creatable()
                                             ->createOptionForm([
                                                 TextInput::make('external_field')
                                                     ->label(__('aho.data_integration.fields.external_field'))
                                                     ->required(),
                                             ])
+                                            ->createOptionUsing(fn (array $data): string => $data['external_field'])
+                                            ->helperText(__('aho.data_integration.help.external_field'))
                                             ->required()
                                             ->columnSpan(1),
                                         Select::make('field_type')
@@ -80,14 +88,43 @@ class ConfigureFieldMapping extends Page
                                 Toggle::make('is_required')
                                     ->label(__('aho.data_integration.fields.is_required'))
                                     ->default(false),
+                                TextInput::make('default_value')
+                                    ->label(__('aho.data_integration.fields.default_value'))
+                                    ->helperText(__('aho.data_integration.help.default_value')),
+                                Textarea::make('transformation_rule')
+                                    ->label(__('aho.data_integration.fields.transformation_rule'))
+                                    ->helperText(__('aho.data_integration.help.transformation_rule'))
+                                    ->rows(2)
+                                    ->columnSpanFull(),
+                                Textarea::make('notes')
+                                    ->label(__('aho.data_integration.fields.notes'))
+                                    ->rows(2)
+                                    ->columnSpanFull(),
                             ])
                             ->addActionLabel(__('aho.data_integration.actions.add_mapping'))
                             ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['local_field'] ? "{$state['local_field']} → {$state['external_field']}" : null)
+                            ->itemLabel(fn (array $state): ?string => filled($state['local_field'] ?? null) ? "{$state['local_field']} -> ".($state['external_field'] ?? '') : null)
                             ->columnSpanFull(),
                     ]),
             ])
             ->statePath('data');
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Form::make([
+                    EmbeddedSchema::make('form'),
+                ])
+                    ->id('field-mapping-form')
+                    ->livewireSubmitHandler('save')
+                    ->footer([
+                        Actions::make($this->getFormActions())
+                            ->alignment($this->getFormActionsAlignment())
+                            ->key('field-mapping-actions'),
+                    ]),
+            ]);
     }
 
     protected function getInitialFormData(): array
@@ -99,6 +136,9 @@ class ConfigureFieldMapping extends Page
                 'external_field' => $mapping->external_field,
                 'field_type' => $mapping->field_type,
                 'is_required' => $mapping->is_required,
+                'default_value' => $mapping->transformation_config['default_value'] ?? null,
+                'transformation_rule' => $mapping->transformation_config['rule'] ?? null,
+                'notes' => $mapping->notes,
             ])
             ->toArray();
 
@@ -136,10 +176,14 @@ class ConfigureFieldMapping extends Page
             'sex',
             'ageGroup',
             'value',
+            'value_received',
             'unit',
             'lowerBound',
             'upperBound',
             'comments',
+            'categoryOption',
+            'age',
+            'sex',
         ]);
     }
 
@@ -172,6 +216,9 @@ class ConfigureFieldMapping extends Page
             'age_category',
             'reported_value',
             'measurement_unit',
+            'age',
+            'sex',
+            'category_option',
         ]);
     }
 
@@ -180,12 +227,12 @@ class ConfigureFieldMapping extends Page
         return [
             Action::make('save')
                 ->label(__('aho.actions.save_mapping'))
+                ->icon('heroicon-o-check-circle')
                 ->submit('save'),
-            Action::make('skip')
-                ->label(__('aho.actions.skip'))
-                ->url(DataIntegrationConnectionResource::getUrl('index'))
-                ->requiresConfirmation()
-                ->action(fn () => $this->redirect(DataIntegrationConnectionResource::getUrl('index'))),
+            Action::make('back')
+                ->label(__('aho.actions.back_to_connections'))
+                ->color('gray')
+                ->url(DataIntegrationConnectionResource::getUrl('index')),
         ];
     }
 
@@ -204,6 +251,11 @@ class ConfigureFieldMapping extends Page
                 'external_field' => $mapping['external_field'],
                 'field_type' => $mapping['field_type'] ?? 'direct',
                 'is_required' => $mapping['is_required'] ?? false,
+                'transformation_config' => array_filter([
+                    'default_value' => $mapping['default_value'] ?? null,
+                    'rule' => $mapping['transformation_rule'] ?? null,
+                ], fn (mixed $value): bool => filled($value)),
+                'notes' => $mapping['notes'] ?? null,
                 'sort_order' => $index,
             ]);
         }

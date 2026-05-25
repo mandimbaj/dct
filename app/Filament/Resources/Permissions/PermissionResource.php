@@ -6,7 +6,10 @@ use App\Filament\Clusters\Authentication;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Permissions\Pages\EditPermission;
 use App\Filament\Resources\Permissions\Pages\ListPermissions;
+use App\Models\Country;
 use App\Models\User;
+use App\Support\SelectOptions;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\EditAction;
@@ -35,6 +38,8 @@ class PermissionResource extends Resource
     protected static ?string $slug = 'permissions';
 
     protected static ?int $navigationSort = 3;
+
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
@@ -79,30 +84,50 @@ class PermissionResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label(__('aho.fields.name'))
-                    ->disabled()
-                    ->dehydrated(false),
-                TextInput::make('email')
-                    ->label(__('aho.fields.email'))
-                    ->disabled()
-                    ->dehydrated(false),
-                Checkbox::make('is_super_admin')
-                    ->label(__('aho.fields.super_admin'))
-                    ->disabled()
-                    ->dehydrated(false),
-                Select::make('location_id')
-                    ->label(__('aho.fields.assigned_country'))
-                    ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => $query
-                        ->where('locationlevel_id', 2)
-                        ->with('translations'))
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->disabled()
-                    ->dehydrated(false),
+                Section::make(__('aho.auth_management.sections.permission_target'))
+                    ->description(__('aho.auth_management.help.permission_target'))
+                    ->icon('heroicon-o-user-circle')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label(__('aho.fields.name'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('email')
+                            ->label(__('aho.fields.email'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        Checkbox::make('is_super_admin')
+                            ->label(__('aho.fields.super_admin'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        Select::make('location_id')
+                            ->label(__('aho.fields.assigned_country'))
+                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                                SelectOptions::orderByDisplayName($query
+                                    ->where('locationlevel_id', 2)
+                                    ->with('translations'), 'code'),
+                            ))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                keyName: 'location_id',
+                            ))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                $search,
+                                'location_id',
+                            ))
+                            ->disabled()
+                            ->dehydrated(false),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
                 Section::make(__('aho.permissions.section'))
                     ->description(__('aho.permissions.section_help'))
+                    ->icon('heroicon-o-lock-closed')
                     ->schema(UserPermissions::formFields())
-                    ->columns(1),
+                    ->columns(1)
+                    ->columnSpanFull(),
             ]);
     }
 

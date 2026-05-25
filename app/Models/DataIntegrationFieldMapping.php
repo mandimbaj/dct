@@ -41,18 +41,23 @@ class DataIntegrationFieldMapping extends Model
     public static function localFieldOptions(): array
     {
         return [
-            'country_id' => 'Pays (Country)',
-            'indicator_id' => 'Indicateur (Indicator)',
-            'year' => 'Année (Year)',
-            'period' => 'Période (Period)',
-            'sex' => 'Sexe (Sex)',
-            'age_group' => 'Groupe d\'âge (Age Group)',
-            'value' => 'Valeur (Value)',
-            'unit_override' => 'Unité (Unit)',
-            'lower_bound' => 'Limite inférieure (Lower Bound)',
-            'upper_bound' => 'Limite supérieure (Upper Bound)',
-            'comment' => 'Commentaire (Comment)',
-            'data_source_id' => 'Source de données (Data Source)',
+            'location_id' => __('aho.fields.location').' (location_id)',
+            'indicator_id' => __('aho.fields.indicator').' (indicator_id)',
+            'start_period' => __('aho.fields.start').' (start_period)',
+            'end_period' => __('aho.fields.end').' (end_period)',
+            'period' => __('aho.fields.period').' (period)',
+            'categoryoption_id' => __('aho.data_integration.fields.age_sex_category').' (categoryoption_id)',
+            'datasource_id' => __('aho.fields.source').' (datasource_id)',
+            'measuremethod_id' => __('aho.fields.measure_method').' (measuremethod_id)',
+            'value_received' => __('aho.fields.value_received').' (value_received)',
+            'numerator_value' => __('aho.fields.numerator').' (numerator_value)',
+            'denominator_value' => __('aho.fields.denominator').' (denominator_value)',
+            'min_value' => __('aho.fields.min').' (min_value)',
+            'max_value' => __('aho.fields.max').' (max_value)',
+            'target_value' => __('aho.fields.target').' (target_value)',
+            'string_value' => __('aho.fields.text_value').' (string_value)',
+            'comment' => __('aho.fields.approval_status').' (comment)',
+            'priority' => __('aho.fields.priority').' (priority)',
         ];
     }
 }

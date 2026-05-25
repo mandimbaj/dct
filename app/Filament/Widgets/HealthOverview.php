@@ -4,11 +4,12 @@ namespace App\Filament\Widgets;
 
 use App\Models\Country;
 use App\Models\DataSource;
-use App\Models\HealthIndicatorValue;
 use App\Models\Indicator;
 use App\Models\MeasureMethod;
+use App\Models\User;
 use App\Support\ApprovalWorkflow;
 use App\Support\DashboardCache;
+use App\Support\DashboardIndicatorValues;
 use App\Support\UserCountryAccess;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -17,7 +18,7 @@ class HealthOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
 
-    protected static bool $isLazy = true;
+    protected static bool $isLazy = false;
 
     protected ?string $pollingInterval = null;
 
@@ -27,43 +28,32 @@ class HealthOverview extends StatsOverviewWidget
             $locations = Country::query();
             $levelTwoLocations = Country::query()
                 ->whereHas('parent', fn ($query) => $query->where('locationlevel_id', 2));
-            $values = HealthIndicatorValue::query();
 
             UserCountryAccess::scopeDashboard($locations, 'location_id');
-            UserCountryAccess::scopeDashboard($values);
 
             if (! UserCountryAccess::canViewRegionalDashboard()) {
                 $levelTwoLocations->where('parent_id', UserCountryAccess::locationId());
             }
 
-            $statusCounts = (clone $values)
-                ->selectRaw(
-                    "case when lower(trim(".ApprovalWorkflow::STATUS_COLUMN.")) in ('approved', 'pending', 'rejected') ".
-                    'then lower(trim('.ApprovalWorkflow::STATUS_COLUMN.")) else 'pending' end as status"
-                )
-                ->selectRaw('count(*) as total')
-                ->groupBy('status')
-                ->pluck('total', 'status');
-
-            $totalValues = (int) $statusCounts->sum();
-            $approvedValues = (int) ($statusCounts[ApprovalWorkflow::STATUS_APPROVED] ?? 0);
-            $pendingValues = (int) ($statusCounts[ApprovalWorkflow::STATUS_PENDING] ?? 0);
-            $rejectedValues = (int) ($statusCounts[ApprovalWorkflow::STATUS_REJECTED] ?? 0);
+            $currentIndicatorTotal = DashboardIndicatorValues::currentCount();
+            $archivedIndicatorTotal = DashboardIndicatorValues::archivedCount();
+            $statusCounts = DashboardIndicatorValues::currentStatusCounts();
 
             return [
                 'locations' => $locations->count(),
                 'level_two_locations' => $levelTwoLocations->count(),
                 'indicators' => Indicator::count(),
-                'indicators_with_values' => (clone $values)
-                    ->whereNotNull('indicator_id')
-                    ->distinct('indicator_id')
-                    ->count('indicator_id'),
-                'values' => $totalValues,
-                'approved_values' => $approvedValues,
-                'pending_values' => $pendingValues,
-                'rejected_values' => $rejectedValues,
+                'indicators_with_values' => DashboardIndicatorValues::distinctIndicatorCount(),
+                'values' => $currentIndicatorTotal,
+                'indicator_values' => $currentIndicatorTotal,
+                'indicator_current_values' => $currentIndicatorTotal,
+                'indicator_archive_values' => $archivedIndicatorTotal,
+                'approved_values' => (int) ($statusCounts[ApprovalWorkflow::STATUS_APPROVED] ?? 0),
+                'pending_values' => (int) ($statusCounts[ApprovalWorkflow::STATUS_PENDING] ?? 0),
+                'rejected_values' => (int) ($statusCounts[ApprovalWorkflow::STATUS_REJECTED] ?? 0),
                 'sources' => DataSource::count(),
                 'methods' => MeasureMethod::count(),
+                'users' => User::count(),
             ];
         });
 
@@ -85,9 +75,15 @@ class HealthOverview extends StatsOverviewWidget
                     'rejected' => number_format($stats['rejected_values']),
                 ]))
                 ->icon('heroicon-o-chart-bar-square'),
+            Stat::make(__('aho.stats.archive_values'), $stats['indicator_archive_values'])
+                ->description(__('aho.stats.archive_values_description'))
+                ->icon('heroicon-o-archive-box'),
             Stat::make(__('aho.stats.sources_methods'), $stats['sources'].' / '.$stats['methods'])
                 ->description(__('aho.stats.sources_methods_description'))
                 ->icon('heroicon-o-circle-stack'),
+            Stat::make(__('aho.stats.users'), $stats['users'])
+                ->description(__('aho.stats.users_description'))
+                ->icon('heroicon-o-users'),
         ];
     }
 }

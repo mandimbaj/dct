@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 #[Fillable(['uuid', 'code', 'level', 'parent_id'])]
 class IndicatorDomain extends Model
@@ -38,7 +38,8 @@ class IndicatorDomain extends Model
     protected static function booted(): void
     {
         static::creating(function (IndicatorDomain $indicatorDomain): void {
-            $indicatorDomain->uuid ??= (string) Str::uuid();
+            GeneratedCode::ensureUuid($indicatorDomain);
+            GeneratedCode::ensure($indicatorDomain, 'code', 'DOM', 45);
         });
     }
 

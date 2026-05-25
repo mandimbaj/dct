@@ -11,6 +11,8 @@ class KnowledgeProductTranslation extends Model
 
     protected $table = 'stg_knowledge_product_translation';
 
+    protected $guarded = [];
+
     public $timestamps = false;
 
     public function product(): BelongsTo

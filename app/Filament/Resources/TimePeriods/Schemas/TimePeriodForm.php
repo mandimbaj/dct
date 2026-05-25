@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TimePeriods\Schemas;
 
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -11,10 +12,7 @@ class TimePeriodForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
-                    ->label(__('aho.fields.code'))
-                    ->maxLength(50)
-                    ->required(),
+                Hidden::make('code'),
                 TextInput::make('name')
                     ->label(__('aho.fields.name'))
                     ->maxLength(255)
@@ -25,10 +23,7 @@ class TimePeriodForm
                 TextInput::make('description')
                     ->label(__('aho.fields.description'))
                     ->maxLength(500),
-                TextInput::make('uuid')
-                    ->label(__('aho.fields.uuid'))
-                    ->maxLength(36)
-                    ->columnSpanFull(),
+                Hidden::make('uuid'),
             ]);
     }
 }

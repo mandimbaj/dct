@@ -3,10 +3,13 @@
 namespace App\Support\DataQuality;
 
 use App\Models\Country;
+use App\Models\DataSource;
 use App\Models\DataQuality\DqaReportModel;
+use App\Models\Indicator;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Support\ApprovalWorkflow;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\TextEncoding;
 use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
@@ -118,6 +121,7 @@ class DqaFilament
                 SelectFilter::make('afrocode')
                     ->label(__('aho.fields.afro_code'))
                     ->options(fn (): array => self::options($modelClass, 'afrocode'))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'afrocode'), $search))
                     ->searchable(),
             ]);
     }
@@ -181,18 +185,27 @@ class DqaFilament
             ->filters([
                 SelectFilter::make('indicator_id')
                     ->label(__('aho.fields.indicator'))
-                    ->relationship('indicator', 'afrocode')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->afrocode ? "{$record->afrocode} - " : '').$record->display_name))
+                    ->relationship('indicator', 'afrocode', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'afrocode'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                     ->searchable(),
                 SelectFilter::make('location_id')
                     ->label(__('aho.fields.location'))
-                    ->relationship('location', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                    ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                        SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
+                    ))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(Country::query()),
+                        $search,
+                        'location_id',
+                    ))
                     ->searchable(),
                 SelectFilter::make('datasource_id')
                     ->label(__('aho.fields.source'))
-                    ->relationship('dataSource', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                    ->relationship('dataSource', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
                     ->searchable(),
                 SelectFilter::make('comment')
                     ->label(__('aho.fields.approval_status'))
@@ -244,22 +257,27 @@ class DqaFilament
             SelectFilter::make('location')
                 ->label(__('aho.fields.country'))
                 ->options(fn (): array => self::options($modelClass, 'location'))
+                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'location'), $search))
                 ->searchable(),
             SelectFilter::make('indicator_name')
                 ->label(__('aho.fields.indicator'))
                 ->options(fn (): array => self::options($modelClass, 'indicator_name'))
+                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'indicator_name'), $search))
                 ->searchable(),
             SelectFilter::make('categoryoption')
                 ->label(__('aho.fields.category_option'))
                 ->options(fn (): array => self::options($modelClass, 'categoryoption'))
+                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'categoryoption'), $search))
                 ->searchable(),
             SelectFilter::make('datasource')
                 ->label(__('aho.fields.source'))
                 ->options(fn (): array => self::options($modelClass, 'datasource'))
+                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'datasource'), $search))
                 ->searchable(),
             SelectFilter::make('measure_type')
                 ->label(__('aho.fields.measure_type'))
                 ->options(fn (): array => self::options($modelClass, 'measure_type'))
+                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::options($modelClass, 'measure_type'), $search))
                 ->searchable(),
         ];
     }
@@ -282,7 +300,7 @@ class DqaFilament
                 ->where($column, '<>', '')
                 ->distinct()
                 ->orderBy($column)
-                ->limit(250);
+                ->limit(SelectOptions::LIMIT);
 
             if (is_subclass_of($modelClass, DqaReportModel::class)) {
                 self::scopeIssueQuery($query);

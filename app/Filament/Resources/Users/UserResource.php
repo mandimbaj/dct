@@ -7,8 +7,11 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Models\Country;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\SelectOptions;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
@@ -16,6 +19,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -101,39 +105,72 @@ class UserResource extends Resource
         return $schema
             ->components([
                 Section::make(__('aho.form_sections.primary_attributes'))
+                    ->description(__('aho.auth_management.help.user_identity'))
+                    ->icon('heroicon-o-identification')
                     ->schema([
                         TextInput::make('name')
                             ->label(__('aho.fields.name'))
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->autocomplete('name'),
                         TextInput::make('email')
                             ->label(__('aho.fields.email'))
                             ->email()
                             ->required()
-                            ->maxLength(255),
-                        TextInput::make('password')
-                            ->label(__('aho.fields.password'))
-                            ->password()
-                            ->revealable()
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->rule(Password::min(12)->mixedCase()->numbers()->symbols(), fn (?string $state): bool => filled($state)),
+                            ->autocomplete('email'),
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('password')
+                                    ->label(__('aho.fields.password'))
+                                    ->password()
+                                    ->revealable()
+                                    ->dehydrated(fn (?string $state): bool => filled($state))
+                                    ->required(fn (string $operation): bool => $operation === 'create')
+                                    ->maxLength(255)
+                                    ->autocomplete('new-password')
+                                    ->helperText(__('aho.auth_management.help.password_policy'))
+                                    ->rule(Password::min(12)->mixedCase()->numbers()->symbols(), fn (?string $state): bool => filled($state)),
+                                TextInput::make('password_confirmation')
+                                    ->label(__('aho.fields.password_confirmation'))
+                                    ->password()
+                                    ->revealable()
+                                    ->dehydrated(false)
+                                    ->autocomplete('new-password')
+                                    ->same('password')
+                                    ->required(fn (string $operation, ?string $state, ?string $rawState): bool => $operation === 'create' || filled($rawState)),
+                            ])
+                            ->columnSpanFull(),
                     ])
-                    ->columns(1),
-                Section::make(__('aho.permissions.section'))
-                    ->description(__('aho.help.role'))
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Section::make(__('aho.auth_management.sections.user_access'))
+                    ->description(__('aho.auth_management.help.user_access'))
+                    ->icon('heroicon-o-shield-check')
                     ->schema([
                         Checkbox::make('is_super_admin')
                             ->label(__('aho.fields.super_admin'))
+                            ->helperText(__('aho.auth_management.help.super_admin'))
                             ->disabled(fn (): bool => ! Auth::user()?->canViewAllCountries())
                             ->dehydrated(fn (): bool => (bool) Auth::user()?->canViewAllCountries()),
                         Select::make('location_id')
                             ->label(__('aho.fields.assigned_country'))
-                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => $query
-                                ->where('locationlevel_id', 2)
-                                ->with('translations'))
-                            ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                                SelectOptions::orderByDisplayName($query
+                                    ->where('locationlevel_id', 2)
+                                    ->with('translations'), 'code'),
+                            ))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                keyName: 'location_id',
+                            ))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                $search,
+                                'location_id',
+                            ))
                             ->searchable()
                             ->preload()
                             ->default(fn (): ?int => Auth::user()?->canViewAllCountries() ? null : Auth::user()?->location_id)
@@ -148,13 +185,25 @@ class UserResource extends Resource
                                 ->get()
                                 ->filter(fn (Role $role): bool => Auth::user()?->canAssignRole($role) ?? false)
                                 ->mapWithKeys(fn (Role $role): array => [$role->getKey() => $role->displayName()])
+                                ->sortBy(fn (string $label): string => mb_strtolower($label))
                                 ->all())
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(
+                                Role::query()
+                                    ->with('location.translations')
+                                    ->orderBy('name')
+                                    ->get()
+                                    ->filter(fn (Role $role): bool => Auth::user()?->canAssignRole($role) ?? false)
+                                    ->mapWithKeys(fn (Role $role): array => [$role->getKey() => $role->displayName()])
+                                    ->all(),
+                                $search,
+                            ))
                             ->searchable()
                             ->preload()
                             ->required(fn (string $operation): bool => $operation === 'create')
                             ->helperText(__('aho.help.role')),
                     ])
-                    ->columns(1),
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 

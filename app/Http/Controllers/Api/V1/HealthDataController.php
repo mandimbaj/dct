@@ -153,6 +153,7 @@ class HealthDataController extends Controller
     public function storeIndicatorValue(Request $request): JsonResponse
     {
         $data = $this->validateIndicatorValue($request, creating: true);
+        $data = $this->forcePendingApproval($data);
 
         if ($response = $this->authorizeLocation($data['location_id'])) {
             return $response;
@@ -251,7 +252,7 @@ class HealthDataController extends Controller
             'max_value' => ['sometimes', 'nullable', 'numeric'],
             'target_value' => ['sometimes', 'nullable', 'numeric'],
             'string_value' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'comment' => [$required, 'string', Rule::in([
+            'comment' => ['sometimes', 'nullable', Rule::in([
                 ApprovalWorkflow::STATUS_PENDING,
                 ApprovalWorkflow::STATUS_APPROVED,
                 ApprovalWorkflow::STATUS_REJECTED,
@@ -279,6 +280,20 @@ class HealthDataController extends Controller
         throw ValidationException::withMessages([
             'value_received' => collect($issues)->pluck('message')->all(),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function forcePendingApproval(array $data): array
+    {
+        $data[ApprovalWorkflow::STATUS_COLUMN] = ApprovalWorkflow::STATUS_PENDING;
+        $data[ApprovalWorkflow::MIRROR_COLUMN] = ApprovalWorkflow::STATUS_PENDING;
+        $data['approved_by'] = null;
+        $data['approved_at'] = null;
+
+        return $data;
     }
 
     private function authorizeLocation(int|string $locationId): ?JsonResponse
@@ -322,7 +337,6 @@ class HealthDataController extends Controller
             'datasource_id',
             'measuremethod_id',
             'value_received',
-            'comment',
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DataIntegrationConnections;
 
 use App\Filament\Clusters\DataIntegration;
 use App\Filament\Resources\AhoResource as Resource;
+use App\Filament\Resources\DataIntegrationConnections\Pages\ConfigureFieldMapping;
 use App\Filament\Resources\DataIntegrationConnections\Pages\CreateDataIntegrationConnection;
 use App\Filament\Resources\DataIntegrationConnections\Pages\EditDataIntegrationConnection;
 use App\Filament\Resources\DataIntegrationConnections\Pages\ListDataIntegrationConnections;
@@ -68,6 +69,7 @@ class DataIntegrationConnectionResource extends Resource
             'index' => ListDataIntegrationConnections::route('/'),
             'create' => CreateDataIntegrationConnection::route('/create'),
             'edit' => EditDataIntegrationConnection::route('/{record}/edit'),
+            'mapping' => ConfigureFieldMapping::route('/{record}/field-mapping'),
         ];
     }
 }

@@ -8,8 +8,12 @@ use App\Filament\Resources\HealthFacilities\Pages\CreateHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\EditHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\ListHealthFacilities;
 use App\Models\HealthFacility;
+use App\Models\Country;
+use App\Models\FacilityOwner;
+use App\Models\FacilityType;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -101,29 +105,49 @@ class HealthFacilityResource extends Resource
                         TextInput::make('shortname')
                             ->label(__('aho.fields.short_name'))
                             ->maxLength(230),
-                        TextInput::make('code')
-                            ->label(__('aho.fields.code'))
-                            ->maxLength(45)
-                            ->helperText(__('aho.help.auto_code')),
+                        Hidden::make('code'),
                         Select::make('type_id')
                             ->label(__('aho.fields.type'))
-                            ->relationship('type', 'code')
+                            ->relationship('type', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(FacilityType::query(), keyName: 'type_id'))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityType::query(), $search, 'type_id'))
                             ->searchable()
                             ->required(),
                         Select::make('owner_id')
                             ->label(__('aho.fields.owner'))
-                            ->relationship('owner', 'code')
+                            ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                                SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
+                            ))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                                keyName: 'owner_id',
+                            ))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                                $search,
+                                'owner_id',
+                            ))
                             ->searchable()
                             ->required(),
                         Select::make('location_id')
                             ->label(__('aho.fields.location'))
-                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::canViewAllCountries()
-                                ? $query->with('translations')->orderBy('code')
-                                : $query->whereIn('location_id', UserCountryAccess::allowedLocationIds())->with('translations')->orderBy('code'))
-                            ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                                SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
+                            ))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()),
+                                keyName: 'location_id',
+                            ))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()),
+                                $search,
+                                'location_id',
+                            ))
                             ->searchable()
+                            ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
                             ->required(),
                         TextInput::make('admin_location')
                             ->label(__('aho.fields.admin_location'))
@@ -218,13 +242,21 @@ class HealthFacilityResource extends Resource
                 CountryTableFilter::make(),
                 SelectFilter::make('type_id')
                     ->label(__('aho.fields.type'))
-                    ->relationship('type', 'code')
+                    ->relationship('type', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityType::query(), $search, 'type_id'))
                     ->searchable(),
                 SelectFilter::make('owner_id')
                     ->label(__('aho.fields.owner'))
-                    ->relationship('owner', 'code')
+                    ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                        SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
+                    ))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                        $search,
+                        'owner_id',
+                    ))
                     ->searchable(),
             ])
             ->recordActions([

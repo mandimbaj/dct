@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\DataSources\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Schema;
 
 class DataSourceForm
@@ -11,14 +11,8 @@ class DataSourceForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
-                    ->label(__('aho.fields.code'))
-                    ->maxLength(50),
-                TextInput::make('uuid')
-                    ->label(__('aho.fields.uuid'))
-                    ->required()
-                    ->maxLength(36)
-                    ->columnSpanFull(),
+                Hidden::make('code'),
+                Hidden::make('uuid'),
             ]);
     }
 }

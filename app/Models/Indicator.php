@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 #[Fillable(['uuid', 'afrocode', 'gen_code', 'reference_id'])]
 class Indicator extends Model
@@ -37,9 +37,9 @@ class Indicator extends Model
     protected static function booted(): void
     {
         static::creating(function (Indicator $indicator): void {
-            if (blank($indicator->uuid)) {
-                $indicator->uuid = (string) Str::uuid();
-            }
+            GeneratedCode::ensureUuid($indicator);
+            GeneratedCode::ensure($indicator, 'afrocode', 'IND', 10);
+            GeneratedCode::ensure($indicator, 'gen_code', 'GEN', 10);
         });
     }
 

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Indicators\Tables;
 
+use App\Models\IndicatorReference;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -60,7 +62,9 @@ class IndicatorsTable
             ->filters([
                 SelectFilter::make('reference_id')
                     ->label(__('aho.fields.reference'))
-                    ->relationship('reference', 'code')
+                    ->relationship('reference', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorReference::query(), $search, 'reference_id'))
                     ->searchable()
                     ->preload(),
             ])

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,14 @@ class DataSource extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (DataSource $dataSource): void {
+            GeneratedCode::ensureUuid($dataSource);
+            GeneratedCode::ensure($dataSource, 'code', 'SRC', 50);
+        });
     }
 
     public function translations(): HasMany

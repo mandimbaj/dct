@@ -7,11 +7,15 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Roles\Pages\CreateRole;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
+use App\Models\Country;
 use App\Models\Role;
+use App\Support\SelectOptions;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -45,7 +49,7 @@ class RoleResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('aho.resources.roles.navigation');
+        return __('aho.auth_management.role_permissions_navigation');
     }
 
     public static function getModelLabel(): string
@@ -94,28 +98,54 @@ class RoleResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label(__('aho.fields.name'))
-                    ->required()
-                    ->maxLength(255),
-                Textarea::make('description')
-                    ->label(__('aho.fields.description'))
-                    ->rows(3)
+                Section::make(__('aho.auth_management.sections.role_identity'))
+                    ->description(__('aho.auth_management.help.role_identity'))
+                    ->icon('heroicon-o-key')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label(__('aho.fields.name'))
+                            ->required()
+                            ->maxLength(255)
+                            ->helperText(__('aho.auth_management.help.role_name')),
+                        Select::make('location_id')
+                            ->label(__('aho.fields.role_scope'))
+                            ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                                SelectOptions::orderByDisplayName($query
+                                    ->where('locationlevel_id', 2)
+                                    ->with('translations'), 'code'),
+                            ))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                keyName: 'location_id',
+                            ))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                                UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                                $search,
+                                'location_id',
+                            ))
+                            ->searchable()
+                            ->preload()
+                            ->placeholder(__('aho.fields.all_countries'))
+                            ->default(fn (): ?int => auth()->user()?->canViewAllCountries() ? null : auth()->user()?->location_id)
+                            ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
+                            ->dehydrated()
+                            ->helperText(__('aho.auth_management.help.role_scope')),
+                        Checkbox::make('is_system')
+                            ->label(__('aho.fields.system_role'))
+                            ->helperText(__('aho.auth_management.help.system_role'))
+                            ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
+                            ->dehydrated(fn (): bool => (bool) auth()->user()?->canViewAllCountries()),
+                        Textarea::make('description')
+                            ->label(__('aho.fields.description'))
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
                     ->columnSpanFull(),
-                Select::make('location_id')
-                    ->label(__('aho.fields.role_scope'))
-                    ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => $query
-                        ->where('locationlevel_id', 2)
-                        ->with('translations'))
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable()
-                    ->preload()
-                    ->placeholder(__('aho.fields.all_countries'))
-                    ->default(fn (): ?int => auth()->user()?->canViewAllCountries() ? null : auth()->user()?->location_id)
-                    ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
-                    ->dehydrated(),
                 Section::make(__('aho.permissions.role_section'))
                     ->description(__('aho.permissions.role_section_help'))
+                    ->icon('heroicon-o-shield-check')
                     ->schema(UserPermissions::formFields())
                     ->columns(1)
                     ->columnSpanFull(),
@@ -136,6 +166,11 @@ class RoleResource extends Resource
                     ->label(__('aho.fields.users_count'))
                     ->counts('users')
                     ->sortable(),
+                TextColumn::make('is_system')
+                    ->label(__('aho.fields.system_role'))
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? __('aho.fields.yes') : __('aho.fields.no'))
+                    ->toggleable(),
                 TextColumn::make('menu_permissions')
                     ->label(__('aho.fields.permissions'))
                     ->badge()

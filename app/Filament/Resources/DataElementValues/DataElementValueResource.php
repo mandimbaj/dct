@@ -7,9 +7,11 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\DataElementValues\Pages\CreateDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\EditDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\ListDataElementValues;
+use App\Models\DataElement;
 use App\Models\DataElementValue;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
 use BackedEnum;
@@ -101,8 +103,9 @@ class DataElementValueResource extends Resource
             ->filters([
                 SelectFilter::make('dataelement_id')
                     ->label(__('aho.fields.data_element'))
-                    ->relationship('dataElement', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                    ->relationship('dataElement', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataElement::query(), $search, 'dataelement_id'))
                     ->searchable(),
                 CountryTableFilter::make(),
             ])

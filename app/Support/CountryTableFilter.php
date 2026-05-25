@@ -16,6 +16,10 @@ class CountryTableFilter
             ->label(__('aho.fields.country'))
             ->options(fn (): array => self::countryOptions())
             ->searchable()
+            ->preload()
+            ->native(false)
+            ->optionsLimit(SelectOptions::LIMIT)
+            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(self::countryOptions(), $search))
             ->query(function (Builder $query, array $data) use ($column): Builder {
                 $value = $data['value'] ?? null;
 
@@ -64,8 +68,9 @@ class CountryTableFilter
                 return $query
                     ->get()
                     ->mapWithKeys(fn (Country $country): array => [
-                        $country->location_id => trim(($country->iso_alpha ?: $country->code).' - '.$country->display_name),
+                        $country->location_id => $country->display_name,
                     ])
+                    ->sortBy(fn (string $label): string => mb_strtolower($label))
                     ->all();
             },
         );

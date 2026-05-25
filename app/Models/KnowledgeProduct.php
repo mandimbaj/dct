@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ApprovalWorkflow;
+use App\Support\GeneratedCode;
 use App\Support\TextEncoding;
 use App\Support\WarehouseLocale;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KnowledgeProduct extends Model
 {
+    private const INTERNAL_FILE_BASE_URL = 'https://afahobckpstorageaccount.blob.core.windows.net/afahobckpcontainer/production/files/';
+
     protected $connection = 'warehouse';
 
     protected $table = 'stg_knowledge_product';
@@ -36,6 +39,9 @@ class KnowledgeProduct extends Model
     protected static function booted(): void
     {
         static::creating(function (KnowledgeProduct $product): void {
+            GeneratedCode::ensureUuid($product);
+            GeneratedCode::ensure($product, 'code', 'KP', 45);
+            $product->user_id ??= auth()->id() ?? 1;
             ApprovalWorkflow::syncStatus($product, $product->comment);
         });
 
@@ -116,7 +122,7 @@ class KnowledgeProduct extends Model
             return null;
         }
 
-        return $path;
+        return self::publicationFileUrl($path);
     }
 
     public function getPublicationFileLabelAttribute(): ?string
@@ -144,6 +150,35 @@ class KnowledgeProduct extends Model
         }
 
         return $coverImage;
+    }
+
+    private static function publicationFileUrl(string $path): string
+    {
+        $path = trim(str_replace('\\', '/', $path));
+
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $path)) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '//')) {
+            return 'https:'.$path;
+        }
+
+        $path = ltrim($path, '/');
+
+        if (str_contains($path, '/production/files/')) {
+            $path = substr($path, strrpos($path, '/production/files/') + strlen('/production/files/'));
+        }
+
+        foreach (['production/files/', 'production/files'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                $path = ltrim(substr($path, strlen($prefix)), '/');
+
+                break;
+            }
+        }
+
+        return rtrim(self::INTERNAL_FILE_BASE_URL, '/').'/'.str_replace(' ', '%20', $path);
     }
 
     private function preferredTranslation(?string $field = null): ?KnowledgeProductTranslation

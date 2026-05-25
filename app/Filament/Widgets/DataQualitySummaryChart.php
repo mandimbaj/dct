@@ -2,15 +2,15 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\HealthIndicatorValue;
 use App\Models\Indicator;
 use App\Support\DashboardCache;
-use App\Support\UserCountryAccess;
+use App\Support\DashboardIndicatorValues;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\DB;
 
 class DataQualitySummaryChart extends ChartWidget
 {
+    protected static bool $isDiscovered = true;
+
     protected ?string $heading = null;
 
     protected static ?int $sort = 22;
@@ -26,27 +26,13 @@ class DataQualitySummaryChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar';
+        return 'doughnut';
     }
 
     protected function getData(): array
     {
-        return DashboardCache::remember('top-indicators-by-country-use', function (): array {
-            $query = HealthIndicatorValue::query()
-                ->leftJoin('stg_location as value_locations', 'value_locations.location_id', '=', 'fact_data_indicators.location_id')
-                ->select(
-                    'fact_data_indicators.indicator_id',
-                    DB::raw('count(distinct case when value_locations.locationlevel_id > 2 and value_locations.parent_id is not null then value_locations.parent_id else fact_data_indicators.location_id end) as countries_count')
-                )
-                ->whereNotNull('fact_data_indicators.indicator_id')
-                ->whereNotNull('fact_data_indicators.location_id')
-                ->groupBy('fact_data_indicators.indicator_id')
-                ->orderByDesc('countries_count')
-                ->limit(10);
-
-            UserCountryAccess::scopeDashboard($query);
-
-            $rows = $query->get();
+        return DashboardCache::remember('top-indicators-by-country-use-light', function (): array {
+            $rows = DashboardIndicatorValues::currentIndicatorCountryUse()->take(5);
             $indicators = Indicator::with('translations')
                 ->whereIn('indicator_id', $rows->pluck('indicator_id'))
                 ->get()
@@ -56,13 +42,13 @@ class DataQualitySummaryChart extends ChartWidget
                 'datasets' => [[
                     'label' => __('aho.charts.countries'),
                     'data' => $rows->pluck('countries_count')->map(fn ($value): int => (int) $value)->all(),
-                    'backgroundColor' => '#0072a0',
+                    'backgroundColor' => ['#0072a0', '#009edb', '#009a61', '#f5a623', '#6b7280'],
                 ]],
                 'labels' => $rows
                     ->map(fn ($row): string => $indicators->get($row->indicator_id)?->display_name ?? (string) $row->indicator_id)
                     ->all(),
             ];
-        }, 15);
+        });
     }
 
     public function getHeading(): string

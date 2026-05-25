@@ -8,6 +8,7 @@ use App\Models\HealthIndicatorValue;
 use App\Services\DataQuality\DataQualityService;
 use App\Support\ApprovalWorkflow;
 use App\Support\DataQuality\DqaIssueResolver;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -46,6 +47,7 @@ class EditHealthIndicatorValue extends EditRecord
         /** @var HealthIndicatorValue $record */
         $record = $this->getRecord();
         $this->dqaPreviousSignature = DqaIssueResolver::signatureForValue($record);
+        $data = UserCountryAccess::enforceLocationData($data);
 
         $this->validateQuality($data);
 

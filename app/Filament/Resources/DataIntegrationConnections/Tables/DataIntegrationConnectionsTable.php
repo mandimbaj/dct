@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DataIntegrationConnections\Tables;
 
+use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
 use App\Models\DataIntegrationConnection;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -66,6 +67,14 @@ class DataIntegrationConnectionsTable
                     ->color(fn (?string $state): string => $state === 'ready' ? 'success' : ($state === 'missing' ? 'warning' : 'gray'))
                     ->placeholder(__('aho.data_integration.not_tested'))
                     ->toggleable(),
+                TextColumn::make('field_mappings_count')
+                    ->label(__('aho.data_integration.fields.field_mappings'))
+                    ->counts('fieldMappings')
+                    ->badge()
+                    ->color(fn (int $state): string => $state > 0 ? 'success' : 'warning')
+                    ->formatStateUsing(fn (int $state): string => trans_choice('aho.data_integration.mapping_count', $state, ['count' => $state]))
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('last_synced_at')
                     ->label(__('aho.data_integration.fields.last_synced_at'))
                     ->dateTime()
@@ -94,9 +103,16 @@ class DataIntegrationConnectionsTable
                     ->options(fn (): array => DataIntegrationConnection::statusOptions()),
             ])
             ->recordActions([
+                Action::make('configure_mapping')
+                    ->label(__('aho.data_integration.actions.configure_mapping'))
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->color(fn (DataIntegrationConnection $record): string => $record->hasConfiguredFieldMappings() ? 'gray' : 'warning')
+                    ->url(fn (DataIntegrationConnection $record): string => DataIntegrationConnectionResource::getUrl('mapping', ['record' => $record])),
                 Action::make('validate_configuration')
                     ->label(__('aho.actions.validate_configuration'))
                     ->icon('heroicon-o-check-circle')
+                    ->disabled(fn (DataIntegrationConnection $record): bool => ! $record->hasConfiguredFieldMappings())
+                    ->tooltip(fn (DataIntegrationConnection $record): ?string => $record->hasConfiguredFieldMappings() ? null : __('aho.data_integration.validation.mapping_missing'))
                     ->action(function (DataIntegrationConnection $record): void {
                         $result = $record->validateConfiguration();
 

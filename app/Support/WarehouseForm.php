@@ -2,8 +2,10 @@
 
 namespace App\Support;
 
+use App\Models\Country;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -54,8 +56,13 @@ class WarehouseForm
         $typeName = strtolower((string) ($column['type_name'] ?? ''));
         $label = self::label($name);
         $readOnly = self::isReadOnlyColumn($column, $model);
+        $length = self::length($type);
 
         $component = match (true) {
+            ! $readOnly && $name === 'uuid' => Hidden::make($name)
+                ->default(fn (): string => (string) Str::uuid()),
+            ! $readOnly && $name === 'code' => Hidden::make($name)
+                ->default(fn (): string => GeneratedCode::forModel($model, 'code', null, $length ?? 50)),
             self::hasRelationForField($name, $model) => self::selectForForeignKey($name, $model),
             self::isBoolean($type, $typeName) => Toggle::make($name),
             self::isDateTime($typeName) => DateTimePicker::make($name)->seconds(false),
@@ -74,7 +81,7 @@ class WarehouseForm
             $component->disabled()->dehydrated(false);
         }
 
-        if (($length = self::length($type)) !== null && method_exists($component, 'maxLength')) {
+        if ($length !== null && method_exists($component, 'maxLength')) {
             $component->maxLength($length);
         }
 
@@ -137,10 +144,19 @@ class WarehouseForm
             if ($relation instanceof Relation) {
                 $related = $relation->getRelated();
                 $label = self::selectLabelForModel($related);
-
-                return Select::make($fieldName)
+                $select = Select::make($fieldName)
                     ->options(self::optionsForRelatedModel($related, $relation->getOwnerKeyName() ?? $fieldName, $label))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::filterAndSort(
+                        self::optionsForRelatedModel($related, $relation->getOwnerKeyName() ?? $fieldName, $label),
+                        $search,
+                    ))
                     ->searchable();
+
+                if ($related instanceof Country) {
+                    $select->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId());
+                }
+
+                return $select;
             }
         }
 
@@ -221,6 +237,10 @@ class WarehouseForm
         try {
             $query = $model::query();
 
+            if ($model instanceof Country || self::modelHasColumn($model, 'location_id')) {
+                UserCountryAccess::scopeLocations($query);
+            }
+
             if (self::modelHasColumn($model, $label)) {
                 $query->orderBy($label);
             } else {
@@ -229,6 +249,7 @@ class WarehouseForm
 
             return $query->get()
                 ->mapWithKeys(fn (Model $record) => [ $record->$keyName => (string) ($record->$label ?? $record->$keyName) ])
+                ->sortBy(fn (string $option): string => mb_strtolower($option))
                 ->all();
         } catch (Throwable) {
             return [];

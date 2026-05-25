@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\SelectOptions;
 use App\Support\UserPermissions;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,6 +28,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Select::configureUsing(static function (Select $select): void {
+            $select->optionsLimit(SelectOptions::LIMIT);
+        });
+
+        SelectFilter::configureUsing(static function (SelectFilter $filter): void {
+            $filter->optionsLimit(SelectOptions::LIMIT);
+        });
+
         RateLimiter::for('api', function (Request $request): Limit {
             $token = (string) $request->bearerToken();
 

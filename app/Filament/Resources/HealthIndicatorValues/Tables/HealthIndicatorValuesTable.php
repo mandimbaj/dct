@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\HealthIndicatorValues\Tables;
 
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
+use App\Models\DataSource;
 use App\Models\HealthIndicatorValue;
+use App\Models\Indicator;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -117,18 +120,31 @@ class HealthIndicatorValuesTable
             ->filters([
                 SelectFilter::make('indicator_id')
                     ->label(__('aho.fields.indicator'))
-                    ->relationship('indicator', 'afrocode')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->afrocode ? "{$record->afrocode} - " : '').$record->display_name))
-                    ->searchable(),
+                    ->relationship('indicator', 'afrocode', modifyQueryUsing: fn (Builder $query): Builder => $query
+                        ->with('translations')
+                        ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'afrocode')))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->optionsLimit(SelectOptions::LIMIT),
                 CountryTableFilter::make(),
                 SelectFilter::make('datasource_id')
                     ->label(__('aho.fields.source'))
-                    ->relationship('dataSource', 'code')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
-                    ->searchable(),
+                    ->relationship('dataSource', 'code', modifyQueryUsing: fn (Builder $query): Builder => $query
+                        ->with('translations')
+                        ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->optionsLimit(SelectOptions::LIMIT),
                 SelectFilter::make('comment')
                     ->label(__('aho.fields.approval_status'))
-                    ->options(fn (): array => ApprovalWorkflow::options()),
+                    ->options(fn (): array => ApprovalWorkflow::options())
+                    ->native(false),
             ])
             ->recordActions([
                 Action::make('approve')

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Country;
 use App\Models\HealthIndicatorValue;
 use App\Models\User;
 use App\Notifications\MessageReceived;
@@ -15,6 +16,8 @@ use Throwable;
 class TopbarAlerts
 {
     private static ?bool $hasNotificationsTable = null;
+
+    private const CACHE_SECONDS = 60;
 
     /**
      * @return array{
@@ -37,6 +40,10 @@ class TopbarAlerts
             $user->getKey(),
             self::normalizeCountry($country ?: optional($user->location)->iso_alpha ?: 'global'),
         ));
+
+        foreach (self::NOTIFICATION_TYPES as $type) {
+            Cache::forget(self::latestCacheKey($user, self::normalizeCountry($country ?: optional($user->location)->iso_alpha ?: 'global'), $type));
+        }
     }
 
     public static function forUser(?User $user, ?string $country): array
@@ -59,7 +66,7 @@ class TopbarAlerts
         try {
             $counts = Cache::remember(
                 $cacheKey,
-                now()->addSeconds(15),
+                now()->addSeconds(self::CACHE_SECONDS),
                 fn (): array => self::notificationsCounts($user, $country),
             );
 
@@ -138,9 +145,13 @@ class TopbarAlerts
      */
     private static function latestNotifications(User $user, string $type, string $country): Collection
     {
-        return self::notificationsQuery($user, $type, $country)
-            ->limit(5)
-            ->get();
+        return Cache::remember(
+            self::latestCacheKey($user, $country, $type),
+            now()->addSeconds(self::CACHE_SECONDS),
+            fn (): Collection => self::notificationsQuery($user, $type, $country)
+                ->limit(5)
+                ->get(),
+        );
     }
 
     private static function pendingValidationCount(string $country): int
@@ -149,12 +160,12 @@ class TopbarAlerts
 
         try {
             return (int) Cache::remember($cacheKey, now()->addMinutes(5), function () use ($country): int {
+                $locationId = self::countryLocationId($country);
+
                 return HealthIndicatorValue::query()
-                    ->when($country !== 'global', function ($query) use ($country): void {
-                        $query->whereHas('location', function ($query) use ($country): void {
-                            $query->where('iso_alpha', 'like', $country.'%');
-                        });
-                    })
+                    ->when($country !== 'global', fn ($query) => filled($locationId)
+                        ? $query->where('location_id', $locationId)
+                        : $query->whereRaw('1 = 0'))
                     ->where(function ($query): void {
                         $query->where(ApprovalWorkflow::STATUS_COLUMN, ApprovalWorkflow::STATUS_PENDING)
                             ->orWhere(ApprovalWorkflow::MIRROR_COLUMN, ApprovalWorkflow::STATUS_PENDING);
@@ -164,6 +175,31 @@ class TopbarAlerts
         } catch (Throwable) {
             return 0;
         }
+    }
+
+    private static function countryLocationId(string $country): ?int
+    {
+        if ($country === 'global') {
+            return null;
+        }
+
+        return Cache::remember(
+            'topbar-alerts.country-location.'.$country,
+            now()->addHour(),
+            fn (): ?int => Country::query()
+                ->whereRaw('lower(iso_alpha) like ?', [$country.'%'])
+                ->value('location_id'),
+        );
+    }
+
+    private static function latestCacheKey(User $user, string $country, string $type): string
+    {
+        return sprintf(
+            'topbar-alerts.user.%s.%s.latest.%s',
+            $user->getKey(),
+            $country,
+            md5($type),
+        );
     }
 
     private static function normalizeCountry(mixed $country): string

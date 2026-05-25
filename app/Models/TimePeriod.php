@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,6 +18,14 @@ class TimePeriod extends Model
     public const CREATED_AT = 'date_created';
 
     public const UPDATED_AT = 'date_lastupdated';
+
+    protected static function booted(): void
+    {
+        static::creating(function (TimePeriod $timePeriod): void {
+            GeneratedCode::ensureUuid($timePeriod);
+            GeneratedCode::ensure($timePeriod, 'code', 'PER', 50);
+        });
+    }
 
     public function getDisplayNameAttribute(): string
     {

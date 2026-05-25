@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\IndicatorDomains\Schemas;
 
+use App\Models\IndicatorDomain;
+use App\Support\SelectOptions;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class IndicatorDomainForm
 {
@@ -12,24 +16,20 @@ class IndicatorDomainForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
-                    ->label(__('aho.fields.code'))
-                    ->required()
-                    ->maxLength(45),
+                Hidden::make('code'),
                 TextInput::make('level')
                     ->label(__('aho.fields.level'))
                     ->required()
                     ->maxLength(50),
                 Select::make('parent_id')
                     ->label(__('aho.fields.parent'))
-                    ->relationship('parent', 'code')
+                    ->relationship('parent', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->options(fn (): array => SelectOptions::fromDisplayNameQuery(IndicatorDomain::query(), keyName: 'domain_id'))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorDomain::query(), $search, 'domain_id'))
                     ->searchable()
                     ->preload(),
-                TextInput::make('uuid')
-                    ->label(__('aho.fields.uuid'))
-                    ->maxLength(36)
-                    ->columnSpanFull(),
+                Hidden::make('uuid'),
             ]);
     }
 }

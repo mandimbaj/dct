@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Indicators\Schemas;
 
+use App\Models\IndicatorReference;
+use App\Support\SelectOptions;
 use App\Support\WarehouseLocale;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -9,6 +11,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class IndicatorForm
 {
@@ -34,17 +37,14 @@ class IndicatorForm
                             ->maxLength(120),
                         Select::make('reference_id')
                             ->label(__('aho.fields.reference'))
-                            ->relationship('reference', 'code')
+                            ->relationship('reference', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(IndicatorReference::query(), keyName: 'reference_id'))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorReference::query(), $search, 'reference_id'))
                             ->searchable()
                             ->required(),
-                        TextInput::make('afrocode')
-                            ->label(__('aho.fields.afro_code'))
-                            ->required()
-                            ->maxLength(10),
-                        TextInput::make('gen_code')
-                            ->label(__('aho.fields.general_code'))
-                            ->maxLength(10),
+                        Hidden::make('afrocode'),
+                        Hidden::make('gen_code'),
                         Textarea::make('translation_definition')
                             ->label(__('aho.fields.definition'))
                             ->rows(4)

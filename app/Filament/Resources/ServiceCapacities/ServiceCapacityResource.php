@@ -8,8 +8,13 @@ use App\Filament\Resources\Concerns\ScopesFacilityCountryAccess;
 use App\Filament\Resources\ServiceCapacities\Pages\CreateServiceCapacity;
 use App\Filament\Resources\ServiceCapacities\Pages\EditServiceCapacity;
 use App\Filament\Resources\ServiceCapacities\Pages\ListServiceCapacities;
+use App\Models\FacilityProvisionUnit;
 use App\Models\FacilityServiceCapacity;
+use App\Models\FacilityServiceDomain;
+use App\Models\HealthFacility;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
+use App\Support\UserCountryAccess;
 use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -114,18 +119,27 @@ class ServiceCapacityResource extends Resource
             ->filters([
                 SelectFilter::make('facility_id')
                     ->label(__('aho.fields.facility'))
-                    ->relationship('facility', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->code ? "{$record->code} - " : '').$record->display_name))
+                    ->relationship('facility', 'name', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
+                        SelectOptions::orderByDisplayName($query, 'name'),
+                    ))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(HealthFacility::query()),
+                        $search,
+                        'facility_id',
+                    ))
                     ->searchable(),
                 SelectFilter::make('domain_id')
                     ->label(__('aho.fields.service_domain'))
-                    ->relationship('domain', 'code')
+                    ->relationship('domain', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityServiceDomain::query(), $search, 'domain_id'))
                     ->searchable(),
                 SelectFilter::make('units_id')
                     ->label(__('aho.fields.provision_unit'))
-                    ->relationship('unit', 'code')
+                    ->relationship('unit', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(FacilityProvisionUnit::query(), $search, 'infra_id'))
                     ->searchable(),
             ])
             ->recordActions([

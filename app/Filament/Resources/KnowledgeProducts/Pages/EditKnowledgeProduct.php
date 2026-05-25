@@ -3,15 +3,18 @@
 namespace App\Filament\Resources\KnowledgeProducts\Pages;
 
 use App\Filament\Resources\KnowledgeProducts\KnowledgeProductResource;
+use App\Filament\Resources\KnowledgeProducts\Pages\Concerns\EnforcesKnowledgeProductData;
+use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 use App\Models\KnowledgeProduct;
 use App\Support\ApprovalWorkflow;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
 
 class EditKnowledgeProduct extends EditRecord
 {
+    use EnforcesKnowledgeProductData;
+
     protected static string $resource = KnowledgeProductResource::class;
 
     protected function getHeaderActions(): array

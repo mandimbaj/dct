@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
-use App\Http\Middleware\RecordUserPageVisit;
 use App\Http\Middleware\RedirectAuthenticatedToCountry;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -50,6 +49,8 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarWidth('14rem')
             ->maxContentWidth(Width::Full)
             ->spa()
+            ->globalSearch()
+            ->globalSearchDebounce('700ms')
             ->colors([
                 'primary' => Color::hex('#0093D5'),
             ])
@@ -58,7 +59,7 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString(
                     '<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">'.
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260515-2">'.
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260525-1">'.
                     '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260512-3"></script>'
                 ),
             )
@@ -77,6 +78,10 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::FOOTER,
                 fn () => view('filament.footer'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.navigation-assistant'),
             )
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -104,7 +109,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                RecordUserPageVisit::class,
             ]);
     }
 }

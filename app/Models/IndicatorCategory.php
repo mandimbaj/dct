@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,14 @@ class IndicatorCategory extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (IndicatorCategory $indicatorCategory): void {
+            GeneratedCode::ensureUuid($indicatorCategory);
+            GeneratedCode::ensure($indicatorCategory, 'code', 'CAT', 50);
+        });
     }
 
     public function parentCategory(): BelongsTo
