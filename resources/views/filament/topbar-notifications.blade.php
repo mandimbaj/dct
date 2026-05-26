@@ -10,7 +10,6 @@
 
 <div
     class="fi-topbar-notifications"
-    style="display: inline-flex; flex-direction: row; align-items: center; gap: .5rem; height: 100%; white-space: nowrap;"
 >
     <x-filament::dropdown placement="bottom-end" width="md" teleport class="fi-topbar-item">
         <x-slot name="trigger">

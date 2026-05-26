@@ -51,6 +51,7 @@
 
 .fi-topbar-ctn {
     border-top: 0;
+    margin-inline: -0.75rem;
 }
 
 .fi-topbar {
@@ -246,7 +247,7 @@
         position: absolute;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: clamp(18rem, 34vw, 30rem);
+        width: clamp(12rem, 20vw, 20rem);
         z-index: 2;
     }
 
@@ -265,16 +266,38 @@
 
 .fi-sidebar {
     background: var(--who-afro-surface);
-    border-right: 1px solid var(--who-afro-panel-border);
+    border-right: none;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    z-index: 40;
 }
 
-:root.dark .fi-sidebar {
-    background: var(--who-afro-surface);
-    border-right-color: var(--who-afro-panel-border);
+/* Sidebar separator: start below the topbar (56px) so the dark-blue header merges with the topbar */
+.fi-sidebar::after {
+    background: var(--who-afro-panel-border);
+    bottom: 0;
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 56px;
+    width: 1px;
+    z-index: 1;
+}
+
+:root.dark .fi-sidebar::after {
+    background: var(--who-afro-panel-border);
 }
 
 .fi-sidebar-header {
     background: var(--who-afro-blue-dark);
+}
+
+/* Remove top gap between sidebar header and first nav item */
+.fi-sidebar-nav {
+    padding-top: 0;
 }
 
 .fi-sidebar-item-btn {
@@ -324,6 +347,10 @@
 .fi-body,
 .fi-main {
     background: var(--who-afro-body);
+}
+
+.fi-body {
+    overflow-x: hidden;
 }
 
 .fi-section {
@@ -610,11 +637,24 @@
     background: white;
     border: 1px solid color-mix(in srgb, white 72%, var(--who-afro-blue));
     border-radius: 6px;
-    color: var(--who-afro-ink);
+    color: #1a2332;
+    color-scheme: light;
     font-size: 0.875rem;
     height: 2.25rem;
     min-width: 8.25rem;
     padding-inline: 0.75rem;
+}
+
+:root.dark .aho-locale-switcher select {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: white;
+    color-scheme: dark;
+}
+
+:root.dark .aho-locale-switcher select option {
+    background-color: #002850;
+    color: white;
 }
 
 .fi-simple-page > .aho-locale-switcher {
@@ -1695,5 +1735,401 @@
 
     .aho-ai__messages {
         max-height: 48vh;
+    }
+}
+
+/* Responsive topbar refinements */
+.fi-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding-inline: 0.5rem;
+}
+
+.fi-topbar-start,
+.fi-topbar-end,
+.fi-topbar-actions,
+.fi-topbar-notifications {
+    min-width: 0;
+}
+
+.fi-topbar-start {
+    flex: 0 1 auto;
+}
+
+.fi-topbar-end {
+    align-items: center;
+    display: flex;
+    flex: 1 1 auto;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-inline-start: auto;
+}
+
+.fi-topbar-actions {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+}
+
+.fi-topbar-notifications {
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 0.375rem;
+}
+
+.fi-topbar .fi-global-search-ctn {
+    flex: 1 1 20rem;
+    max-width: 30rem;
+    min-width: 12rem;
+}
+
+.fi-topbar .fi-global-search,
+.fi-topbar .fi-global-search-field {
+    width: 100%;
+}
+
+.fi-topbar .fi-topbar-item-btn {
+    align-items: center;
+    display: inline-flex;
+    flex-shrink: 0;
+    justify-content: center;
+    min-width: 2.35rem;
+    position: relative;
+}
+
+.fi-topbar .fi-badge {
+    flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+    .fi-topbar .fi-global-search-ctn {
+        left: 50%;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: clamp(12rem, 20vw, 20rem);
+        z-index: 2;
+    }
+}
+
+@media (max-width: 1180px) {
+    .aho-topbar-welcome {
+        display: none;
+    }
+
+    .aho-topbar-brand__label {
+        max-width: 14rem;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        max-width: 22rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .fi-topbar {
+        gap: 0.375rem;
+        padding-inline: 0.375rem;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: none;
+    }
+
+    .aho-locale-switcher {
+        gap: 0.375rem;
+        padding-inline: 0.25rem;
+    }
+
+    .aho-locale-switcher__label {
+        display: none;
+    }
+
+    .aho-locale-switcher select {
+        min-width: 6.75rem;
+        width: 6.75rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .aho-topbar-brand {
+        gap: 0.5rem;
+        padding-inline-start: 0.25rem;
+    }
+
+    .aho-topbar-brand__logo {
+        height: 2.05rem;
+        max-width: 8.75rem;
+        padding: 0.25rem 0.45rem;
+    }
+
+    .fi-topbar-actions {
+        gap: 0.25rem;
+    }
+
+    .fi-topbar-notifications {
+        gap: 0.25rem;
+    }
+
+    .fi-topbar .fi-topbar-item-btn {
+        min-height: 2.15rem;
+        min-width: 2.15rem;
+        padding-inline: 0;
+    }
+
+    .fi-topbar .fi-topbar-item-btn .fi-badge {
+        inset-inline-end: -0.35rem;
+        position: absolute;
+        top: -0.35rem;
+    }
+
+    .aho-locale-switcher {
+        display: none;
+    }
+}
+
+/* Dark-mode contrast fixes for custom panels and Filament text */
+:root.dark .fi-body,
+:root.dark .fi-main,
+:root.dark .fi-page,
+:root.dark .fi-page-content {
+    color: var(--who-afro-ink);
+}
+
+:root.dark .fi-section,
+:root.dark .fi-ta-ctn,
+:root.dark .fi-wi-stats-overview-stat,
+:root.dark .aho-quality__hero,
+:root.dark .aho-quality-stat,
+:root.dark .aho-quality-panel,
+:root.dark .aho-api__hero,
+:root.dark .aho-api-create,
+:root.dark .aho-api-panel,
+:root.dark .aho-api-examples,
+:root.dark .aho-footer {
+    background: var(--who-afro-panel);
+    border-color: var(--who-afro-panel-border);
+    color: var(--who-afro-ink);
+}
+
+:root.dark .fi-header-heading,
+:root.dark .fi-section-header-heading,
+:root.dark .fi-ta-header-heading,
+:root.dark .fi-fo-field-wrp-label span,
+:root.dark .fi-ta-text,
+:root.dark .fi-ta-cell,
+:root.dark .fi-ta-cell p,
+:root.dark .fi-ta-summary-row-heading,
+:root.dark .fi-dropdown-header p,
+:root.dark .fi-dropdown-list-item-label,
+:root.dark .aho-quality__title,
+:root.dark .aho-quality-panel__header h3,
+:root.dark .aho-quality__sample strong,
+:root.dark .aho-quality-stat strong,
+:root.dark .aho-api__title,
+:root.dark .aho-api-create h3,
+:root.dark .aho-api-panel__header h3,
+:root.dark .aho-api-examples__header h3,
+:root.dark .aho-api__summary strong,
+:root.dark .aho-api-stat strong,
+:root.dark .aho-api-table__name,
+:root.dark .aho-api-example-grid h4,
+:root.dark .aho-footer__title {
+    color: #f8fafc;
+}
+
+:root.dark .fi-fo-field-wrp-helper-text,
+:root.dark .fi-fo-field-wrp-error-message,
+:root.dark .fi-ta-empty-state-description,
+:root.dark .fi-ta-text-item-label,
+:root.dark .fi-placeholder,
+:root.dark .aho-quality__subtitle,
+:root.dark .aho-quality-panel__header p,
+:root.dark .aho-quality-panel__meta,
+:root.dark .aho-quality__sample span,
+:root.dark .aho-quality-stat span,
+:root.dark .aho-api__subtitle,
+:root.dark .aho-api-create p,
+:root.dark .aho-api-panel__header p,
+:root.dark .aho-api-examples__header p,
+:root.dark .aho-api-panel__meta,
+:root.dark .aho-api__summary span,
+:root.dark .aho-api-stat span,
+:root.dark .aho-api-muted,
+:root.dark .aho-api-empty,
+:root.dark .aho-footer__subtitle,
+:root.dark .aho-footer__meta {
+    color: #cbd5e1;
+}
+
+:root.dark .fi-input,
+:root.dark .fi-select-input,
+:root.dark .fi-textarea,
+:root.dark .fi-tags-input,
+:root.dark .fi-date-time-picker-input,
+:root.dark .aho-quality-search input,
+:root.dark .aho-api-form input,
+:root.dark .aho-api-search input {
+    background: #1f2937;
+    border-color: #475569;
+    color: #f8fafc;
+}
+
+:root.dark .fi-input::placeholder,
+:root.dark .fi-textarea::placeholder,
+:root.dark .aho-quality-search input::placeholder,
+:root.dark .aho-api-form input::placeholder,
+:root.dark .aho-api-search input::placeholder {
+    color: #94a3b8;
+}
+
+:root.dark .fi-ta-row:hover,
+:root.dark .aho-quality-stat:hover,
+:root.dark .aho-quality-stat.is-active,
+:root.dark .aho-api-stat:hover,
+:root.dark .aho-api-stat.is-active {
+    background: #334155;
+}
+
+:root.dark .fi-dropdown-panel {
+    background: #1f2937;
+    border-color: #475569;
+}
+
+:root.dark .fi-dropdown-panel .text-gray-500,
+:root.dark .fi-dropdown-panel .text-gray-600,
+:root.dark .fi-dropdown-panel .text-gray-700,
+:root.dark .fi-dropdown-panel .text-gray-800,
+:root.dark .fi-dropdown-panel .text-gray-900 {
+    color: #e5e7eb;
+}
+
+:root.dark .fi-sidebar-item-btn,
+:root.dark .fi-sidebar-group-btn {
+    background: transparent;
+    color: #cbd5e1;
+}
+
+:root.dark .fi-sidebar-item-btn:hover,
+:root.dark .fi-sidebar-group-btn:hover,
+:root.dark .fi-sidebar-item-active .fi-sidebar-item-btn,
+:root.dark .fi-sidebar-group.fi-active .fi-sidebar-group-btn,
+:root.dark .fi-sidebar-group:has(.fi-sidebar-item-active) .fi-sidebar-group-btn {
+    background: #334155;
+    color: #f8fafc;
+}
+
+:root.dark .fi-sidebar-item-btn:hover svg,
+:root.dark .fi-sidebar-group-btn:hover svg,
+:root.dark .fi-sidebar-item-active .fi-sidebar-item-btn svg,
+:root.dark .fi-sidebar-group.fi-active .fi-sidebar-group-btn svg,
+:root.dark .fi-sidebar-group:has(.fi-sidebar-item-active) .fi-sidebar-group-btn svg {
+    color: #f8fafc;
+}
+
+:root.dark .fi-sidebar-nav-groups .fi-sidebar-group-label {
+    color: #94a3b8;
+}
+
+/* Country context card in the main navigation */
+.aho-country-card {
+    background: color-mix(in srgb, var(--who-afro-blue) 7%, white);
+    border: 1px solid var(--who-afro-panel-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgb(0 94 184 / 8%);
+    color: var(--who-afro-ink);
+    display: grid;
+    flex: 0 0 auto;
+    gap: 0.375rem;
+    margin: 0.5rem 0.5rem 0;
+    overflow: hidden;
+    padding: 0.5rem;
+}
+
+:root.dark .aho-country-card {
+    background: #1f2937;
+    border-color: #475569;
+    box-shadow: 0 12px 24px rgb(0 0 0 / 24%);
+    color: #f8fafc;
+}
+
+/* Map + flag grouped side by side */
+.aho-country-card__visual {
+    align-items: stretch;
+    display: flex;
+    gap: 0.375rem;
+    height: 5rem;
+}
+
+.aho-country-card__svg {
+    align-items: center;
+    background: #e8f4fb;
+    border-radius: 5px;
+    display: flex;
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.aho-country-card__svg svg,
+.aho-country-card__svg img {
+    display: block;
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+:root.dark .aho-country-card__svg {
+    background: #1e3a5f;
+    filter: brightness(1.1);
+}
+
+/* Flag in landscape (wider than tall) */
+.aho-country-card__flag {
+    align-self: center;
+    background: white;
+    border: 1px solid var(--who-afro-panel-border);
+    border-radius: 4px;
+    flex: 0 0 auto;
+    height: 2.75rem;
+    object-fit: cover;
+    width: 4rem;
+}
+
+/* Country name — no label, just the name */
+.aho-country-card__name {
+    color: var(--who-afro-blue-dark);
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+:root.dark .aho-country-card__name {
+    color: #f1f5f9;
+}
+
+/* Sidebar: prevent horizontal scrollbar */
+.fi-sidebar,
+.fi-sidebar-nav {
+    overflow-x: hidden;
+}
+
+@media (max-width: 1023px) {
+    .aho-country-card {
+        margin-inline: 0.75rem;
+    }
+}
+
+@media (max-width: 1023px) {
+    .aho-country-card {
+        margin-inline: 0.75rem;
     }
 }

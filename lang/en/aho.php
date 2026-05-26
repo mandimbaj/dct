@@ -11,6 +11,14 @@ return [
     'layout' => [
         'welcome' => 'Welcome, :name',
     ],
+    'country_context' => [
+        'card_label' => 'Current country context',
+        'current_country' => 'Country workspace',
+        'flag_alt' => 'Flag of :country',
+        'map_title' => 'Map of :country',
+        'open_map' => 'Open map',
+        'africa_region' => 'African Region',
+    ],
     'notifications' => [
         'messages' => [
             'aria_label' => 'Received messages',

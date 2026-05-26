@@ -11,6 +11,14 @@ return [
     'layout' => [
         'welcome' => 'Bem-vindo, :name',
     ],
+    'country_context' => [
+        'card_label' => 'Contexto atual do país',
+        'current_country' => 'Espaço do país',
+        'flag_alt' => 'Bandeira de :country',
+        'map_title' => 'Mapa de :country',
+        'open_map' => 'Abrir mapa',
+        'africa_region' => 'Região africana',
+    ],
     'notifications' => [
         'messages' => [
             'aria_label' => 'Mensagens recebidas',
