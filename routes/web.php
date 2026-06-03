@@ -10,11 +10,14 @@ Route::redirect('/', '/admin');
 Route::get('/admin', function () {
     $country = optional(optional(auth()->user())->location)->iso_alpha;
 
-    return redirect('/admin/'.($country ? strtolower(substr(trim((string) $country), 0, 2)) : 'global'));
+    return redirect('/admin/'.($country ? strtolower(substr(trim((string) $country), 0, 2)) : 'af'));
 });
 
-Route::redirect('/admin/login', '/admin/global/login');
-Route::redirect('/admin/logout', '/admin/global/logout');
+Route::redirect('/admin/login', '/admin/af/login');
+Route::redirect('/admin/logout', '/admin/af/logout');
+Route::redirect('/admin/global', '/admin/af');
+Route::redirect('/admin/global/login', '/admin/af/login');
+Route::redirect('/admin/global/logout', '/admin/af/logout');
 
 Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
     ->name('admin.notifications.show');

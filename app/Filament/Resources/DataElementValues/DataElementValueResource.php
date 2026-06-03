@@ -27,6 +27,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+/**
+ * Data-element fact-value resource.
+ *
+ * Data elements are lower-level inputs than indicators, so this module keeps their values and
+ * definitions separate from the Indicators cluster.
+ */
 class DataElementValueResource extends Resource
 {
     protected static ?string $model = DataElementValue::class;

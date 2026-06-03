@@ -22,6 +22,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+/**
+ * Health workforce reference submenu for training institutions.
+ *
+ * The table now exposes institution type and programme count so it connects with the
+ * Institution types and Training programmes submenus.
+ */
 class TrainingInstitutionResource extends Resource
 {
     protected static ?string $model = TrainingInstitution::class;
@@ -67,7 +73,8 @@ class TrainingInstitutionResource extends Resource
             TextColumn::make('display_name')->label(__('aho.fields.institution'))->wrap(),
             TextColumn::make('code')->label(__('aho.fields.code'))->searchable()->sortable(),
             TextColumn::make('location.display_name')->label(__('aho.fields.location'))->toggleable(),
-            TextColumn::make('type_id')->label(__('aho.fields.type'))->toggleable(),
+            TextColumn::make('type.display_name')->label(__('aho.fields.type'))->toggleable(),
+            TextColumn::make('programmes_count')->label(__('aho.fields.programmes_count'))->counts('programmes')->sortable()->toggleable(),
             TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
             TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
         ])
@@ -84,7 +91,12 @@ class TrainingInstitutionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserCountryAccess::scope(parent::getEloquentQuery());
+        // Load type/programme context used by the expanded Health workforce reference table.
+        return UserCountryAccess::scope(
+            parent::getEloquentQuery()
+                ->with(['translations', 'location.translations', 'type.translations'])
+                ->withCount('programmes'),
+        );
     }
 
     public static function getPages(): array

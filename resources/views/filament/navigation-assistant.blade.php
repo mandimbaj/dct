@@ -1,6 +1,6 @@
 @if (auth()->check())
     @php
-        $country = trim((string) (request()->route('country') ?: request()->segment(2) ?: 'global')) ?: 'global';
+        $country = trim((string) (request()->route('country') ?: request()->segment(2) ?: 'af')) ?: 'af';
         $adminUrl = fn (string $path = ''): string => url('/admin/'.$country.($path === '' ? '' : '/'.ltrim($path, '/')));
         $goTo = fn (string $menu): string => __('aho.assistant.go_to', ['menu' => $menu]);
 
@@ -9,114 +9,142 @@
                 'title' => __('Dashboard'),
                 'url' => $adminUrl(),
                 'answer' => $goTo(__('Dashboard')),
+                'intent' => 'dashboard',
                 'keywords' => ['dashboard', 'tableau de bord', 'accueil', 'statistiques', 'stats', 'graphique', 'chart'],
             ],
             [
                 'title' => __('aho.resources.indicator_values.navigation'),
                 'url' => $adminUrl('indicators/values'),
-                'answer' => $goTo(__('aho.resources.indicator_values.navigation')),
-                'keywords' => ['indicator', 'indicateur', 'valeur', 'values', 'pending', 'approved', 'rejected', 'validation', 'approve', 'csv', 'excel', 'export'],
+                'answer' => __('aho.assistant.guides.indicator_value'),
+                'guide' => __('aho.assistant.guides.indicator_value'),
+                'intent' => 'indicator_value',
+                'keywords' => ['indicator', 'indicateur', 'valeur', 'values', 'data entry', 'saisie', 'charger donnees indicateur', 'charger les donnees indicateur', 'chargement indicateur', 'pending', 'approved', 'rejected', 'validation', 'approve', 'csv', 'excel', 'export'],
             ],
             [
                 'title' => __('aho.actions.add_indicator_value'),
                 'url' => $adminUrl('indicators/values/create'),
-                'answer' => $goTo(__('aho.actions.add_indicator_value')),
-                'keywords' => ['create indicator value', 'nouvelle valeur', 'ajouter valeur', 'saisie indicateur', 'new value'],
+                'answer' => __('aho.assistant.guides.indicator_value'),
+                'guide' => __('aho.assistant.guides.indicator_value'),
+                'intent' => 'indicator_value',
+                'keywords' => ['create indicator value', 'nouvelle valeur', 'ajouter valeur', 'saisie indicateur', 'new value', 'comment charger les donnees indicateur', 'comment charger les données indicateur', 'ajouter donnee indicateur', 'valider donnee indicateur'],
             ],
             [
                 'title' => __('aho.resources.indicators.navigation'),
                 'url' => $adminUrl('indicators/definitions'),
                 'answer' => $goTo(__('aho.resources.indicators.navigation')),
+                'intent' => 'indicator_definition',
                 'keywords' => ['indicator definition', 'definition indicateur', 'metadata', 'metadonnees', 'code indicateur', 'afrocode'],
             ],
             [
                 'title' => __('aho.resources.indicator_archives.navigation'),
                 'url' => $adminUrl('indicators/archives'),
                 'answer' => $goTo(__('aho.resources.indicator_archives.navigation')),
+                'intent' => 'archives',
                 'keywords' => ['archive', 'archives', 'fact_data_archive', 'historique', 'old values'],
             ],
             [
                 'title' => __('aho.resources.imports.navigation'),
                 'url' => $adminUrl('indicators/imports'),
-                'answer' => $goTo(__('aho.resources.imports.navigation')),
-                'keywords' => ['import', 'imports', 'data wizard', 'assistant donnees', 'upload', 'chargement'],
+                'answer' => __('aho.assistant.guides.imports'),
+                'guide' => __('aho.assistant.guides.imports'),
+                'intent' => 'imports',
+                'keywords' => ['import', 'imports', 'data wizard', 'assistant donnees', 'upload', 'chargement', 'fichier csv', 'csv import', 'televerser', 'téléverser'],
             ],
             [
                 'title' => __('aho.resources.exports.navigation'),
                 'url' => $adminUrl('indicators/exports'),
-                'answer' => $goTo(__('aho.resources.exports.navigation')),
+                'answer' => __('aho.assistant.guides.exports'),
+                'guide' => __('aho.assistant.guides.exports'),
+                'intent' => 'exports',
                 'keywords' => ['export', 'exports', 'csv', 'excel', 'download', 'telecharger'],
             ],
             [
                 'title' => __('aho.resources.data_integration_connections.navigation'),
                 'url' => $adminUrl('data-integration/connections'),
-                'answer' => $goTo(__('aho.resources.data_integration_connections.navigation')),
-                'keywords' => ['data integration', 'integration', 'dhis2', 'databank', 'who datahub', 'api', 'mapping', 'correspondance', 'connexion', 'server', 'username'],
+                'answer' => __('aho.assistant.guides.data_integration'),
+                'guide' => __('aho.assistant.guides.data_integration'),
+                'intent' => 'data_integration',
+                'keywords' => ['data integration', 'integration', 'dhis2', 'databank', 'who datahub', 'mapping', 'correspondance', 'connexion', 'server', 'username'],
             ],
             [
                 'title' => __('aho.resources.indicator_quality_checks.navigation'),
                 'url' => $adminUrl('data-quality/indicator-checks'),
-                'answer' => $goTo(__('aho.resources.indicator_quality_checks.navigation')),
-                'keywords' => ['data quality', 'qualite', 'quality', 'dqa', 'controle', 'alert', 'missing', 'consistency'],
+                'answer' => __('aho.assistant.guides.data_quality'),
+                'guide' => __('aho.assistant.guides.data_quality'),
+                'intent' => 'data_quality',
+                'keywords' => ['data quality', 'qualite', 'qualité', 'quality', 'dqa', 'controle', 'contrôle', 'alert', 'missing', 'consistency', 'coherence', 'cohérence'],
             ],
             [
                 'title' => __('aho.resources.locations.navigation'),
                 'url' => $adminUrl('regions/locations'),
                 'answer' => $goTo(__('aho.resources.locations.navigation')),
+                'intent' => 'locations',
                 'keywords' => ['country', 'countries', 'pays', 'location', 'localisation', 'region', 'iso'],
             ],
             [
                 'title' => __('aho.resources.health_facilities.navigation'),
                 'url' => $adminUrl('facilities/facilities'),
                 'answer' => $goTo(__('aho.resources.health_facilities.navigation')),
+                'intent' => 'facilities',
                 'keywords' => ['facility', 'facilities', 'formation sanitaire', 'fosa', 'service availability', 'service capacity', 'service readiness'],
             ],
             [
                 'title' => __('aho.resources.health_workforce_values.navigation'),
                 'url' => $adminUrl('health-workforce/values'),
                 'answer' => $goTo(__('aho.resources.health_workforce_values.navigation')),
+                'intent' => 'health_workforce',
                 'keywords' => ['workforce', 'personnel', 'cadre', 'health workforce', 'training institution', 'ressources humaines'],
             ],
             [
                 'title' => __('aho.resources.health_service_values.navigation'),
                 'url' => $adminUrl('health-services/values'),
                 'answer' => $goTo(__('aho.resources.health_service_values.navigation')),
+                'intent' => 'health_services',
                 'keywords' => ['health service', 'service sante', 'services', 'service values'],
             ],
             [
                 'title' => __('aho.resources.data_element_values.navigation'),
                 'url' => $adminUrl('data-elements/values'),
                 'answer' => $goTo(__('aho.resources.data_element_values.navigation')),
+                'intent' => 'data_elements',
                 'keywords' => ['data element', 'element de donnees', 'elements', 'data values'],
             ],
             [
                 'title' => __('aho.resources.knowledge_products.navigation'),
                 'url' => $adminUrl('publications/products'),
                 'answer' => $goTo(__('aho.resources.knowledge_products.navigation')),
+                'intent' => 'publications',
                 'keywords' => ['knowledge', 'publication', 'publications', 'produit de connaissance', 'document', 'file', 'pdf', 'resource'],
             ],
             [
                 'title' => __('aho.resources.users.navigation'),
                 'url' => $adminUrl('authentication/users'),
-                'answer' => $goTo(__('aho.resources.users.navigation')),
+                'answer' => __('aho.assistant.guides.users'),
+                'guide' => __('aho.assistant.guides.users'),
+                'intent' => 'users',
                 'keywords' => ['user', 'users', 'utilisateur', 'utilisateurs', 'account', 'compte', 'super admin', 'country admin'],
             ],
             [
                 'title' => __('aho.resources.roles.navigation'),
                 'url' => $adminUrl('authentication/roles'),
-                'answer' => $goTo(__('aho.resources.roles.navigation')),
+                'answer' => __('aho.assistant.guides.roles'),
+                'guide' => __('aho.assistant.guides.roles'),
+                'intent' => 'roles',
                 'keywords' => ['role', 'roles', 'permission', 'permissions', 'access', 'acces', 'auth', 'authentication'],
             ],
             [
                 'title' => __('aho.resources.api_tokens.navigation'),
                 'url' => $adminUrl('api-tokens/status'),
-                'answer' => $goTo(__('aho.resources.api_tokens.navigation')),
-                'keywords' => ['api token', 'token', 'api', 'endpoint', 'integration api'],
+                'answer' => __('aho.assistant.guides.api_tokens'),
+                'guide' => __('aho.assistant.guides.api_tokens'),
+                'intent' => 'api_tokens',
+                'keywords' => ['api token', 'token', 'api', 'endpoint', 'integration api', 'jeton api', 'cle api', 'clé api', 'bearer', 'rest api'],
             ],
             [
                 'title' => __('aho.menus.uhc_clock'),
                 'url' => $adminUrl('uhc-clock'),
                 'answer' => $goTo(__('aho.menus.uhc_clock')),
+                'intent' => 'uhc_clock',
                 'keywords' => ['uhc', 'csu', 'clock', 'horloge', 'priority indicator'],
             ],
         ];
@@ -188,6 +216,52 @@
                 .replace(/[\u0300-\u036f]/g, '')
                 .toLowerCase();
 
+            const stopWords = new Set([
+                'comment', 'pour', 'avec', 'dans', 'sur', 'des', 'les', 'une', 'aux', 'par', 'que', 'qui', 'quoi',
+                'the', 'and', 'for', 'how', 'what', 'where', 'with', 'from', 'dans', 'faire', 'utiliser', 'use',
+                'donnee', 'donnees', 'data', 'valeur', 'values', 'menu', 'page', 'aller', 'open', 'ouvrir',
+            ]);
+
+            const intentRules = [
+                ['api_tokens', [' api ', 'api', 'token', 'jeton', 'endpoint', 'bearer', 'rest api', 'cle api', 'clef api']],
+                ['imports', ['import', 'imports', 'importer', 'csv import', 'fichier csv', 'televerser', 'upload file']],
+                ['exports', ['export', 'exports', 'exporter', 'excel', 'download', 'telecharger']],
+                ['data_integration', ['data integration', 'integration', 'dhis2', 'databank', 'who datahub', 'mapping', 'connexion']],
+                ['data_quality', ['data quality', 'qualite', 'quality', 'dqa', 'controle', 'coherence', 'consistency', 'validation rule']],
+                ['users', ['user', 'users', 'utilisateur', 'utilisateurs', 'account', 'compte']],
+                ['roles', ['role', 'roles', 'permission', 'permissions', 'access', 'acces']],
+                ['indicator_value', ['valeur indicateur', 'indicator value', 'charger donnees indicateur', 'charger les donnees indicateur', 'saisie indicateur', 'ajouter donnee indicateur']],
+                ['indicator_definition', ['definition indicateur', 'indicator definition', 'metadata', 'metadonnees', 'afrocode']],
+                ['archives', ['archive', 'archives', 'historique', 'fact data archive', 'fact_data_archive']],
+                ['publications', ['publication', 'publications', 'knowledge', 'produit de connaissance', 'document', 'pdf']],
+                ['locations', ['pays', 'country', 'countries', 'location', 'localisation', 'iso']],
+                ['facilities', ['facility', 'facilities', 'formation sanitaire', 'fosa']],
+                ['health_workforce', ['workforce', 'personnel', 'ressources humaines', 'cadre']],
+                ['health_services', ['health service', 'service sante', 'services de sante']],
+                ['data_elements', ['data element', 'element de donnees']],
+                ['uhc_clock', ['uhc', 'csu', 'clock', 'horloge']],
+                ['dashboard', ['dashboard', 'tableau de bord', 'accueil', 'graphique']],
+            ];
+
+            const detectIntent = (normalizedQuestion) => {
+                const paddedQuestion = ` ${normalizedQuestion} `;
+
+                for (const [intent, patterns] of intentRules) {
+                    if (patterns.some((pattern) => {
+                        const normalizedPattern = normalize(pattern).trim();
+                        const isShortWord = /^[a-z0-9]+$/.test(normalizedPattern) && normalizedPattern.length <= 4;
+
+                        return isShortWord
+                            ? paddedQuestion.includes(` ${normalizedPattern} `)
+                            : normalizedQuestion.includes(normalizedPattern);
+                    })) {
+                        return intent;
+                    }
+                }
+
+                return null;
+            };
+
             const setOpen = (open) => {
                 panel.hidden = ! open;
                 toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -227,9 +301,10 @@
 
             const findMatches = (question) => {
                 const normalizedQuestion = normalize(question);
+                const detectedIntent = detectIntent(normalizedQuestion);
                 const terms = normalizedQuestion
                     .split(/[^a-z0-9]+/)
-                    .filter((term) => term.length > 2);
+                    .filter((term) => term.length > 2 && ! stopWords.has(term));
 
                 return items
                     .map((item) => {
@@ -241,6 +316,20 @@
 
                         let score = 0;
 
+                        if (detectedIntent && item.intent === detectedIntent) {
+                            score += 48;
+                        } else if (detectedIntent && item.guide) {
+                            score -= 10;
+                        }
+
+                        (item.keywords || []).forEach((keyword) => {
+                            const normalizedKeyword = normalize(keyword);
+
+                            if (normalizedKeyword && normalizedQuestion.includes(normalizedKeyword)) {
+                                score += normalizedKeyword.length > 12 ? 16 : 10;
+                            }
+                        });
+
                         terms.forEach((term) => {
                             if (haystack.includes(term)) {
                                 score += term.length > 5 ? 3 : 2;
@@ -249,6 +338,10 @@
 
                         if (normalizedQuestion && normalize(item.title).includes(normalizedQuestion)) {
                             score += 8;
+                        }
+
+                        if (normalizedQuestion && haystack.includes(normalizedQuestion)) {
+                            score += 12;
                         }
 
                         return { ...item, score };
@@ -267,7 +360,12 @@
                 }
 
                 const intro = matches.length === 1 ? copy.suggestionIntro : copy.suggestionsIntro;
-                appendMessage('assistant', `${intro} ${matches[0].answer}`, matches);
+                const response = matches[0].guide || `${intro} ${matches[0].answer}`;
+                const responseLinks = matches[0].guide
+                    ? matches.filter((match) => match.guide === matches[0].guide).slice(0, 2)
+                    : matches;
+
+                appendMessage('assistant', response, responseLinks);
             };
 
             toggle.addEventListener('click', () => setOpen(panel.hidden));

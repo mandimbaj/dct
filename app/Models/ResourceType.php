@@ -32,6 +32,14 @@ class ResourceType extends Model
         return $this->hasMany(KnowledgeProduct::class, 'type_id', 'type_id');
     }
 
+    /**
+     * Categories using this type; used to filter Health workforce resource types by category = 2.
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(ResourceCategory::class, 'type_id', 'type_id');
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return $this->preferredTranslationName($this->code);

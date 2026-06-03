@@ -7,19 +7,32 @@ use App\Support\WarehouseLocale;
 
 trait HasPreferredTranslationName
 {
+    /**
+     * Resolve the translated name in the active warehouse language, then fall back safely.
+     */
     protected function preferredTranslationName(?string $fallback = null): string
+    {
+        return $this->preferredTranslationValue('name', $fallback) ?? (string) ($fallback ?? $this->getKey());
+    }
+
+    /**
+     * Read any translated field using the same language priority as display names.
+     *
+     * This is used by Health workforce models for shortname, theme and message fields.
+     */
+    protected function preferredTranslationValue(string $field, ?string $fallback = null): ?string
     {
         $languages = WarehouseLocale::preferredLanguages();
 
         if ($this->relationLoaded('translations')) {
             $translation = $this->translations
                 ->whereIn('language_code', $languages)
-                ->filter(fn ($translation): bool => filled($translation->name))
+                ->filter(fn ($translation): bool => filled($translation->{$field}))
                 ->sortBy(fn ($translation): int => array_search($translation->language_code, $languages, true))
                 ->first();
 
-            if (filled($translation?->name)) {
-                return TextEncoding::clean($translation->name) ?? $translation->name;
+            if (filled($translation?->{$field})) {
+                return TextEncoding::clean($translation->{$field}) ?? $translation->{$field};
             }
         }
 
@@ -29,10 +42,10 @@ trait HasPreferredTranslationName
 
         $name = $this->translations()
             ->whereIn('language_code', $languages)
-            ->whereNotNull('name')
+            ->whereNotNull($field)
             ->orderByRaw("FIELD(language_code, {$order})")
-            ->value('name');
+            ->value($field);
 
-        return TextEncoding::clean($name) ?? (string) ($fallback ?? $this->getKey());
+        return TextEncoding::clean($name) ?? $fallback;
     }
 }

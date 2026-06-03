@@ -32,6 +32,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
+/**
+ * Publication and knowledge-product resource.
+ *
+ * This is the global publication view. Workforce-specific resources extend this class and add
+ * category filters, so avoid adding Health workforce filters here.
+ */
 class KnowledgeProductResource extends Resource
 {
     protected static ?string $model = KnowledgeProduct::class;

@@ -33,6 +33,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+/**
+ * Facility master-data resource for the Facilities module.
+ *
+ * Facility service fact tables point back to these records through the warehouse location and
+ * facility reference relationships.
+ */
 class HealthFacilityResource extends Resource
 {
     protected static ?string $model = HealthFacility::class;

@@ -18,6 +18,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+/**
+ * Location resource for the Locations menu.
+ *
+ * The model maps to stg_location and includes countries plus lower administrative levels, with
+ * UserCountryAccess limiting non-global users to their allowed location tree.
+ */
 class CountryResource extends Resource
 {
     protected static ?string $model = Country::class;

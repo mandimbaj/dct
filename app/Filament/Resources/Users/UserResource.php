@@ -31,6 +31,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use UnitEnum;
 
+/**
+ * User administration resource.
+ *
+ * Access is intentionally stricter than ordinary resources because users, roles and permissions
+ * control which country and menu actions a person can reach.
+ */
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;

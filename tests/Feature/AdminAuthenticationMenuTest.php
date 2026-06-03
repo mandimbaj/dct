@@ -18,7 +18,7 @@ class AdminAuthenticationMenuTest extends TestCase
 
         $this
             ->actingAs($user)
-            ->get('/admin/global/authentication/users')
+            ->get('/admin/af/authentication/users')
             ->assertOk();
     }
 
@@ -30,7 +30,7 @@ class AdminAuthenticationMenuTest extends TestCase
 
         $this
             ->actingAs($user)
-            ->get('/admin/global/authentication/permissions')
+            ->get('/admin/af/authentication/permissions')
             ->assertOk();
     }
 }

@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Illuminate\Support\Str;
 use Throwable;
 
+/**
+ * API token workflow page.
+ *
+ * Tokens are shown as lifecycle actions instead of a full CRUD table because the plain token is
+ * only available once, immediately after creation.
+ */
 class ApiTokenStatus extends Page
 {
     protected static ?string $cluster = ApiTokens::class;

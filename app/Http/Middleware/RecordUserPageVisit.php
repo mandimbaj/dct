@@ -58,7 +58,7 @@ class RecordUserPageVisit
     private function payload(Request $request): array
     {
         $user = $request->user();
-        $routeCountry = (string) ($request->route('country') ?: 'global');
+        $routeCountry = (string) ($request->route('country') ?: 'af');
 
         return [
             'user_id' => $user->id,
@@ -66,7 +66,7 @@ class RecordUserPageVisit
             'user_email' => $user->email,
             'is_super_admin' => (bool) $user->is_super_admin,
             'location_id' => $user->location_id,
-            'country_iso' => $routeCountry !== 'global' ? strtoupper($routeCountry) : null,
+            'country_iso' => ! in_array($routeCountry, ['af', 'global'], true) ? strtoupper($routeCountry) : null,
             'country_name' => null,
             'country_route' => $routeCountry,
             'method' => $request->method(),

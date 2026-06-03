@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\AdminActivityNotifier;
 use App\Models\User;
 use App\Support\SelectOptions;
 use App\Support\UserPermissions;
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        AdminActivityNotifier::observeApplicationModels();
+
         Select::configureUsing(static function (Select $select): void {
             $select->optionsLimit(SelectOptions::LIMIT);
         });

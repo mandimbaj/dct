@@ -20,6 +20,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
+/**
+ * Indicator fact-value resource for the Indicators module.
+ *
+ * This is the main country-scoped data-entry table and includes approval workflow actions.
+ */
 class HealthIndicatorValueResource extends Resource
 {
     protected static ?string $model = HealthIndicatorValue::class;

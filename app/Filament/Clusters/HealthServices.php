@@ -6,6 +6,12 @@ use BackedEnum;
 use Filament\Clusters\Cluster;
 use Filament\Support\Icons\Heroicon;
 
+/**
+ * Main menu for health-service fact values.
+ *
+ * The current cluster is intentionally narrow: it exposes service values while reusing
+ * indicator, source, method and location references from the shared warehouse models.
+ */
 class HealthServices extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHeart;

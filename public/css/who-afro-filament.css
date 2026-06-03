@@ -167,22 +167,43 @@
 }
 
 .aho-topbar-brand__label {
+    align-items: center;
     color: white;
+    display: inline-flex;
     font-size: clamp(0.875rem, 2vw, 1rem);
-    line-height: 1.2;
+    gap: 0;
     font-weight: 700;
-    white-space: nowrap;
+    line-height: 1.2;
+    max-width: min(28rem, 36vw);
+    min-width: 0;
+    overflow: visible;
+}
+
+.aho-topbar-brand__app {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
     flex-shrink: 1;
-    min-width: 0;
 }
 
 .aho-topbar-welcome {
+    align-items: center;
     color: rgba(255, 255, 255, 0.78);
+    display: inline-flex;
     font-size: 0.88rem;
     font-weight: 400;
+    gap: 0.4rem;
     margin-left: 0.65rem;
+}
+
+.aho-topbar-welcome__flag {
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+    display: inline-block;
+    height: 0.9rem;
+    object-fit: cover;
+    width: 1.35rem;
 }
 
 .aho-topbar-search {
@@ -264,6 +285,34 @@
     }
 }
 
+@media (max-width: 1180px) {
+    .aho-topbar-brand__label {
+        max-width: min(23rem, 42vw);
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        flex-basis: 12rem;
+        max-width: 14rem;
+        min-width: 8rem;
+        width: clamp(8rem, 14vw, 14rem);
+    }
+}
+
+@media (max-width: 1040px) {
+    .aho-topbar-welcome__text {
+        max-width: 8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        max-width: 11rem;
+        min-width: 7rem;
+        width: clamp(7rem, 12vw, 11rem);
+    }
+}
+
 .fi-sidebar {
     background: var(--who-afro-surface);
     border-right: none;
@@ -303,7 +352,7 @@
 .fi-sidebar-item-btn {
     color: #4a5568;
     border-radius: 0.75rem;
-    padding-block: 0.75rem;
+    padding-block: 0.35rem;
     padding-inline: 0.85rem;
 }
 
@@ -408,7 +457,7 @@
 }
 
 .fi-sidebar-nav {
-    padding: 0.625rem 0.5rem;
+    padding: 0.25rem 0.5rem;
 }
 
 .fi-sidebar-nav-groups {
@@ -431,8 +480,8 @@
     border: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--who-afro-panel-border) 74%, transparent);
     border-radius: 0;
-    margin-bottom: 0.375rem;
-    padding-bottom: 0.375rem;
+    margin-bottom: 0.125rem;
+    padding-bottom: 0.125rem;
     overflow: visible;
 }
 
@@ -442,7 +491,7 @@
     border-radius: 6px;
     color: var(--who-afro-ink);
     min-height: 2.125rem;
-    padding-block: 0.375rem;
+    padding-block: 0.2rem;
 }
 
 .fi-sidebar-group-btn:hover {
@@ -1556,12 +1605,20 @@
 .aho-ai-message p {
     margin: 0;
     overflow-wrap: anywhere;
+    white-space: pre-line;
 }
 
 .aho-ai-message--assistant {
     background: color-mix(in srgb, var(--who-afro-blue) 8%, white);
     border: 1px solid color-mix(in srgb, var(--who-afro-blue) 18%, white);
+    color: #10243a;
     justify-self: start;
+}
+
+:root.dark .aho-ai-message--assistant {
+    background: #172f4a;
+    border-color: #27567d;
+    color: #eef7ff;
 }
 
 .aho-ai-message--user {
@@ -1659,11 +1716,19 @@
     }
 
     .aho-topbar-brand__label {
+        display: inline-flex;
+        max-width: 3rem;
+        overflow: visible;
+    }
+
+    .aho-topbar-brand__app,
+    .aho-topbar-welcome__separator,
+    .aho-topbar-welcome__text {
         display: none;
     }
 
-    .aho-topbar-brand__welcome {
-        display: none;
+    .aho-topbar-welcome {
+        margin-left: 0;
     }
 
     .aho-footer__inner {
@@ -1819,15 +1884,34 @@
 
 @media (max-width: 1180px) {
     .aho-topbar-welcome {
-        display: none;
+        display: inline-flex;
+        margin-left: 0.4rem;
     }
 
     .aho-topbar-brand__label {
-        max-width: 14rem;
+        max-width: min(23rem, 42vw);
     }
 
     .fi-topbar .fi-global-search-ctn {
-        max-width: 22rem;
+        flex-basis: 12rem;
+        max-width: 14rem;
+        min-width: 8rem;
+        width: clamp(8rem, 14vw, 14rem);
+    }
+}
+
+@media (max-width: 1040px) {
+    .aho-topbar-welcome__text {
+        max-width: 8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        max-width: 11rem;
+        min-width: 7rem;
+        width: clamp(7rem, 12vw, 11rem);
     }
 }
 
@@ -2126,6 +2210,188 @@
     .aho-country-card {
         margin-inline: 0.75rem;
     }
+}
+
+/* Desktop toggleable main sidebar. */
+@media (min-width: 1024px) and (hover: hover) {
+    :root {
+        --aho-sidebar-open-width: 14rem;
+        --aho-sidebar-toggle-size: 1.375rem;
+    }
+
+    .fi-layout {
+        position: relative;
+    }
+
+    .aho-sidebar-toggle {
+        align-items: center;
+        background: var(--who-afro-blue);
+        border: 1px solid color-mix(in srgb, white 42%, var(--who-afro-blue));
+        border-radius: 999px;
+        box-shadow: 0 6px 16px rgb(0 40 80 / 18%);
+        color: white;
+        display: inline-flex;
+        height: var(--aho-sidebar-toggle-size);
+        justify-content: center;
+        left: calc(var(--aho-sidebar-open-width) - var(--aho-sidebar-toggle-size) - 1rem);
+        position: fixed;
+        top: 4.625rem;
+        transition: background 160ms ease, box-shadow 160ms ease, left 180ms ease, transform 160ms ease;
+        width: var(--aho-sidebar-toggle-size);
+        z-index: 90;
+    }
+
+    .aho-sidebar-toggle:hover,
+    .aho-sidebar-toggle:focus-visible {
+        background: var(--who-afro-blue-hover);
+        box-shadow: 0 8px 20px rgb(0 40 80 / 22%);
+        outline: 0;
+        transform: translateY(-1px);
+    }
+
+    .aho-sidebar-toggle::before {
+        border-right: 1.5px solid currentColor;
+        border-top: 1.5px solid currentColor;
+        content: '';
+        height: 0.4rem;
+        transform: rotate(225deg);
+        width: 0.4rem;
+    }
+
+    .fi-layout > div:has(> .fi-main-sidebar),
+    .fi-main-sidebar,
+    .fi-main-ctn,
+    .fi-main {
+        transition: transform 180ms ease, width 180ms ease, flex-basis 180ms ease, margin 180ms ease;
+    }
+
+    .fi-body.aho-sidebar-collapsed .fi-layout > div:has(> .fi-main-sidebar) {
+        flex: 0 0 0;
+        min-width: 0;
+        overflow: visible;
+        width: 0;
+        z-index: 70;
+    }
+
+    .fi-body.aho-sidebar-collapsed .fi-main-sidebar {
+        left: 0;
+        position: fixed;
+        top: 56px;
+        transform: translateX(-100%);
+        will-change: transform;
+    }
+
+    .fi-body.aho-sidebar-collapsed .aho-sidebar-toggle {
+        left: 0.375rem;
+    }
+
+    .fi-body.aho-sidebar-collapsed .aho-sidebar-toggle::before {
+        transform: rotate(45deg);
+    }
+
+    .fi-body.aho-sidebar-collapsed .fi-main-ctn {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .fi-body.aho-sidebar-collapsed .fi-main {
+        flex: 1 1 auto;
+        margin-inline: 0;
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 1023px), (hover: none) {
+    .aho-sidebar-toggle {
+        display: none;
+    }
+}
+
+/* Final layout trim: keep the sidebar menu attached to the top/header area. */
+.fi-sidebar-header {
+    margin-bottom: 0;
+}
+
+.fi-sidebar-nav {
+    padding-top: 0;
+}
+
+.fi-sidebar-nav-groups {
+    margin-top: 0;
+}
+
+/* Lightweight, non-interactive country context card. */
+.aho-country-card {
+    background: white;
+    border: 1px solid var(--who-afro-panel-border);
+    border-radius: 8px;
+    box-shadow: none;
+    cursor: default;
+    gap: 0.4rem;
+    margin: 0.125rem 0.5rem 0;
+    padding: 0.375rem 0.5rem 0.5rem;
+    pointer-events: none;
+}
+
+:root.dark .aho-country-card {
+    background: #1f2937;
+    border-color: #475569;
+    box-shadow: none;
+}
+
+.aho-country-card__visual {
+    height: 6.75rem;
+}
+
+.aho-country-card__svg {
+    background: #f4f9fc;
+    border: 1px solid #dbe7f0;
+    border-radius: 6px;
+    min-height: 6.75rem;
+    padding: 0.25rem;
+    pointer-events: none;
+}
+
+.aho-country-card__svg svg,
+.aho-country-card__svg img {
+    pointer-events: none;
+}
+
+:root.dark .aho-country-card__svg {
+    background: #16253a;
+    border-color: #334155;
+}
+
+.aho-country-card__fallback {
+    align-items: center;
+    background: #f4f9fc;
+    border: 1px solid #dbe7f0;
+    border-radius: 6px;
+    color: var(--who-afro-blue-dark);
+    display: flex;
+    font-size: 0.95rem;
+    font-weight: 800;
+    height: 6.75rem;
+    justify-content: center;
+}
+
+:root.dark .aho-country-card__fallback {
+    background: #16253a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.aho-country-card__flag,
+.aho-country-card__map,
+.aho-country-card iframe {
+    display: none;
+}
+
+.aho-country-card__name {
+    font-size: 0.78rem;
+    text-align: center;
 }
 
 @media (max-width: 1023px) {

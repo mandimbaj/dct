@@ -35,6 +35,10 @@ class SetLocale
         $country = $request->route('country');
 
         if (filled($country)) {
+            if (in_array((string) $country, ['global', 'login', 'logout', 'password'], true)) {
+                return 'af';
+            }
+
             return (string) $country;
         }
 
@@ -56,6 +60,6 @@ class SetLocale
             return strtolower(Str::substr(trim((string) $iso), 0, 2));
         }
 
-        return 'global';
+        return 'af';
     }
 }

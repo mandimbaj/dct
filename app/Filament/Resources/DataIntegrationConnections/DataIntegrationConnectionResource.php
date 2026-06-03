@@ -17,6 +17,12 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+/**
+ * Data-integration connection resource.
+ *
+ * Connection records define external providers; the custom mapping page stores how incoming
+ * fields map to warehouse concepts.
+ */
 class DataIntegrationConnectionResource extends Resource
 {
     protected static ?string $model = DataIntegrationConnection::class;

@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         Route::bind('country', function ($value) {
-            return $value ?: 'global';
+            return $value ?: 'af';
         });
 
         return $panel
@@ -41,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin/{country}')
             ->login()
-            ->homeUrl(fn (): string => Auth::check() ? URL::to('/admin/'.(optional(Auth::user()->location)->iso_alpha ? strtolower(substr(trim((string) Auth::user()->location->iso_alpha), 0, 2)) : 'global')) : URL::to('/admin/global'))
+            ->homeUrl(fn (): string => Auth::check() ? URL::to('/admin/'.(optional(Auth::user()->location)->iso_alpha ? strtolower(substr(trim((string) Auth::user()->location->iso_alpha), 0, 2)) : 'af')) : URL::to('/admin/af'))
             ->brandName(fn (): string => AhoBrand::appName())
             ->brandLogo(fn (): string => asset(AhoBrand::logoPath()))
             ->darkModeBrandLogo(fn (): string => asset(AhoBrand::logoPath()))
@@ -59,8 +59,8 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString(
                     '<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">'.
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260526-9">'.
-                    '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260512-3"></script>'
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260603-2">'.
+                    '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260602-1"></script>'
                 ),
             )
             ->renderHook(

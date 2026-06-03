@@ -1,7 +1,7 @@
 # Documentation de Maintenance — Outil de Saisie de Données AHO
 
 > **Projet :** Health Indicators Africa (iAHO Data Entry Tool)
-> **Framework :** Laravel 11 · Filament v3 · Livewire 3
+> **Framework :** Laravel 13 · Filament 5 · Livewire
 > **Langues supportées :** Anglais · Français · Portugais
 > **Maintenu par :** Bureau régional de l'OMS pour l'Afrique
 
@@ -21,6 +21,7 @@
 10. [Déploiement et mise à jour des assets](#10-déploiement-et-mise-à-jour-des-assets)
 11. [Scripts utilitaires](#11-scripts-utilitaires)
 12. [Référence des classes Support](#12-référence-des-classes-support)
+13. [Module Health workforce](#13-module-health-workforce)
 
 ---
 
@@ -28,7 +29,7 @@
 
 L'application est un panneau d'administration multi-pays, multi-langue permettant la saisie, la validation et la consultation des indicateurs de santé des 47 États membres de la région africaine de l'OMS.
 
-**Accès :** `/admin/{country}` où `{country}` est le code ISO-2 en minuscules (ex : `ng`, `ke`, `dz`) ou `global` pour les super administrateurs.
+**Accès :** `/admin/{country}` où `{country}` est le code ISO-2 en minuscules (ex : `ng`, `ke`, `dz`) ou `af` pour le contexte régional africain des super administrateurs.
 
 **Rôles principaux :**
 | Rôle | Périmètre |
@@ -43,9 +44,9 @@ L'application est un panneau d'administration multi-pays, multi-langue permettan
 
 | Composant | Technologie | Version |
 |---|---|---|
-| Backend | Laravel | 11.x |
-| Admin UI | Filament | v3 |
-| Réactivité | Livewire | 3.x |
+| Backend | Laravel | 13.x |
+| Admin UI | Filament | 5.6+ |
+| Réactivité | Livewire | Via Filament |
 | Base de données | MySQL / MariaDB | — |
 | PHP | PHP | 8.3+ |
 | CSS personnalisé | Fichier statique compilé | `who-afro-filament.css` |
@@ -61,7 +62,7 @@ health-indicators-africa/
 ├── app/
 │   ├── Filament/
 │   │   ├── Clusters/          # 12 groupes de navigation (Indicators, Facilities, etc.)
-│   │   ├── Resources/         # 61 ressources CRUD (HealthIndicatorValues, Users, etc.)
+│   │   ├── Resources/         # 68 ressources CRUD (HealthIndicatorValues, Users, etc.)
 │   │   └── Widgets/           # Widgets du tableau de bord
 │   ├── Http/
 │   │   └── Middleware/        # 5 middlewares personnalisés (voir §8)
@@ -69,9 +70,11 @@ health-indicators-africa/
 │   ├── Providers/
 │   │   └── Filament/
 │   │       └── AdminPanelProvider.php   # ⭐ Configuration centrale du panneau
-│   └── Support/               # 23 classes utilitaires (voir §12)
+│   └── Support/               # 22 classes utilitaires (voir §12)
 ├── docs/
-│   └── maintenance.md         # Ce fichier
+│   ├── maintenance.md         # Ce fichier
+│   ├── modules.md             # Cartographie des modules Filament
+│   └── health-workforce.md    # Mapping Django/DB/Filament du menu Health workforce
 ├── lang/
 │   ├── en/aho.php             # Traductions anglaises
 │   ├── fr/aho.php             # Traductions françaises
@@ -302,7 +305,7 @@ La route `GET /locale/{locale}` permet à l'utilisateur de changer de langue dep
 Le middleware `RedirectAuthenticatedToCountry` redirige automatiquement les utilisateurs vers leur espace pays. Un utilisateur assigné à `NG` (Nigeria) ne peut pas accéder à `/admin/gh/...` (Ghana).
 
 **Règles :**
-- Si `is_super_admin = true` → accès à tous les pays + section `/admin/global`
+- Si `is_super_admin = true` → accès à tous les pays + section régionale `/admin/af`
 - Sinon → redirection forcée vers `/admin/{iso_du_pays_assigné}/...`
 
 ### 7.3 Créer un super administrateur
@@ -533,6 +536,43 @@ Toutes dans le namespace `App\Support`.
 | `UserPermissions` | Calcul des permissions effectives d'un utilisateur |
 | `WarehouseForm` | Formulaires spécifiques à l'entrepôt de données |
 | `WarehouseLocale` | Gestion centralisée de la locale (en/fr/pt) |
+
+---
+
+## 13. Module Health workforce
+
+La cartographie générale des autres modules est disponible dans `docs/modules.md`.
+
+Le menu **Health workforce** est documenté en détail dans `docs/health-workforce.md`.
+
+Ce module contient les sous-menus suivants :
+
+| Groupe | Sous-menu | Source principale |
+|---|---|---|
+| Data | Workforce values | `fact_health_workforce` |
+| Data | Resources / guides | `stg_knowledge_product` filtre Health workforce |
+| Data | Nursing and midwifery | `stg_recurring_event` |
+| Data | Announcements | `stg_event_announcement` |
+| References | Health cadres | `stg_health_cadre` |
+| References | Training institutions | `stg_traininginstitution` |
+| References | Institution types | `stg_institution_type` |
+| References | Training programmes | `stg_institution_programme` |
+| References | Resource types | `stg_resource_type` filtre Health workforce |
+| References | Resource categories | `stg_resource_category.category = 2` |
+
+**Points de maintenance importants :**
+
+- Les sous-menus ajoutés reprennent les modèles visibles dans l'ancienne application Django.
+- Les tables de traduction `*_translation` sont utilisées par `HasPreferredTranslationName`.
+- Les ressources liées aux publications utilisent le filtre historique `category = 2` pour isoler Health workforce.
+- Les nouvelles ressources utilisent `UsesFallbackResourcePermission` pour rester visibles aux rôles qui avaient déjà accès aux menus parents.
+- Quand une nouvelle ressource partage un modèle avec une ressource existante, vérifier `UserPermissions::allowsModel()` afin de ne pas casser les permissions globales.
+
+Pour vérifier rapidement les routes :
+
+```bash
+php artisan route:list --path=health-workforce
+```
 
 ---
 

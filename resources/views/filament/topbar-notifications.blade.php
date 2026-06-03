@@ -5,7 +5,7 @@
     $pendingValidationCount = $alerts['pendingValidationCount'];
     $latestMessages = $alerts['latestMessages'];
     $latestSystemNotifications = $alerts['latestSystemNotifications'];
-    $country = request()->route('country') ?: 'global';
+    $country = request()->route('country') ?: 'af';
 @endphp
 
 <div

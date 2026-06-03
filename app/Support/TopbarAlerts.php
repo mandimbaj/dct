@@ -206,7 +206,7 @@ class TopbarAlerts
     {
         $country = strtolower(trim((string) $country));
 
-        if ($country === '' || $country === 'global') {
+        if ($country === '' || $country === 'global' || $country === 'af') {
             return 'global';
         }
 

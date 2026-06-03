@@ -31,8 +31,8 @@ class RegionalValuesByDataSourceChart extends ChartWidget
 
     protected function getData(): array
     {
-        return DashboardCache::remember('top-data-sources-light', function (): array {
-            $rows = DashboardIndicatorValues::currentGroupedCounts('datasource_id')->take(5);
+        return DashboardCache::remember('top-data-sources-light.v2', function (): array {
+            $rows = DashboardIndicatorValues::groupedCountsWithArchiveFallback('datasource_id')->take(5);
             $sources = DataSource::with('translations')
                 ->whereIn('datasource_id', $rows->pluck('datasource_id'))
                 ->get()

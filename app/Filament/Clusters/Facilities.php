@@ -6,6 +6,12 @@ use BackedEnum;
 use Filament\Clusters\Cluster;
 use Filament\Support\Icons\Heroicon;
 
+/**
+ * Main menu for facility master data and facility service measurements.
+ *
+ * Data resources hold facility records and service availability/capacity/readiness facts;
+ * reference resources hold the service taxonomy used by those facts.
+ */
 class Facilities extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;

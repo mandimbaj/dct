@@ -18,6 +18,7 @@ use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class TableExportActions
 {
@@ -44,7 +45,17 @@ class TableExportActions
 
     private static function hasExportableRecords(Component $livewire): bool
     {
-        return $livewire instanceof HasTable;
+        if (! $livewire instanceof HasTable) {
+            return false;
+        }
+
+        try {
+            return (clone $livewire->getTableQueryForExport())
+                ->limit(1)
+                ->exists();
+        } catch (Throwable) {
+            return true;
+        }
     }
 
     private static function downloadCsv(Component $livewire): StreamedResponse

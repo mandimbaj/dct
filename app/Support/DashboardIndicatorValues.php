@@ -64,6 +64,15 @@ class DashboardIndicatorValues
         return self::groupedCountsForTables([self::LIVE_TABLE], $column, $callback);
     }
 
+    public static function groupedCountsWithArchiveFallback(string $column, ?Closure $callback = null): Collection
+    {
+        $rows = self::currentGroupedCounts($column, $callback);
+
+        return $rows->isNotEmpty()
+            ? $rows
+            : self::groupedCounts($column, $callback);
+    }
+
     public static function recentUploadsByLocation(): Collection
     {
         return self::recentUploadsByLocationForTables(self::tables());
@@ -74,6 +83,52 @@ class DashboardIndicatorValues
         return self::recentUploadsByLocationForTables([self::LIVE_TABLE]);
     }
 
+    public static function archivedRecentUploadsByLocation(int $limit = 5000): Collection
+    {
+        if (! self::hasArchiveTable()) {
+            return collect();
+        }
+
+        $table = self::ARCHIVE_TABLE;
+        $recentUploads = self::scopedTable($table)
+            ->select([
+                "{$table}.location_id",
+                "{$table}.date_created",
+                "{$table}.date_lastupdated",
+            ])
+            ->whereNotNull("{$table}.location_id")
+            ->whereRaw("coalesce({$table}.date_lastupdated, {$table}.date_created) is not null")
+            ->orderByDesc("{$table}.fact_id")
+            ->limit($limit);
+
+        return DB::connection('warehouse')
+            ->query()
+            ->fromSub($recentUploads, 'recent_archive_uploads')
+            ->select(
+                'location_id',
+                DB::raw('max(coalesce(date_lastupdated, date_created)) as latest_at'),
+                DB::raw('count(*) as total')
+            )
+            ->groupBy('location_id')
+            ->get()
+            ->map(fn (object $row): object => (object) [
+                'location_id' => (int) $row->location_id,
+                'latest_at' => $row->latest_at,
+                'total' => (int) $row->total,
+            ]);
+    }
+
+    public static function currentRecentUploadsByLocationWithArchiveFallback(): Collection
+    {
+        $uploads = self::currentRecentUploadsByLocation()
+            ->filter(fn (object $row): bool => filled($row->latest_at))
+            ->values();
+
+        return $uploads->isNotEmpty()
+            ? $uploads
+            : self::archivedRecentUploadsByLocation();
+    }
+
     public static function indicatorCountryUse(): Collection
     {
         return self::indicatorCountryUseForTables(self::tables());
@@ -82,6 +137,15 @@ class DashboardIndicatorValues
     public static function currentIndicatorCountryUse(): Collection
     {
         return self::indicatorCountryUseForTables([self::LIVE_TABLE]);
+    }
+
+    public static function indicatorCountryUseWithArchiveFallback(): Collection
+    {
+        $rows = self::currentIndicatorCountryUse();
+
+        return $rows->isNotEmpty()
+            ? $rows
+            : self::indicatorCountryUse();
     }
 
     /**

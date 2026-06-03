@@ -39,6 +39,13 @@ class HealthOverview extends StatsOverviewWidget
             $archivedIndicatorTotal = DashboardIndicatorValues::archivedCount();
             $statusCounts = DashboardIndicatorValues::currentStatusCounts();
 
+            // Count users: super admins see all users, others see only users of their assigned country
+            if (UserCountryAccess::canViewAllCountries()) {
+                $usersCount = User::count();
+            } else {
+                $usersCount = User::where('location_id', UserCountryAccess::locationId())->count();
+            }
+
             return [
                 'locations' => $locations->count(),
                 'level_two_locations' => $levelTwoLocations->count(),
@@ -53,7 +60,7 @@ class HealthOverview extends StatsOverviewWidget
                 'rejected_values' => (int) ($statusCounts[ApprovalWorkflow::STATUS_REJECTED] ?? 0),
                 'sources' => DataSource::count(),
                 'methods' => MeasureMethod::count(),
-                'users' => User::count(),
+                'users' => $usersCount,
             ];
         });
 

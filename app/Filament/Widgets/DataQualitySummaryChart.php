@@ -31,8 +31,8 @@ class DataQualitySummaryChart extends ChartWidget
 
     protected function getData(): array
     {
-        return DashboardCache::remember('top-indicators-by-country-use-light', function (): array {
-            $rows = DashboardIndicatorValues::currentIndicatorCountryUse()->take(5);
+        return DashboardCache::remember('top-indicators-by-country-use-light.v2', function (): array {
+            $rows = DashboardIndicatorValues::indicatorCountryUseWithArchiveFallback()->take(5);
             $indicators = Indicator::with('translations')
                 ->whereIn('indicator_id', $rows->pluck('indicator_id'))
                 ->get()

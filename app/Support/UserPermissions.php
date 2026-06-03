@@ -300,13 +300,21 @@ class UserPermissions
             return null;
         }
 
-        $key = static::keyForModel($model);
+        // Some menus intentionally reuse the same model with different filters.
+        // Accept any matching resource key so a scoped submenu does not break the global one.
+        $keys = static::keysForModel($model);
 
-        if ($key === null) {
+        if ($keys === []) {
             return null;
         }
 
-        return static::allowsKey($user, $key, $action);
+        foreach ($keys as $key) {
+            if (static::allowsKey($user, $key, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function allowsResource(User $user, string $resourceClass, string $action): bool
@@ -503,17 +511,26 @@ class UserPermissions
             && in_array($key, $permissions[$action] ?? [], true);
     }
 
-    private static function keyForModel(string|Model $model): ?string
+    /**
+     * Return every permission key backed by the same Eloquent model.
+     *
+     * This matters for proxy-style resources such as Health workforce publications, resource
+     * types and resource categories, which share models with the global Publications menu.
+     *
+     * @return array<int, string>
+     */
+    private static function keysForModel(string|Model $model): array
     {
         $modelClass = is_string($model) ? $model : $model::class;
+        $keys = [];
 
         foreach (static::resourceDefinitions() as $key => $definition) {
             if (($definition['model'] ?? null) === $modelClass) {
-                return $key;
+                $keys[] = $key;
             }
         }
 
-        return null;
+        return $keys;
     }
 
     private static function keyForClass(string $class, string $prefix): string

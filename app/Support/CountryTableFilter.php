@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Cache;
 
 class CountryTableFilter
 {
+    private const LOCATION_TREE_CACHE_KEY = 'country-table-filter.location-tree.v2';
+
     public static function make(string $column = 'location_id', string $name = 'country_id'): SelectFilter
     {
         return SelectFilter::make($name)
@@ -112,15 +114,39 @@ class CountryTableFilter
      */
     private static function locationTree(): Collection
     {
-        return Cache::remember(
-            'country-table-filter.location-tree',
+        $locations = Cache::remember(
+            self::LOCATION_TREE_CACHE_KEY,
             now()->addMinutes(30),
-            fn (): Collection => Country::query()
-                ->get(['location_id', 'parent_id'])
-                ->map(fn (Country $location): array => [
-                    'location_id' => (int) $location->location_id,
-                    'parent_id' => filled($location->parent_id) ? (int) $location->parent_id : null,
-                ]),
+            fn (): array => self::buildLocationTree(),
         );
+
+        if (! is_array($locations)) {
+            Cache::forget(self::LOCATION_TREE_CACHE_KEY);
+
+            $locations = self::buildLocationTree();
+            Cache::put(self::LOCATION_TREE_CACHE_KEY, $locations, now()->addMinutes(30));
+        }
+
+        return collect($locations)
+            ->filter(fn (mixed $location): bool => is_array($location) && isset($location['location_id']))
+            ->map(fn (array $location): array => [
+                'location_id' => (int) $location['location_id'],
+                'parent_id' => filled($location['parent_id'] ?? null) ? (int) $location['parent_id'] : null,
+            ])
+            ->values();
+    }
+
+    /**
+     * @return array<int, array{location_id: int, parent_id: int|null}>
+     */
+    private static function buildLocationTree(): array
+    {
+        return Country::query()
+            ->get(['location_id', 'parent_id'])
+            ->map(fn (Country $location): array => [
+                'location_id' => (int) $location->location_id,
+                'parent_id' => filled($location->parent_id) ? (int) $location->parent_id : null,
+            ])
+            ->all();
     }
 }

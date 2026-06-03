@@ -27,6 +27,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+/**
+ * Health-service fact-value resource.
+ *
+ * The resource is scoped by country and reuses shared indicator, category, source and measure
+ * method references from the warehouse.
+ */
 class HealthServiceValueResource extends Resource
 {
     protected static ?string $model = HealthServiceValue::class;

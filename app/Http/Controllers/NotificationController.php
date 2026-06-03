@@ -16,7 +16,7 @@ class NotificationController extends Controller
         $user = $request->user();
 
         if (! $user) {
-            return redirect('/admin/'.($country ?: 'global').'/login');
+            return redirect('/admin/'.($country ?: 'af').'/login');
         }
 
         abort_unless(
@@ -35,7 +35,7 @@ class NotificationController extends Controller
         }
 
         return view('notifications.show', [
-            'backUrl' => URL::to('/admin/'.($country ?: 'global')),
+            'backUrl' => URL::to('/admin/'.($country ?: 'af')),
             'body' => $body,
             'notification' => $notification,
             'title' => $title,

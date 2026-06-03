@@ -31,8 +31,8 @@ class RegionalValuesByPeriodChart extends ChartWidget
 
     protected function getData(): array
     {
-        return DashboardCache::remember('top-indicators-african-region-light', function (): array {
-            $rows = DashboardIndicatorValues::currentGroupedCounts('indicator_id')->take(5);
+        return DashboardCache::remember('top-indicators-african-region-light.v2', function (): array {
+            $rows = DashboardIndicatorValues::groupedCountsWithArchiveFallback('indicator_id')->take(5);
 
             $indicators = Indicator::with('translations')
                 ->whereIn('indicator_id', $rows->pluck('indicator_id'))

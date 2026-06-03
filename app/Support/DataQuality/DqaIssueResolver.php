@@ -331,6 +331,6 @@ class DqaIssueResolver
 
         $iso = optional(auth()->user()?->location)->iso_alpha;
 
-        return filled($iso) ? strtolower(substr(trim((string) $iso), 0, 2)) : 'global';
+        return filled($iso) ? strtolower(substr(trim((string) $iso), 0, 2)) : 'af';
     }
 }
