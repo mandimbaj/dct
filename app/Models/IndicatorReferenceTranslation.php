@@ -15,6 +15,8 @@ class IndicatorReferenceTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function reference(): BelongsTo
     {
         return $this->belongsTo(IndicatorReference::class, 'master_id', 'reference_id');

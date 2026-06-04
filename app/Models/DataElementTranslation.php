@@ -13,6 +13,8 @@ class DataElementTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function dataElement(): BelongsTo
     {
         return $this->belongsTo(DataElement::class, 'master_id', 'dataelement_id');

@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Indicators\Schemas;
 
+use App\Models\Indicator;
 use App\Models\IndicatorReference;
 use App\Support\SelectOptions;
-use App\Support\WarehouseLocale;
+use App\Support\TranslatedReferenceForm;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,18 +22,6 @@ class IndicatorForm
 
                 Section::make(__('aho.form_sections.primary_attributes'))
                     ->schema([
-                        Select::make('translation_language_code')
-                            ->label(__('aho.fields.language'))
-                            ->options(fn (): array => WarehouseLocale::supported())
-                            ->default(fn (): string => WarehouseLocale::current())
-                            ->required(),
-                        TextInput::make('translation_name')
-                            ->label(__('aho.fields.name'))
-                            ->required()
-                            ->maxLength(500),
-                        TextInput::make('translation_shortname')
-                            ->label(__('aho.fields.short_name'))
-                            ->maxLength(120),
                         Select::make('reference_id')
                             ->label(__('aho.fields.reference'))
                             ->relationship('reference', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
@@ -45,27 +32,10 @@ class IndicatorForm
                             ->required(),
                         Hidden::make('afrocode'),
                         Hidden::make('gen_code'),
-                        Textarea::make('translation_definition')
-                            ->label(__('aho.fields.definition'))
-                            ->rows(4)
-                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
-                Section::make(__('aho.form_sections.secondary_attributes'))
-                    ->schema([
-                        Textarea::make('translation_numerator_description')
-                            ->label(__('aho.fields.numerator_description'))
-                            ->rows(3),
-                        Textarea::make('translation_denominator_description')
-                            ->label(__('aho.fields.denominator_description'))
-                            ->rows(3),
-                        Textarea::make('translation_preferred_datasources')
-                            ->label(__('aho.fields.preferred_datasources'))
-                            ->rows(3)
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2),
+                TranslatedReferenceForm::translationsSection(Indicator::class),
             ]);
     }
 }

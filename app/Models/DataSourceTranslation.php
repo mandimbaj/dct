@@ -15,6 +15,8 @@ class DataSourceTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function dataSource(): BelongsTo
     {
         return $this->belongsTo(DataSource::class, 'master_id', 'datasource_id');

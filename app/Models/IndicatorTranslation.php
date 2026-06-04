@@ -24,6 +24,8 @@ class IndicatorTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function indicator(): BelongsTo
     {
         return $this->belongsTo(Indicator::class, 'master_id', 'indicator_id');

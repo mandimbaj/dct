@@ -7,10 +7,13 @@ use App\Models\HealthServiceProgramme;
 use App\Models\UhcClockIndicator;
 use App\Models\UhcClockTheme;
 use App\Models\User;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,31 +27,84 @@ class TranslatedReferenceForm
     /**
      * Build the common create/edit form for translated Django reference tables.
      *
-     * @param  array<int, string>  $translationFields
-     * @param  array<int, \Filament\Schemas\Components\Component|\Filament\Forms\Components\Field>  $baseComponents
+     * @param  array<int, string>|null  $translationFields
+     * @param  array<int, Component|Field>  $baseComponents
      */
     public static function configure(
         Schema $schema,
         string $modelClass,
-        array $translationFields = ['name', 'shortname', 'description'],
+        ?array $translationFields = null,
         array $baseComponents = [],
+        bool $includeIdentityComponents = true,
     ): Schema {
-        return $schema->components([
-            Section::make(__('aho.form_sections.primary_attributes'))
-                ->schema([
-                    ...self::identityComponents($modelClass),
-                    ...$baseComponents,
-                    Select::make('translation_language_code')
-                        ->label(__('aho.fields.language'))
-                        ->options(fn (): array => WarehouseLocale::supported())
-                        ->default(fn (): string => WarehouseLocale::current())
-                        ->required(),
-                    ...collect($translationFields)
-                        ->map(fn (string $field) => self::translationComponent($field))
-                        ->all(),
-                ])
-                ->columns(2),
-        ]);
+        $primaryComponents = [
+            ...($includeIdentityComponents ? self::identityComponents($modelClass) : []),
+            ...$baseComponents,
+        ];
+
+        $components = [];
+
+        if ($primaryComponents !== []) {
+            $components[] = Section::make(__('aho.form_sections.primary_attributes'))
+                ->schema($primaryComponents)
+                ->columns(2);
+        }
+
+        $components[] = self::translationsSection($modelClass, $translationFields);
+
+        return $schema->components($components);
+    }
+
+    /**
+     * Build a relationship-backed multilingual editor for any warehouse model.
+     *
+     * Translation columns are read from the related Django translation table so fields such as
+     * academic, theme, message or training institution contact details are not silently omitted.
+     *
+     * @param  array<int, string>|null  $translationFields
+     */
+    public static function translationsSection(string $modelClass, ?array $translationFields = null): Section
+    {
+        $columns = collect(self::translationColumns($modelClass))
+            ->when(
+                $translationFields !== null,
+                fn ($columns) => $columns->whereIn('name', $translationFields),
+            )
+            ->values();
+
+        return Section::make(__('aho.form_sections.translations'))
+            ->description(__('aho.help.translations'))
+            ->schema([
+                Repeater::make('translations')
+                    ->relationship(
+                        modifyQueryUsing: fn (Builder $query): Builder => $query
+                            ->orderByRaw("CASE language_code WHEN 'en' THEN 1 WHEN 'fr' THEN 2 WHEN 'pt' THEN 3 ELSE 4 END"),
+                    )
+                    ->hiddenLabel()
+                    ->schema([
+                        Select::make('language_code')
+                            ->label(__('aho.fields.language'))
+                            ->options(fn (): array => WarehouseLocale::supported())
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                            ->distinct()
+                            ->required(),
+                        ...$columns
+                            ->map(fn (array $column) => self::translationComponent($column))
+                            ->all(),
+                    ])
+                    ->default([
+                        ['language_code' => WarehouseLocale::current()],
+                    ])
+                    ->itemLabel(fn (array $state): string => WarehouseLocale::supported()[$state['language_code'] ?? ''] ?? __('aho.fields.language'))
+                    ->addActionLabel(__('aho.actions.add_language'))
+                    ->minItems(1)
+                    ->maxItems(count(WarehouseLocale::supported()))
+                    ->reorderable(false)
+                    ->collapsible()
+                    ->columns(2)
+                    ->columnSpanFull(),
+            ])
+            ->columnSpanFull();
     }
 
     public static function locationCode(Schema $schema): Schema
@@ -186,7 +242,7 @@ class TranslatedReferenceForm
     }
 
     /**
-     * @return array<int, \Filament\Forms\Components\Field>
+     * @return array<int, Field>
      */
     private static function identityComponents(string $modelClass): array
     {
@@ -209,26 +265,73 @@ class TranslatedReferenceForm
         return $components;
     }
 
-    private static function translationComponent(string $field)
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function translationColumns(string $modelClass): array
     {
-        $component = in_array($field, ['description', 'announcement', 'custom_header', 'custom_footer', 'address'], true)
-            ? Textarea::make('translation_'.$field)->rows(in_array($field, ['description', 'announcement'], true) ? 4 : 3)
-            : TextInput::make('translation_'.$field);
+        try {
+            /** @var Model $model */
+            $model = new $modelClass;
+            $translation = $model->translations()->getRelated();
+
+            return collect(DatabaseSchema::connection($translation->getConnectionName())->getColumns($translation->getTable()))
+                ->reject(fn (array $column): bool => in_array($column['name'], [
+                    $translation->getKeyName(),
+                    'language_code',
+                    'master_id',
+                    $translation->getCreatedAtColumn(),
+                    $translation->getUpdatedAtColumn(),
+                    'deleted_at',
+                ], true))
+                ->values()
+                ->all();
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $column
+     */
+    private static function translationComponent(array $column)
+    {
+        $field = (string) $column['name'];
+        $type = strtolower((string) ($column['type'] ?? ''));
+        $typeName = strtolower((string) ($column['type_name'] ?? ''));
+        $component = self::isLongText($field, $typeName)
+            ? Textarea::make($field)->rows(4)
+            : TextInput::make($field);
 
         $component->label(self::label($field));
 
-        if (in_array($field, ['name', 'shortname'], true)) {
+        if ($component instanceof TextInput && self::isNumeric($typeName)) {
+            $component->numeric();
+        }
+
+        if ($component instanceof TextInput && $field === 'email') {
+            $component->email();
+        }
+
+        if ($component instanceof TextInput && in_array($field, ['url', 'external_url'], true)) {
+            $component->url();
+        }
+
+        if ($component instanceof TextInput && $field === 'year_published') {
+            $component
+                ->minValue(1900)
+                ->maxValue((int) date('Y') + 1);
+        }
+
+        if ($field === 'internal_url') {
+            $component->helperText(__('aho.knowledge_products.help.internal_url'));
+        }
+
+        if (self::isRequired($column)) {
             $component->required();
         }
 
-        $maxLength = match ($field) {
-            'name' => 230,
-            'shortname' => 45,
-            'custom_header', 'custom_footer' => 1000,
-            'coat_arms' => 100,
-            'address' => 500,
-            default => null,
-        };
+        $maxLength = self::length($type);
 
         if ($maxLength !== null && method_exists($component, 'maxLength')) {
             $component->maxLength($maxLength);
@@ -253,8 +356,12 @@ class TranslatedReferenceForm
             'coat_arms' => 'aho.fields.coat_arms',
             'address' => 'aho.fields.address',
         ];
+        $translationKey = $keys[$field] ?? 'aho.fields.'.$field;
+        $translation = __($translationKey);
 
-        return __($keys[$field] ?? 'aho.fields.'.$field);
+        return $translation === $translationKey
+            ? Str::headline($field)
+            : $translation;
     }
 
     private static function hasColumn(Model $model, string $column): bool
@@ -289,5 +396,58 @@ class TranslatedReferenceForm
         } catch (Throwable) {
             return true;
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $column
+     */
+    private static function isRequired(array $column): bool
+    {
+        return ! ($column['nullable'] ?? true)
+            && ($column['default'] ?? null) === null
+            && ! ($column['auto_increment'] ?? false);
+    }
+
+    private static function isNumeric(string $typeName): bool
+    {
+        return in_array($typeName, [
+            'bigint',
+            'decimal',
+            'double',
+            'float',
+            'int',
+            'integer',
+            'mediumint',
+            'real',
+            'smallint',
+            'tinyint',
+        ], true);
+    }
+
+    private static function isLongText(string $field, string $typeName): bool
+    {
+        return str_contains($typeName, 'text')
+            || in_array($field, [
+                'abstract',
+                'accreditation_info',
+                'address',
+                'announcement',
+                'cordinate',
+                'custom_footer',
+                'custom_header',
+                'definition',
+                'denominator_description',
+                'description',
+                'message',
+                'numerator_description',
+                'posta',
+                'preferred_datasources',
+                'theme',
+            ], true);
+    }
+
+    private static function length(string $type): ?int
+    {
+        return preg_match('/\((\d+)\)/', $type, $matches) === 1 ? (int) $matches[1] : null;
     }
 }

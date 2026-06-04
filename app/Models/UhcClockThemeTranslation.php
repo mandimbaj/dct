@@ -13,6 +13,8 @@ class UhcClockThemeTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function theme(): BelongsTo
     {
         return $this->belongsTo(UhcClockTheme::class, 'master_id', 'domain_id');

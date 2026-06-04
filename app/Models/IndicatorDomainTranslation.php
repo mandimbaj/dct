@@ -15,6 +15,8 @@ class IndicatorDomainTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function domain(): BelongsTo
     {
         return $this->belongsTo(IndicatorDomain::class, 'master_id', 'domain_id');

@@ -13,6 +13,8 @@ class UhcClockIndicatorGroupTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function group(): BelongsTo
     {
         return $this->belongsTo(UhcClockIndicatorGroup::class, 'master_id', 'group_id');

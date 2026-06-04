@@ -13,6 +13,8 @@ class TrainingInstitutionTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function institution(): BelongsTo
     {
         return $this->belongsTo(TrainingInstitution::class, 'master_id', 'institution_id');

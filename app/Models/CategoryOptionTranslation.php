@@ -15,6 +15,8 @@ class CategoryOptionTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function categoryOption(): BelongsTo
     {
         return $this->belongsTo(IndicatorCategory::class, 'master_id', 'categoryoption_id');

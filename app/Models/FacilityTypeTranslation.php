@@ -13,6 +13,8 @@ class FacilityTypeTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function facilityType(): BelongsTo
     {
         return $this->belongsTo(FacilityType::class, 'master_id', 'type_id');

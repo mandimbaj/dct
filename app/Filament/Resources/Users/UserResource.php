@@ -151,6 +151,30 @@ class UserResource extends Resource
                     ])
                     ->columns(2)
                     ->columnSpanFull(),
+                Section::make(__('aho.microsoft_entra.admin.section'))
+                    ->description(__('aho.microsoft_entra.admin.section_description'))
+                    ->icon('heroicon-o-building-office-2')
+                    ->schema([
+                        TextInput::make('entra_user_principal_name')
+                            ->label(__('aho.fields.entra_user_principal_name'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('entra_last_login_at')
+                            ->label(__('aho.fields.entra_last_login_at'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('entra_tenant_id')
+                            ->label(__('aho.fields.entra_tenant_id'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('entra_object_id')
+                            ->label(__('aho.fields.entra_object_id'))
+                            ->disabled()
+                            ->dehydrated(false),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->visible(fn (?User $record): bool => filled($record?->entra_object_id)),
                 Section::make(__('aho.auth_management.sections.user_access'))
                     ->description(__('aho.auth_management.help.user_access'))
                     ->icon('heroicon-o-shield-check')
@@ -220,6 +244,8 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')->label(__('aho.fields.name'))->searchable()->sortable(),
                 TextColumn::make('email')->label(__('aho.fields.email'))->searchable()->sortable(),
+                TextColumn::make('entra_user_principal_name')->label(__('aho.fields.entra_user_principal_name'))->placeholder(__('aho.fields.not_available'))->searchable()->toggleable(),
+                TextColumn::make('entra_last_login_at')->label(__('aho.fields.entra_last_login_at'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.assigned_country'))->placeholder(__('aho.fields.all_countries'))->toggleable(),
                 TextColumn::make('role.name')->label(__('aho.fields.role'))->placeholder(__('aho.fields.no_role'))->searchable()->sortable()->toggleable(),
                 TextColumn::make('location_assignments_count')

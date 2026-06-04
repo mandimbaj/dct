@@ -5,11 +5,10 @@ namespace App\Filament\Resources\Countries\Schemas;
 use App\Models\Country;
 use App\Models\LocationLevel;
 use App\Support\SelectOptions;
+use App\Support\TranslatedReferenceForm;
 use App\Support\UserCountryAccess;
-use App\Support\WarehouseLocale;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -25,15 +24,6 @@ class CountryForm
 
                 Section::make(__('aho.form_sections.location_details'))
                     ->schema([
-                        Select::make('translation_language_code')
-                            ->label(__('aho.fields.language'))
-                            ->options(fn (): array => WarehouseLocale::supported())
-                            ->default(fn (): string => WarehouseLocale::current())
-                            ->required(),
-                        TextInput::make('translation_name')
-                            ->label(__('aho.fields.name'))
-                            ->required()
-                            ->maxLength(230),
                         Select::make('locationlevel_id')
                             ->label(__('aho.fields.level'))
                             ->relationship('locationLevel', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
@@ -51,10 +41,6 @@ class CountryForm
                             ->label(__('aho.fields.iso_numeric'))
                             ->required()
                             ->maxLength(15),
-                        Textarea::make('translation_description')
-                            ->label(__('aho.fields.description'))
-                            ->rows(3)
-                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -77,16 +63,6 @@ class CountryForm
                             ))
                             ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
                             ->searchable(),
-                        TextInput::make('translation_longitude')
-                            ->label(__('aho.fields.longitude'))
-                            ->numeric(),
-                        TextInput::make('translation_latitude')
-                            ->label(__('aho.fields.latitude'))
-                            ->numeric(),
-                        Textarea::make('translation_cordinate')
-                            ->label(__('aho.fields.coordinate'))
-                            ->rows(3)
-                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -102,6 +78,8 @@ class CountryForm
                             ->numeric(),
                     ])
                     ->columns(2),
+
+                TranslatedReferenceForm::translationsSection(Country::class),
             ]);
     }
 }

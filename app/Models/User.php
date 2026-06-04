@@ -3,9 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Role;
 use App\Support\UserLocationAssignments;
 use App\Support\UserPermissions;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,11 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_super_admin', 'is_country_admin', 'location_id', 'role_id', 'menu_permissions'])]
+#[Fillable(['name', 'email', 'password', 'is_super_admin', 'is_country_admin', 'location_id', 'role_id', 'menu_permissions', 'entra_tenant_id', 'entra_object_id', 'entra_user_principal_name', 'entra_last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -36,6 +36,7 @@ class User extends Authenticatable implements FilamentUser
             'is_super_admin' => 'boolean',
             'is_country_admin' => 'boolean',
             'menu_permissions' => 'array',
+            'entra_last_login_at' => 'datetime',
         ];
     }
 

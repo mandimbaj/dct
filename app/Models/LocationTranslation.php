@@ -15,6 +15,8 @@ class LocationTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function location(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'master_id', 'location_id');

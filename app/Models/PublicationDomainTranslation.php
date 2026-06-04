@@ -13,6 +13,8 @@ class PublicationDomainTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function domain(): BelongsTo
     {
         return $this->belongsTo(PublicationDomain::class, 'master_id', 'domain_id');

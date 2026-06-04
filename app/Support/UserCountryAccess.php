@@ -35,7 +35,7 @@ class UserCountryAccess
 
     public static function canViewRegionalDashboard(): bool
     {
-        return self::canViewAllCountries() || blank(self::locationId());
+        return self::canViewAllCountries();
     }
 
     /**

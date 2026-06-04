@@ -13,7 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Illuminate\Support\Str;
 use Throwable;
@@ -44,6 +44,15 @@ class WarehouseForm
             $components[] = Placeholder::make('no_editable_fields')
                 ->label('Fields')
                 ->content('No editable columns were detected for this table.');
+        }
+
+        if (method_exists($model, 'translations')) {
+            return TranslatedReferenceForm::configure(
+                schema: $schema,
+                modelClass: $modelClass,
+                baseComponents: $components,
+                includeIdentityComponents: false,
+            );
         }
 
         return $schema->components($components);
@@ -141,7 +150,7 @@ class WarehouseForm
                 $relation = null;
             }
 
-            if ($relation instanceof Relation) {
+            if ($relation instanceof BelongsTo) {
                 $related = $relation->getRelated();
                 $label = self::selectLabelForModel($related);
                 $select = Select::make($fieldName)
@@ -183,11 +192,13 @@ class WarehouseForm
     private static function relationNameByForeignKey(string $fieldName, Model $model): ?string
     {
         foreach (get_class_methods($model) as $method) {
-            if ($method === '__construct') {
-                continue;
-            }
+            $reflection = new \ReflectionMethod($model, $method);
 
-            if (! method_exists($model, $method)) {
+            if (
+                $reflection->getDeclaringClass()->getName() !== $model::class
+                || $reflection->isStatic()
+                || $reflection->getNumberOfRequiredParameters() > 0
+            ) {
                 continue;
             }
 
@@ -197,7 +208,7 @@ class WarehouseForm
                 continue;
             }
 
-            if (! $relation instanceof Relation) {
+            if (! $relation instanceof BelongsTo) {
                 continue;
             }
 
@@ -248,7 +259,7 @@ class WarehouseForm
             }
 
             return $query->get()
-                ->mapWithKeys(fn (Model $record) => [ $record->$keyName => (string) ($record->$label ?? $record->$keyName) ])
+                ->mapWithKeys(fn (Model $record) => [$record->$keyName => (string) ($record->$label ?? $record->$keyName)])
                 ->sortBy(fn (string $option): string => mb_strtolower($option))
                 ->all();
         } catch (Throwable) {

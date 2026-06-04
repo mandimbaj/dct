@@ -13,6 +13,8 @@ class FacilityOwnerTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function facilityOwner(): BelongsTo
     {
         return $this->belongsTo(FacilityOwner::class, 'master_id', 'owner_id');

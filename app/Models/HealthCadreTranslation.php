@@ -13,6 +13,8 @@ class HealthCadreTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function cadre(): BelongsTo
     {
         return $this->belongsTo(HealthCadre::class, 'master_id', 'cadre_id');

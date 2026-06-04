@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MicrosoftEntraController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,14 @@ Route::redirect('/admin/logout', '/admin/af/logout');
 Route::redirect('/admin/global', '/admin/af');
 Route::redirect('/admin/global/login', '/admin/af/login');
 Route::redirect('/admin/global/logout', '/admin/af/logout');
+
+Route::get('/admin/{country}/microsoft/login', [MicrosoftEntraController::class, 'redirectToProvider'])
+    ->middleware(['guest', 'throttle:10,1'])
+    ->name('microsoft-entra.redirect');
+
+Route::get('/auth/microsoft/callback', [MicrosoftEntraController::class, 'callback'])
+    ->middleware(['guest', 'throttle:10,1'])
+    ->name('microsoft-entra.callback');
 
 Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
     ->name('admin.notifications.show');

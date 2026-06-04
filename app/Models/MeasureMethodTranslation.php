@@ -15,6 +15,8 @@ class MeasureMethodTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function measureMethod(): BelongsTo
     {
         return $this->belongsTo(MeasureMethod::class, 'master_id', 'measuremethod_id');

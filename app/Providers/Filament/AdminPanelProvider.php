@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
 use App\Http\Middleware\RedirectAuthenticatedToCountry;
 use App\Http\Middleware\SecurityHeaders;
@@ -40,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin/{country}')
-            ->login()
+            ->login(Login::class)
             ->homeUrl(fn (): string => Auth::check() ? URL::to('/admin/'.(optional(Auth::user()->location)->iso_alpha ? strtolower(substr(trim((string) Auth::user()->location->iso_alpha), 0, 2)) : 'af')) : URL::to('/admin/af'))
             ->brandName(fn (): string => AhoBrand::appName())
             ->brandLogo(fn (): string => asset(AhoBrand::logoPath()))
@@ -59,13 +60,17 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString(
                     '<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">'.
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260603-2">'.
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260604-1">'.
                     '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260602-1"></script>'
                 ),
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,
                 fn () => view('filament.language-switcher'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.auth.microsoft-login'),
             )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_START,

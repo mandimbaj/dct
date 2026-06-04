@@ -18,6 +18,8 @@ class RecurringEventTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     /**
      * Parent recurring event referenced by master_id.
      */

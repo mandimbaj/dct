@@ -13,6 +13,8 @@ class ResourceTypeTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function type(): BelongsTo
     {
         return $this->belongsTo(ResourceType::class, 'master_id', 'type_id');

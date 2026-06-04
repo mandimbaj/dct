@@ -18,6 +18,8 @@ class InstitutionProgrammeTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     /**
      * Parent training programme referenced by master_id.
      */

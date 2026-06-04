@@ -15,6 +15,8 @@ class LocationLevelTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function locationLevel(): BelongsTo
     {
         return $this->belongsTo(LocationLevel::class, 'master_id', 'locationlevel_id');

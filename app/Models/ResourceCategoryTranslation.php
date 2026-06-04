@@ -13,6 +13,8 @@ class ResourceCategoryTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(ResourceCategory::class, 'master_id', 'category_id');

@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'microsoft_entra' => [
+        'enabled' => (bool) env('MICROSOFT_ENTRA_ENABLED', false),
+        'tenant' => env('MICROSOFT_ENTRA_TENANT', ''),
+        'client_id' => env('MICROSOFT_ENTRA_CLIENT_ID', ''),
+        'client_secret' => env('MICROSOFT_ENTRA_CLIENT_SECRET', ''),
+        'redirect_uri' => env('MICROSOFT_ENTRA_REDIRECT_URI', ''),
+        'scopes' => array_values(array_filter(preg_split('/\s+/', (string) env('MICROSOFT_ENTRA_SCOPES', 'openid profile email User.Read')) ?: [])),
+        'local_login_enabled' => (bool) env('MICROSOFT_ENTRA_LOCAL_LOGIN_ENABLED', true),
+    ],
+
 ];

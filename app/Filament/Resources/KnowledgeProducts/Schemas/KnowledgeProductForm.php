@@ -4,18 +4,17 @@ namespace App\Filament\Resources\KnowledgeProducts\Schemas;
 
 use App\Filament\Resources\KnowledgeProducts\KnowledgeProductResource;
 use App\Models\Country;
+use App\Models\KnowledgeProduct;
 use App\Models\PublicationDomain;
 use App\Models\ResourceCategory;
 use App\Models\ResourceType;
 use App\Support\ApprovalWorkflow;
 use App\Support\SelectOptions;
+use App\Support\TranslatedReferenceForm;
 use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
-use App\Support\WarehouseLocale;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -31,19 +30,7 @@ class KnowledgeProductForm
             ->components([
                 Section::make(__('aho.knowledge_products.sections.identity'))
                     ->schema([
-                        Select::make('translation_language_code')
-                            ->label(__('aho.fields.language'))
-                            ->options(fn (): array => WarehouseLocale::supported())
-                            ->default(fn (): string => WarehouseLocale::current())
-                            ->required(),
-
                         Hidden::make('code'),
-
-                        TextInput::make('translation_title')
-                            ->label(__('aho.fields.title'))
-                            ->required()
-                            ->maxLength(2000)
-                            ->columnSpanFull(),
 
                         Select::make('location_id')
                             ->label(__('aho.fields.location'))
@@ -100,52 +87,7 @@ class KnowledgeProductForm
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Section::make(__('aho.knowledge_products.sections.content'))
-                    ->schema([
-                        TextInput::make('translation_author')
-                            ->label(__('aho.fields.author'))
-                            ->required()
-                            ->maxLength(200),
-
-                        TextInput::make('translation_year_published')
-                            ->label(__('aho.fields.year_published'))
-                            ->required()
-                            ->numeric()
-                            ->minValue(1900)
-                            ->maxValue((int) date('Y') + 1),
-
-                        Textarea::make('translation_abstract')
-                            ->label(__('aho.fields.abstract'))
-                            ->rows(3)
-                            ->columnSpanFull(),
-
-                        Textarea::make('translation_description')
-                            ->label(__('aho.fields.description'))
-                            ->rows(5)
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2)
-                    ->columnSpanFull(),
-
-                Section::make(__('aho.knowledge_products.sections.files'))
-                    ->schema([
-                        TextInput::make('translation_internal_url')
-                            ->label(__('aho.fields.internal_url'))
-                            ->maxLength(2000)
-                            ->helperText(__('aho.knowledge_products.help.internal_url')),
-
-                        TextInput::make('translation_external_url')
-                            ->label(__('aho.fields.external_url'))
-                            ->url()
-                            ->maxLength(2083),
-
-                        TextInput::make('translation_cover_image')
-                            ->label(__('aho.fields.cover_image'))
-                            ->maxLength(100)
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2)
-                    ->columnSpanFull(),
+                TranslatedReferenceForm::translationsSection(KnowledgeProduct::class),
 
                 Section::make(__('aho.fields.approval_status'))
                     ->schema([

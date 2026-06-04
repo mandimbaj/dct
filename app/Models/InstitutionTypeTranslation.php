@@ -18,6 +18,8 @@ class InstitutionTypeTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     /**
      * Parent institution type referenced by master_id.
      */

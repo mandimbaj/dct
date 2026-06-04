@@ -18,6 +18,8 @@ class EventAnnouncementTranslation extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     /**
      * Parent announcement referenced by master_id.
      */
