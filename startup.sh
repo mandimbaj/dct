@@ -1,14 +1,39 @@
 #!/bin/bash
+
 cd /home/site/wwwroot
 
-# Installer les dépendances
-composer install --no-dev --optimize-autoloader
+echo "=== Création des dossiers storage manquants ==="
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/logs
+mkdir -p bootstrap/cache
 
-# Configurer Laravel
+echo "=== Permissions ==="
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+
+echo "=== Composer install ==="
+# Chercher composer dans les emplacements possibles sur Azure
+if [ -f /usr/local/bin/composer ]; then
+    COMPOSER=/usr/local/bin/composer
+elif [ -f /usr/bin/composer ]; then
+    COMPOSER=/usr/bin/composer
+else
+    # Télécharger composer si absent
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    COMPOSER=/usr/local/bin/composer
+fi
+
+$COMPOSER install --no-dev --optimize-autoloader --no-interaction
+
+echo "=== Artisan ==="
+php artisan config:clear
+php artisan view:clear
+php artisan cache:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan migrate --force
 
-# Démarrer Nginx avec le bon document root
-echo "root /home/site/wwwroot/public;" > /etc/nginx/conf.d/laravel.conf
+echo "=== Démarrage PHP-FPM ==="
+php-fpm
