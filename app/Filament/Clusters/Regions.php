@@ -16,7 +16,7 @@ class Regions extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeEuropeAfrica;
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 8;
 
     protected static ?string $slug = 'regions';
 

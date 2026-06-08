@@ -16,7 +16,7 @@ class UserLocationAssignments
             return;
         }
 
-        if ($user->is_super_admin || blank($user->location_id)) {
+        if ($user->canViewAllCountries() || blank($user->location_id)) {
             UserLocationAssignment::query()
                 ->where('user_id', $user->id)
                 ->delete();

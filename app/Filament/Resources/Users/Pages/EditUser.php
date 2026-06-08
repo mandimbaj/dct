@@ -28,9 +28,14 @@ class EditUser extends EditRecord
     {
         $data['is_country_admin'] = false;
 
-        if (! auth()->user()?->canViewAllCountries()) {
+        if (! auth()->user()?->is_super_admin) {
             $data['location_id'] = auth()->user()?->location_id;
             $data['is_super_admin'] = false;
+            $data['can_view_all_countries'] = false;
+        }
+
+        if (($data['is_super_admin'] ?? false) || ($data['can_view_all_countries'] ?? false)) {
+            $data['location_id'] = null;
         }
 
         return $this->normalizeAssignableRole($data);

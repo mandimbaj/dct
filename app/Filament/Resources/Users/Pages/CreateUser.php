@@ -24,9 +24,14 @@ class CreateUser extends CreateRecord
     {
         $data['is_country_admin'] = false;
 
-        if (! auth()->user()?->canViewAllCountries()) {
+        if (! auth()->user()?->is_super_admin) {
             $data['location_id'] = auth()->user()?->location_id;
             $data['is_super_admin'] = false;
+            $data['can_view_all_countries'] = false;
+        }
+
+        if (($data['is_super_admin'] ?? false) || ($data['can_view_all_countries'] ?? false)) {
+            $data['location_id'] = null;
         }
 
         return $this->normalizeAssignableRole($data);
@@ -37,7 +42,7 @@ class CreateUser extends CreateRecord
         /** @var User $user */
         $user = $this->getRecord();
 
-        if (! auth()->user()?->canViewAllCountries() && $user->location_id) {
+        if (! auth()->user()?->is_super_admin && $user->location_id) {
             $countryCode = optional($user->location)->iso_alpha;
             $title = __('aho.notifications.messages.created_account_title');
             $body = __('aho.notifications.messages.created_account_body', [

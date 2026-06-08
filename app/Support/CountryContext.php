@@ -9,6 +9,66 @@ use Illuminate\Support\Facades\Cache;
 class CountryContext
 {
     /**
+     * ISO-3166 alpha-3 to alpha-2 mapping used by flag providers and map assets.
+     *
+     * The warehouse sometimes stores country identifiers as alpha-3 values
+     * (SEN, CPV, TCD). Taking the first two letters would point to another
+     * country, so topbar flags and country maps must normalize through this
+     * explicit list first.
+     *
+     * @var array<string, string>
+     */
+    private const ISO3_TO_ISO2 = [
+        'AGO' => 'AO',
+        'BDI' => 'BI',
+        'BEN' => 'BJ',
+        'BFA' => 'BF',
+        'BWA' => 'BW',
+        'CAF' => 'CF',
+        'CIV' => 'CI',
+        'CMR' => 'CM',
+        'COD' => 'CD',
+        'COG' => 'CG',
+        'COM' => 'KM',
+        'CPV' => 'CV',
+        'DZA' => 'DZ',
+        'ERI' => 'ER',
+        'ETH' => 'ET',
+        'GAB' => 'GA',
+        'GHA' => 'GH',
+        'GIN' => 'GN',
+        'GMB' => 'GM',
+        'GNB' => 'GW',
+        'GNQ' => 'GQ',
+        'KEN' => 'KE',
+        'LBR' => 'LR',
+        'LSO' => 'LS',
+        'MDG' => 'MG',
+        'MLI' => 'ML',
+        'MOZ' => 'MZ',
+        'MRT' => 'MR',
+        'MUS' => 'MU',
+        'MWI' => 'MW',
+        'NAM' => 'NA',
+        'NER' => 'NE',
+        'NGA' => 'NG',
+        'RWA' => 'RW',
+        'SEN' => 'SN',
+        'SLE' => 'SL',
+        'SSD' => 'SS',
+        'STP' => 'ST',
+        'SWZ' => 'SZ',
+        'SYC' => 'SC',
+        'TCD' => 'TD',
+        'TGO' => 'TG',
+        'TZA' => 'TZ',
+        'UGA' => 'UG',
+        'ZAF' => 'ZA',
+        'ZMB' => 'ZM',
+        'ZWE' => 'ZW',
+    ];
+
+    /**
      * Lightweight country identity for compact UI areas such as the topbar.
      *
      * Unlike forUser(), this does not include the country map SVG.
@@ -32,7 +92,7 @@ class CountryContext
         }
 
         return Cache::remember(
-            'country-context-identity.'.$country->getKey().'.'.WarehouseLocale::current(),
+            'country-context-identity.v2.'.$country->getKey().'.'.WarehouseLocale::current(),
             now()->addHours(12),
             fn (): array => self::identityPayload($country),
         );
@@ -58,7 +118,7 @@ class CountryContext
         }
 
         return Cache::remember(
-            'country-context-card.simple.'.$country->getKey().'.'.WarehouseLocale::current(),
+            'country-context-card.simple.v2.'.$country->getKey().'.'.WarehouseLocale::current(),
             now()->addHours(12),
             fn (): array => self::payload($country),
         );
@@ -154,7 +214,27 @@ class CountryContext
 
     private static function iso2(mixed $iso): string
     {
-        $iso = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', (string) $iso) ?: '', 0, 2));
+        $iso = strtoupper(preg_replace('/[^A-Za-z]/', '', (string) $iso) ?: '');
+
+        if ($iso === '') {
+            return 'AF';
+        }
+
+        if (strlen($iso) === 2) {
+            return $iso;
+        }
+
+        if (isset(self::ISO3_TO_ISO2[$iso])) {
+            return self::ISO3_TO_ISO2[$iso];
+        }
+
+        $iso3 = substr($iso, 0, 3);
+
+        if (isset(self::ISO3_TO_ISO2[$iso3])) {
+            return self::ISO3_TO_ISO2[$iso3];
+        }
+
+        $iso = substr($iso, 0, 2);
 
         return $iso !== '' ? $iso : 'AF';
     }

@@ -50,7 +50,7 @@ class UserPageVisitResource extends Resource
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->canViewAllCountries();
+        return (bool) auth()->user()?->is_super_admin;
     }
 
     public static function canCreate(): bool

@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
-use App\Support\AdminActivityNotifier;
 use App\Models\User;
+use App\Support\AdminActivityNotifier;
 use App\Support\SelectOptions;
 use App\Support\UserPermissions;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -37,6 +39,18 @@ class AppServiceProvider extends ServiceProvider
 
         SelectFilter::configureUsing(static function (SelectFilter $filter): void {
             $filter->optionsLimit(SelectOptions::LIMIT);
+        });
+
+        DeleteAction::configureUsing(static function (DeleteAction $action): void {
+            $action
+                ->tooltip(__('aho.actions.delete_confirmation_tooltip'))
+                ->modalDescription(__('aho.actions.delete_confirmation_description'));
+        });
+
+        DeleteBulkAction::configureUsing(static function (DeleteBulkAction $action): void {
+            $action
+                ->tooltip(__('aho.actions.delete_bulk_confirmation_tooltip'))
+                ->modalDescription(__('aho.actions.delete_bulk_confirmation_description'));
         });
 
         RateLimiter::for('api', function (Request $request): Limit {

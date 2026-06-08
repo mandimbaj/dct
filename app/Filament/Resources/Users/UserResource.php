@@ -21,6 +21,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -82,7 +83,7 @@ class UserResource extends Resource
         $user = Auth::user();
 
         return (bool) $user
-            && ($user->canViewAllCountries() || filled($user->location_id))
+            && ($user->is_super_admin || filled($user->location_id))
             && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_CREATE);
     }
 
@@ -182,8 +183,15 @@ class UserResource extends Resource
                         Checkbox::make('is_super_admin')
                             ->label(__('aho.fields.super_admin'))
                             ->helperText(__('aho.auth_management.help.super_admin'))
-                            ->disabled(fn (): bool => ! Auth::user()?->canViewAllCountries())
-                            ->dehydrated(fn (): bool => (bool) Auth::user()?->canViewAllCountries()),
+                            ->live()
+                            ->disabled(fn (): bool => ! Auth::user()?->is_super_admin)
+                            ->dehydrated(fn (): bool => (bool) Auth::user()?->is_super_admin),
+                        Checkbox::make('can_view_all_countries')
+                            ->label(__('aho.fields.regional_data_access'))
+                            ->helperText(__('aho.auth_management.help.regional_data_access'))
+                            ->live()
+                            ->disabled(fn (Get $get): bool => ! Auth::user()?->is_super_admin || (bool) $get('is_super_admin'))
+                            ->dehydrated(fn (): bool => (bool) Auth::user()?->is_super_admin),
                         Select::make('location_id')
                             ->label(__('aho.fields.assigned_country'))
                             ->relationship('location', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
@@ -203,9 +211,10 @@ class UserResource extends Resource
                             ))
                             ->searchable()
                             ->preload()
-                            ->default(fn (): ?int => Auth::user()?->canViewAllCountries() ? null : Auth::user()?->location_id)
-                            ->disabled(fn (): bool => ! Auth::user()?->canViewAllCountries())
-                            ->dehydrated(fn (): bool => (bool) Auth::user()?->canViewAllCountries())
+                            ->placeholder(__('aho.fields.all_countries'))
+                            ->default(fn (): ?int => Auth::user()?->is_super_admin ? null : Auth::user()?->location_id)
+                            ->disabled(fn (Get $get): bool => ! Auth::user()?->is_super_admin || (bool) $get('is_super_admin') || (bool) $get('can_view_all_countries'))
+                            ->dehydrated(fn (): bool => (bool) Auth::user()?->is_super_admin)
                             ->helperText(__('aho.help.assigned_country')),
                         Select::make('role_id')
                             ->label(__('aho.fields.role'))
@@ -247,6 +256,11 @@ class UserResource extends Resource
                 TextColumn::make('entra_user_principal_name')->label(__('aho.fields.entra_user_principal_name'))->placeholder(__('aho.fields.not_available'))->searchable()->toggleable(),
                 TextColumn::make('entra_last_login_at')->label(__('aho.fields.entra_last_login_at'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.assigned_country'))->placeholder(__('aho.fields.all_countries'))->toggleable(),
+                TextColumn::make('can_view_all_countries')
+                    ->label(__('aho.fields.regional_data_access'))
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? __('aho.fields.yes') : __('aho.fields.no'))
+                    ->toggleable(),
                 TextColumn::make('role.name')->label(__('aho.fields.role'))->placeholder(__('aho.fields.no_role'))->searchable()->sortable()->toggleable(),
                 TextColumn::make('location_assignments_count')
                     ->label(__('aho.fields.level2_locations'))
@@ -275,7 +289,7 @@ class UserResource extends Resource
 
     private static function recordIsManageableBy(Model $record, User $user): bool
     {
-        if ($user->canViewAllCountries()) {
+        if ($user->is_super_admin) {
             return true;
         }
 
@@ -288,7 +302,7 @@ class UserResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user?->canViewAllCountries()) {
+        if ($user?->is_super_admin) {
             return $query->with(['location.translations', 'role']);
         }
 

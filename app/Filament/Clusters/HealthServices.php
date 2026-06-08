@@ -16,7 +16,7 @@ class HealthServices extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHeart;
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'health-services';
 

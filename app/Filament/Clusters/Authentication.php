@@ -15,7 +15,7 @@ class Authentication extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 12;
 
     protected static ?string $slug = 'authentication';
 

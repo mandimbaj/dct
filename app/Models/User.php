@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_super_admin', 'is_country_admin', 'location_id', 'role_id', 'menu_permissions', 'entra_tenant_id', 'entra_object_id', 'entra_user_principal_name', 'entra_last_login_at'])]
+#[Fillable(['name', 'email', 'password', 'is_super_admin', 'can_view_all_countries', 'is_country_admin', 'location_id', 'role_id', 'menu_permissions', 'entra_tenant_id', 'entra_object_id', 'entra_user_principal_name', 'entra_last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -34,6 +34,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
+            'can_view_all_countries' => 'boolean',
             'is_country_admin' => 'boolean',
             'menu_permissions' => 'array',
             'entra_last_login_at' => 'datetime',
@@ -62,7 +63,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canViewAllCountries(): bool
     {
-        return (bool) $this->is_super_admin;
+        return (bool) ($this->is_super_admin || $this->can_view_all_countries);
     }
 
     public function effectivePermissions(): array

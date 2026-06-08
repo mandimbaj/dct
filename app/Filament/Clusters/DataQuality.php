@@ -16,7 +16,7 @@ class DataQuality extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckBadge;
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $slug = 'data-quality';
 

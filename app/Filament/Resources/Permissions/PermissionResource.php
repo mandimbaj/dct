@@ -63,7 +63,7 @@ class PermissionResource extends Resource
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->canViewAllCountries();
+        return (bool) auth()->user()?->is_super_admin;
     }
 
     public static function canCreate(): bool
@@ -73,7 +73,7 @@ class PermissionResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        if (auth()->user()?->canViewAllCountries()) {
+        if (auth()->user()?->is_super_admin) {
             return true;
         }
 
@@ -98,6 +98,10 @@ class PermissionResource extends Resource
                             ->dehydrated(false),
                         Checkbox::make('is_super_admin')
                             ->label(__('aho.fields.super_admin'))
+                            ->disabled()
+                            ->dehydrated(false),
+                        Checkbox::make('can_view_all_countries')
+                            ->label(__('aho.fields.regional_data_access'))
                             ->disabled()
                             ->dehydrated(false),
                         Select::make('location_id')
@@ -139,6 +143,11 @@ class PermissionResource extends Resource
                 TextColumn::make('name')->label(__('aho.fields.name'))->searchable()->sortable(),
                 TextColumn::make('email')->label(__('aho.fields.email'))->searchable()->sortable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.assigned_country'))->placeholder(__('aho.fields.all_countries')),
+                TextColumn::make('can_view_all_countries')
+                    ->label(__('aho.fields.regional_data_access'))
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? __('aho.fields.yes') : __('aho.fields.no'))
+                    ->toggleable(),
                 TextColumn::make('location_assignments_count')
                     ->label(__('aho.fields.level2_locations'))
                     ->counts('locationAssignments')
@@ -182,7 +191,7 @@ class PermissionResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user?->canViewAllCountries()) {
+        if ($user?->is_super_admin) {
             return $query->with(['location.translations']);
         }
 

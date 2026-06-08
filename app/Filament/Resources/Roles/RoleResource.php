@@ -73,7 +73,7 @@ class RoleResource extends Resource
         $user = auth()->user();
 
         return (bool) $user
-            && ($user->canViewAllCountries() || filled($user->location_id))
+            && ($user->is_super_admin || filled($user->location_id))
             && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_CREATE);
     }
 
@@ -127,15 +127,15 @@ class RoleResource extends Resource
                             ->searchable()
                             ->preload()
                             ->placeholder(__('aho.fields.all_countries'))
-                            ->default(fn (): ?int => auth()->user()?->canViewAllCountries() ? null : auth()->user()?->location_id)
-                            ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
+                            ->default(fn (): ?int => auth()->user()?->is_super_admin ? null : auth()->user()?->location_id)
+                            ->disabled(fn (): bool => ! auth()->user()?->is_super_admin)
                             ->dehydrated()
                             ->helperText(__('aho.auth_management.help.role_scope')),
                         Checkbox::make('is_system')
                             ->label(__('aho.fields.system_role'))
                             ->helperText(__('aho.auth_management.help.system_role'))
-                            ->disabled(fn (): bool => ! auth()->user()?->canViewAllCountries())
-                            ->dehydrated(fn (): bool => (bool) auth()->user()?->canViewAllCountries()),
+                            ->disabled(fn (): bool => ! auth()->user()?->is_super_admin)
+                            ->dehydrated(fn (): bool => (bool) auth()->user()?->is_super_admin),
                         Textarea::make('description')
                             ->label(__('aho.fields.description'))
                             ->rows(3)
@@ -203,7 +203,7 @@ class RoleResource extends Resource
         $query = parent::getEloquentQuery()->with(['location.translations']);
         $user = auth()->user();
 
-        if ($user?->canViewAllCountries()) {
+        if ($user?->is_super_admin) {
             return $query;
         }
 

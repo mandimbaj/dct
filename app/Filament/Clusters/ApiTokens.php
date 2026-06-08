@@ -16,7 +16,7 @@ class ApiTokens extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 11;
 
     protected static ?string $slug = 'api-tokens';
 

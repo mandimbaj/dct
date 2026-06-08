@@ -156,13 +156,9 @@
 }
 
 .aho-topbar-brand__logo {
-    background: white;
-    border-radius: 10px;
     height: clamp(2.25rem, 8vw, 3.15rem);
     max-width: clamp(11.5rem, 25vw, 18rem);
     object-fit: contain;
-    padding: 0.35rem 0.75rem;
-    box-shadow: rgba(0, 0, 0, 0.08) 0 1px 8px;
     flex-shrink: 0;
 }
 
@@ -204,6 +200,19 @@
     height: 0.9rem;
     object-fit: cover;
     width: 1.35rem;
+}
+
+.aho-topbar-country-flag {
+    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+    display: block;
+    flex-shrink: 0;
+    height: 1.25rem;
+    margin-inline: 0.25rem 0.1rem;
+    object-fit: cover;
+    width: 1.8rem;
 }
 
 .aho-topbar-search {
@@ -1926,6 +1935,14 @@
     width: 100%;
 }
 
+.fi-topbar .fi-global-search-ctn + .aho-topbar-country-flag {
+    order: 1;
+}
+
+.fi-topbar .aho-topbar-country-flag + .fi-user-menu {
+    order: 2;
+}
+
 .fi-topbar .fi-topbar-item-btn {
     align-items: center;
     display: inline-flex;
@@ -1992,6 +2009,12 @@
 
     .fi-topbar .fi-global-search-ctn {
         display: none;
+    }
+
+    .aho-topbar-country-flag {
+        height: 1.1rem;
+        margin-inline: 0.1rem;
+        width: 1.55rem;
     }
 
     .aho-locale-switcher {

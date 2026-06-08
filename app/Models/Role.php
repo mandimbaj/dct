@@ -35,7 +35,7 @@ class Role extends Model
             return false;
         }
 
-        if ($actor->canViewAllCountries()) {
+        if ($actor->is_super_admin) {
             return true;
         }
 
@@ -50,7 +50,7 @@ class Role extends Model
             return false;
         }
 
-        if ($actor->canViewAllCountries()) {
+        if ($actor->is_super_admin) {
             return true;
         }
 

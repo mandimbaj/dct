@@ -1,6 +1,5 @@
 @php
-    $logoPath = \App\Support\AhoBrand::logoPath();
-    $countryIdentity = \App\Support\CountryContext::identityForUser(auth()->user());
+    $logoPath = \App\Support\AhoBrand::whiteLogoPath();
 @endphp
 
 <div class="aho-topbar-brand">
@@ -11,16 +10,6 @@
             <span class="aho-topbar-welcome">
                 <span class="aho-topbar-welcome__separator" aria-hidden="true">|</span>
                 <span class="aho-topbar-welcome__text">{{ __('aho.layout.welcome', ['name' => auth()->user()->name]) }}</span>
-                @if ($countryIdentity['flag_url'] ?? null)
-                    <img
-                        src="{{ $countryIdentity['flag_url'] }}"
-                        srcset="{{ $countryIdentity['flag_srcset'] ?? '' }}"
-                        alt="{{ $countryIdentity['name'] ?? '' }}"
-                        class="aho-topbar-welcome__flag"
-                        loading="lazy"
-                        referrerpolicy="no-referrer"
-                    >
-                @endif
             </span>
         @endauth
     </div>

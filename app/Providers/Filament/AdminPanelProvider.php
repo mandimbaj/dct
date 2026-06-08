@@ -60,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString(
                     '<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">'.
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260604-1">'.
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260605-2">'.
                     '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260602-1"></script>'
                 ),
             )
@@ -71,6 +71,10 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
                 fn () => view('filament.auth.microsoft-login'),
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn () => view('filament.topbar-country-flag'),
             )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_START,

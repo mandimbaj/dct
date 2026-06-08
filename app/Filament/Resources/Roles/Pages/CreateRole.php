@@ -16,7 +16,7 @@ class CreateRole extends CreateRecord
         $data = UserPermissions::removeFormState($data);
         $data['menu_permissions'] = $permissions;
 
-        if (! auth()->user()?->canViewAllCountries()) {
+        if (! auth()->user()?->is_super_admin) {
             $data['location_id'] = auth()->user()?->location_id;
         }
 
