@@ -2,7 +2,7 @@
 
 cd /home/site/wwwroot
 
-echo "=== Création des dossiers storage manquants ==="
+echo "=== Création des dossiers storage ==="
 mkdir -p storage/framework/views
 mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
@@ -13,14 +13,16 @@ echo "=== Permissions ==="
 chmod -R 775 storage
 chmod -R 775 bootstrap/cache
 
+echo "=== Configuration Nginx → /public ==="
+cp /home/site/wwwroot/default /etc/nginx/sites-available/default
+service nginx reload
+
 echo "=== Composer install ==="
-# Chercher composer dans les emplacements possibles sur Azure
 if [ -f /usr/local/bin/composer ]; then
     COMPOSER=/usr/local/bin/composer
 elif [ -f /usr/bin/composer ]; then
     COMPOSER=/usr/bin/composer
 else
-    # Télécharger composer si absent
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     COMPOSER=/usr/local/bin/composer
 fi
