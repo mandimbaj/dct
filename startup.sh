@@ -72,6 +72,8 @@ server {
     index index.php index.html;
 
     client_max_body_size 100M;
+    client_header_buffer_size 32k;
+    large_client_header_buffers 8 64k;
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
