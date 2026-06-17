@@ -11,7 +11,7 @@ class CreateHealthServiceIndicator extends CreateIndicator
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['reference_id'] = $data['reference_id'] ?? 5;
+        $data['reference_id'] = $data['reference_id'] ?? HealthServiceIndicatorResource::hscReferenceId();
 
         return parent::mutateFormDataBeforeCreate($data);
     }

@@ -32,7 +32,7 @@ class UhcClockGroupResource extends Resource
 
     protected static ?string $slug = 'groups';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {

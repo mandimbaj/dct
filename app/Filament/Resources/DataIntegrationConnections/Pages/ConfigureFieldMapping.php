@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DataIntegrationConnections\Pages;
 use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
 use App\Models\DataIntegrationConnection;
 use App\Models\DataIntegrationFieldMapping;
+use App\Support\DataIntegration\ExternalFieldDetector;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -55,6 +56,14 @@ class ConfigureFieldMapping extends Page
                     ->description(__('aho.data_integration.help.field_mapping_config_description'))
                     ->icon('heroicon-o-arrow-path')
                     ->schema([
+                        Actions::make([
+                            Action::make('refresh_external_fields')
+                                ->label(__('aho.data_integration.actions.refresh_external_fields'))
+                                ->icon('heroicon-o-arrow-path')
+                                ->color('gray')
+                                ->action(fn (): null => $this->refreshExternalFields()),
+                        ])
+                            ->columnSpanFull(),
                         Repeater::make('field_mappings')
                             ->label(__('aho.data_integration.fields.field_mappings'))
                             ->schema([
@@ -150,11 +159,7 @@ class ConfigureFieldMapping extends Page
     protected function detectExternalFields(): void
     {
         try {
-            $this->externalFields = match ($this->record->integration_method) {
-                DataIntegrationConnection::METHOD_API => $this->detectApiFields(),
-                DataIntegrationConnection::METHOD_DIRECT => $this->detectDatabaseFields(),
-                default => collect(),
-            };
+            $this->externalFields = ExternalFieldDetector::detect($this->record);
         } catch (\Throwable $e) {
             Notification::make()
                 ->danger()
@@ -162,64 +167,6 @@ class ConfigureFieldMapping extends Page
                 ->body($e->getMessage())
                 ->send();
         }
-    }
-
-    protected function detectApiFields(): Collection
-    {
-        // This would integrate with the actual API client
-        // For now, return empty collection - implement based on provider
-        return collect([
-            'country',
-            'indicator',
-            'year',
-            'period',
-            'sex',
-            'ageGroup',
-            'value',
-            'value_received',
-            'unit',
-            'lowerBound',
-            'upperBound',
-            'comments',
-            'categoryOption',
-            'age',
-            'sex',
-        ]);
-    }
-
-    protected function detectDatabaseFields(): Collection
-    {
-        try {
-            $driver = $this->record->database_driver;
-            $tableName = 'health_indicators'; // Default table name
-
-            return match ($driver) {
-                'mysql', 'pgsql', 'sqlsrv' => $this->getFieldsFromDatabase(),
-                'sqlite' => $this->getFieldsFromDatabase(),
-                default => collect(),
-            };
-        } catch (\Throwable) {
-            return collect();
-        }
-    }
-
-    protected function getFieldsFromDatabase(): Collection
-    {
-        // Implementation would depend on database connection
-        // This is a placeholder that could use Laravel's Schema builder
-        return collect([
-            'country_code',
-            'indicator_code',
-            'reporting_year',
-            'reporting_period',
-            'gender',
-            'age_category',
-            'reported_value',
-            'measurement_unit',
-            'age',
-            'sex',
-            'category_option',
-        ]);
     }
 
     protected function getFormActions(): array
@@ -234,6 +181,23 @@ class ConfigureFieldMapping extends Page
                 ->color('gray')
                 ->url(DataIntegrationConnectionResource::getUrl('index')),
         ];
+    }
+
+    public function refreshExternalFields(): null
+    {
+        $this->detectExternalFields();
+
+        $count = $this->externalFields->count();
+
+        $notification = Notification::make()
+            ->title($count > 0
+                ? __('aho.data_integration.messages.external_fields_loaded', ['count' => $count])
+                : __('aho.data_integration.messages.no_external_fields'));
+
+        $count > 0 ? $notification->success() : $notification->warning();
+        $notification->send();
+
+        return null;
     }
 
     public function save(): void

@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\ApprovalWorkflow;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
+use Throwable;
 
 class HealthServiceValue extends Model
 {
@@ -29,6 +33,43 @@ class HealthServiceValue extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (HealthServiceValue $value): void {
+            GeneratedCode::ensureUuid($value);
+            $value->user_id ??= auth()->id() ?? 1;
+            $value->comment ??= ApprovalWorkflow::STATUS_PENDING;
+        });
+
+        static::saving(function (HealthServiceValue $value): void {
+            $value->period = self::periodLabel($value);
+        });
+    }
+
+    private static function periodLabel(HealthServiceValue $value): ?string
+    {
+        if (blank($value->start_period)) {
+            return $value->period;
+        }
+
+        try {
+            $start = Carbon::parse($value->start_period);
+            $end = filled($value->end_period) ? Carbon::parse($value->end_period) : $start;
+        } catch (Throwable) {
+            return $value->period;
+        }
+
+        return match ((int) $value->periodicity_id) {
+            1 => $start->format('Y-m'),
+            2 => $start->format('Y').'-Q'.(int) ceil($start->month / 3),
+            3 => $start->format('Y').($end->month < 7 ? '-S1' : '-S2'),
+            4 => $start->format('Y'),
+            default => $start->year === $end->year
+                ? (string) $start->year
+                : $start->year.'-'.$end->year,
+        };
     }
 
     public function indicator(): BelongsTo

@@ -35,6 +35,8 @@ class UhcPriorityIndicatorResource extends Resource
 
     protected static ?string $slug = 'priority-indicators';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationGroup(): string|UnitEnum|null

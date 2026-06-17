@@ -8,16 +8,19 @@ use App\Filament\Resources\HealthCadres\Pages\CreateHealthCadre;
 use App\Filament\Resources\HealthCadres\Pages\EditHealthCadre;
 use App\Filament\Resources\HealthCadres\Pages\ListHealthCadres;
 use App\Models\HealthCadre;
-use App\Support\WarehouseForm;
+use App\Support\SelectOptions;
+use App\Support\TranslatedReferenceForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class HealthCadreResource extends Resource
@@ -56,7 +59,21 @@ class HealthCadreResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return WarehouseForm::configure($schema, static::getModel());
+        return TranslatedReferenceForm::configure(
+            schema: $schema,
+            modelClass: static::getModel(),
+            translationFields: ['name', 'shortname', 'academic', 'description'],
+            baseComponents: [
+                Select::make('parent_id')
+                    ->label(__('aho.fields.parent'))
+                    ->relationship('parent', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                    ->getOptionLabelFromRecordUsing(fn (HealthCadre $record): string => $record->display_name)
+                    ->options(fn (): array => SelectOptions::fromDisplayNameQuery(HealthCadre::query(), keyName: 'cadre_id'))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(HealthCadre::query(), $search, 'cadre_id'))
+                    ->searchable()
+                    ->preload(),
+            ],
+        );
     }
 
     public static function table(Table $table): Table

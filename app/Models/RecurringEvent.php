@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -29,6 +30,23 @@ class RecurringEvent extends Model
     public const CREATED_AT = 'date_created';
 
     public const UPDATED_AT = 'date_lastupdated';
+
+    protected static function booted(): void
+    {
+        static::creating(function (RecurringEvent $event): void {
+            GeneratedCode::ensureUuid($event);
+            GeneratedCode::ensure($event, 'code', 'EVT', 45);
+            $event->status ??= 'active';
+        });
+
+        static::saving(function (RecurringEvent $event): void {
+            if (filled($event->start_year) && filled($event->end_year)) {
+                $event->period = ((int) $event->start_year === (int) $event->end_year)
+                    ? (string) (int) $event->start_year
+                    : ((int) $event->start_year).'-'.((int) $event->end_year);
+            }
+        });
+    }
 
     /**
      * Multilingual event labels and themes from stg_recurring_event_translation.

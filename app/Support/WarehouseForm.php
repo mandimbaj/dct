@@ -72,6 +72,8 @@ class WarehouseForm
                 ->default(fn (): string => (string) Str::uuid()),
             ! $readOnly && $name === 'code' => Hidden::make($name)
                 ->default(fn (): string => GeneratedCode::forModel($model, 'code', null, $length ?? 50)),
+            ! $readOnly && $name === 'user_id' => Hidden::make($name)
+                ->default(fn (): int => auth()->id() ?? 1),
             self::hasRelationForField($name, $model) => self::selectForForeignKey($name, $model),
             self::isBoolean($type, $typeName) => Toggle::make($name),
             self::isDateTime($typeName) => DateTimePicker::make($name)->seconds(false),

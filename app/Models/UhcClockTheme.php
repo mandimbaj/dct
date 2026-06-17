@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\HasPreferredTranslationName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UhcClockTheme extends Model
@@ -36,6 +37,18 @@ class UhcClockTheme extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id', 'domain_id');
+    }
+
+    public function indicators(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            UhcClockIndicator::class,
+            'stg_uhclock_indicator_themes_indicators',
+            'stguhcindicatortheme_id',
+            'stguhclockindicators_id',
+            'domain_id',
+            'id',
+        );
     }
 
     public function getDisplayNameAttribute(): string

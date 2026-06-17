@@ -8,12 +8,17 @@ use App\Filament\Resources\DataElements\Pages\CreateDataElement;
 use App\Filament\Resources\DataElements\Pages\EditDataElement;
 use App\Filament\Resources\DataElements\Pages\ListDataElements;
 use App\Models\DataElement;
-use App\Support\WarehouseForm;
+use App\Support\WarehouseLocale;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -56,7 +61,48 @@ class DataElementResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return WarehouseForm::configure($schema, static::getModel());
+        return $schema->components([
+            Hidden::make('uuid'),
+            Hidden::make('code'),
+            Hidden::make('translation_language_code')
+                ->default(fn (): string => WarehouseLocale::current()),
+
+            Section::make(__('aho.form_sections.primary_attributes'))
+                ->schema([
+                    TextInput::make('translation_name')
+                        ->label(__('aho.fields.name'))
+                        ->required()
+                        ->maxLength(230),
+                    TextInput::make('translation_shortname')
+                        ->label(__('aho.fields.short_name'))
+                        ->required()
+                        ->maxLength(50),
+                    Textarea::make('translation_description')
+                        ->label(__('aho.fields.description'))
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+
+            Section::make(__('aho.form_sections.secondary_attributes'))
+                ->schema([
+                    Select::make('aggregation_type')
+                        ->label(__('aho.fields.aggregation_type'))
+                        ->options([
+                            'Count' => 'Count',
+                            'Sum' => 'Sum',
+                            'Average' => 'Average',
+                            'Standard Deviation' => 'Standard Deviation',
+                            'Variance' => 'Variance',
+                            'Min' => 'Min',
+                            'max' => 'max',
+                            'None' => 'None',
+                        ])
+                        ->default('Count')
+                        ->required(),
+                ])
+                ->columns(2),
+        ]);
     }
 
     public static function table(Table $table): Table

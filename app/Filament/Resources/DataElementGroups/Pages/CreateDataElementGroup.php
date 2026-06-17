@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\DataElementGroups\Pages;
 
 use App\Filament\Resources\DataElementGroups\DataElementGroupResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateTranslatedRecord;
 
-class CreateDataElementGroup extends CreateRecord
+class CreateDataElementGroup extends CreateTranslatedRecord
 {
     protected static string $resource = DataElementGroupResource::class;
 }

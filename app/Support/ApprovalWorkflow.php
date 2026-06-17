@@ -36,11 +36,7 @@ class ApprovalWorkflow
 
     public static function color(?string $status): string
     {
-        return match (static::normalizeStatus($status)) {
-            self::STATUS_APPROVED => 'success',
-            self::STATUS_REJECTED => 'danger',
-            default => 'warning',
-        };
+        return StatusColor::for($status);
     }
 
     public static function isApproved(Model $record): bool

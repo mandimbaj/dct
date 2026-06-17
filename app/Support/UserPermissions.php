@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Filament\Clusters\ApiTokens\Pages\ApiTokenStatus;
 use App\Filament\Clusters\DataQuality\Pages\IndicatorQualityChecks;
+use App\Filament\Resources\DataElementValues\DataElementValueResource;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Filament\Resources\KnowledgeProducts\KnowledgeProductResource;
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
@@ -434,7 +435,7 @@ class UserPermissions
                     static::ACTION_UPDATE,
                     static::ACTION_DELETE,
                     ...(in_array($resourceClass, [HealthIndicatorValueResource::class], true) ? [static::ACTION_IMPORT] : []),
-                    ...(in_array($resourceClass, [HealthIndicatorValueResource::class, KnowledgeProductResource::class], true) ? [static::ACTION_APPROVE] : []),
+                    ...(in_array($resourceClass, [DataElementValueResource::class, HealthIndicatorValueResource::class, KnowledgeProductResource::class], true) ? [static::ACTION_APPROVE] : []),
                 ],
             ];
         }

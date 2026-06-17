@@ -12,6 +12,7 @@ use App\Support\FilamentReadOnlyTables;
 use BackedEnum;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class HealthServiceProgrammeLookupResource extends Resource
@@ -48,6 +49,26 @@ class HealthServiceProgrammeLookupResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('aho.resources.health_service_programme_lookup.plural');
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
     }
 
     public static function table(Table $table): Table

@@ -2,12 +2,6 @@
 
 namespace App\Filament\Resources\HealthServiceProgrammes;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use App\Support\TranslatedReferenceForm;
 use App\Filament\Resources\HealthServiceProgrammes\Pages\EditHealthServiceProgramme;
 use App\Filament\Resources\HealthServiceProgrammes\Pages\CreateHealthServiceProgramme;
 use App\Filament\Clusters\HealthServices;
@@ -17,11 +11,19 @@ use App\Filament\Resources\HealthServiceProgrammes\Pages\ListHealthServiceProgra
 use App\Filament\Resources\HealthServiceValues\HealthServiceValueResource;
 use App\Models\HealthServiceProgramme;
 use App\Support\FilamentSearch;
+use App\Support\TranslatedReferenceForm;
+use App\Support\UserPermissions;
 use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class HealthServiceProgrammeResource extends Resource
@@ -63,6 +65,26 @@ class HealthServiceProgrammeResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return TranslatedReferenceForm::healthServiceProgramme($schema, static::getModel());
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_CREATE);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_UPDATE);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_DELETE);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_DELETE);
     }
 
     public static function table(Table $table): Table
@@ -109,6 +131,27 @@ class HealthServiceProgrammeResource extends Resource
     protected static function fallbackPermissionResources(): array
     {
         return [HealthServiceValueResource::class];
+    }
+
+    private static function canUseInheritedPermission(string $action): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->is_super_admin) {
+            return true;
+        }
+
+        foreach ([static::class, ...static::fallbackPermissionResources()] as $resourceClass) {
+            if (UserPermissions::allowsResource($user, $resourceClass, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function getPages(): array

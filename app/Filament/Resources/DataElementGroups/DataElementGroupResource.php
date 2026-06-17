@@ -7,13 +7,20 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\DataElementGroups\Pages\CreateDataElementGroup;
 use App\Filament\Resources\DataElementGroups\Pages\EditDataElementGroup;
 use App\Filament\Resources\DataElementGroups\Pages\ListDataElementGroups;
+use App\Models\DataElement;
 use App\Models\DataElementGroup;
-use App\Support\WarehouseForm;
+use App\Support\SelectOptions;
+use App\Support\WarehouseLocale;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -56,7 +63,42 @@ class DataElementGroupResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return WarehouseForm::configure($schema, static::getModel());
+        return $schema->components([
+            Hidden::make('uuid'),
+            Hidden::make('code'),
+            Hidden::make('translation_language_code')
+                ->default(fn (): string => WarehouseLocale::current()),
+
+            Section::make(__('aho.form_sections.data_element_group_attributes'))
+                ->schema([
+                    TextInput::make('translation_name')
+                        ->label(__('aho.fields.name'))
+                        ->required()
+                        ->maxLength(200),
+                    TextInput::make('translation_shortname')
+                        ->label(__('aho.fields.short_name'))
+                        ->required()
+                        ->maxLength(120),
+                    Textarea::make('translation_description')
+                        ->label(__('aho.fields.description'))
+                        ->rows(3)
+                        ->required()
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+
+            Section::make(__('aho.form_sections.data_elements_allocation'))
+                ->schema([
+                    Select::make('dataElements')
+                        ->label(__('aho.fields.data_elements'))
+                        ->relationship('dataElements', 'code', modifyQueryUsing: fn ($query) => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                        ->getOptionLabelFromRecordUsing(fn (DataElement $record): string => trim(($record->code ? $record->code.' - ' : '').$record->display_name))
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->columnSpanFull(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

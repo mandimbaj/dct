@@ -5,6 +5,7 @@ namespace App\Filament\Resources\HealthIndicatorValues\Schemas;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Models\Country;
 use App\Models\DataSource;
+use App\Models\HealthIndicatorValue;
 use App\Models\Indicator;
 use App\Models\IndicatorCategory;
 use App\Models\MeasureMethod;
@@ -16,8 +17,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class HealthIndicatorValueForm
 {
@@ -57,6 +62,7 @@ class HealthIndicatorValueForm
                             ))
                             ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
                             ->searchable()
+                            ->live()
                             ->preload()
                             ->required(),
 
@@ -69,11 +75,6 @@ class HealthIndicatorValueForm
                             ->label(__('aho.fields.end'))
                             ->numeric()
                             ->required(),
-
-                        TextInput::make('period')
-                            ->label(__('aho.fields.period'))
-                            ->maxLength(25)
-                            ->required(),
                     ])
                     ->columns(2)
                     ->columnSpanFull(),
@@ -83,11 +84,11 @@ class HealthIndicatorValueForm
                         Select::make('categoryoption_id')
                             ->label(__('aho.fields.category_option'))
                             ->relationship('categoryOption', 'code', modifyQueryUsing: fn (Builder $query): Builder => $query
-                                ->with('translations')
+                                ->with(['translations', 'parentCategory.translations'])
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
-                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(IndicatorCategory::query(), keyName: 'categoryoption_id'))
-                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorCategory::query(), $search, 'categoryoption_id'))
+                            ->getOptionLabelFromRecordUsing(fn (IndicatorCategory $record): string => self::categoryOptionLabel($record))
+                            ->options(fn (): array => self::categoryOptionOptions())
+                            ->getSearchResultsUsing(fn (?string $search): array => self::categoryOptionSearchResults($search))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -124,7 +125,11 @@ class HealthIndicatorValueForm
                         TextInput::make('value_received')
                             ->label(__('aho.fields.value_received'))
                             ->numeric()
-                            ->required(),
+                            ->live()
+                            ->disabled(fn (Get $get): bool => filled($get('string_value')))
+                            ->dehydrated()
+                            ->required(fn (Get $get): bool => blank($get('string_value')))
+                            ->afterStateUpdated(fn (Set $set, mixed $state): mixed => filled($state) ? $set('string_value', null) : null),
 
                         TextInput::make('numerator_value')
                             ->label(__('aho.fields.numerator'))
@@ -149,10 +154,20 @@ class HealthIndicatorValueForm
                         TextInput::make('string_value')
                             ->label(__('aho.fields.text_value'))
                             ->maxLength(500)
+                            ->live()
+                            ->disabled(fn (Get $get): bool => filled($get('value_received')))
+                            ->dehydrated()
+                            ->required(fn (Get $get): bool => blank($get('value_received')))
+                            ->afterStateUpdated(fn (Set $set, mixed $state): mixed => filled($state) ? $set('value_received', null) : null)
                             ->columnSpanFull(),
 
                         Toggle::make('priority')
                             ->label(__('aho.fields.priority'))
+                            ->disabled(fn (Get $get, ?Model $record): bool => self::priorityLimitReached($get, $record))
+                            ->helperText(fn (Get $get, ?Model $record): ?string => self::priorityLimitReached($get, $record)
+                                ? __('aho.indicator_values.priority_limit_reached')
+                                : null)
+                            ->dehydrated(fn (Get $get, ?Model $record): bool => ! self::priorityLimitReached($get, $record))
                             ->default(false),
 
                         Select::make('comment')
@@ -186,5 +201,83 @@ class HealthIndicatorValueForm
             auth()->user()
             && UserPermissions::allowsResource(auth()->user(), HealthIndicatorValueResource::class, UserPermissions::ACTION_APPROVE)
         );
+    }
+
+    /**
+     * @return array<int|string, string|array<int, string>>
+     */
+    private static function categoryOptionOptions(): array
+    {
+        return self::categoryOptionRecords()
+            ->groupBy(fn (IndicatorCategory $record): string => $record->parentCategory?->display_name ?: __('aho.data_integration.other'))
+            ->map(fn ($group): array => $group
+                ->mapWithKeys(fn (IndicatorCategory $record): array => [
+                    $record->categoryoption_id => $record->display_name,
+                ])
+                ->all())
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function categoryOptionSearchResults(?string $search = null): array
+    {
+        $normalizedSearch = self::normalizeCategoryOption((string) $search);
+
+        return self::categoryOptionRecords()
+            ->filter(fn (IndicatorCategory $record): bool => blank($search) || str_contains(
+                self::normalizeCategoryOption(self::categoryOptionLabel($record)),
+                $normalizedSearch,
+            ))
+            ->mapWithKeys(fn (IndicatorCategory $record): array => [
+                $record->categoryoption_id => self::categoryOptionLabel($record),
+            ])
+            ->all();
+    }
+
+    private static function categoryOptionRecords()
+    {
+        return IndicatorCategory::query()
+            ->with(['translations', 'parentCategory.translations'])
+            ->limit(SelectOptions::LIMIT)
+            ->get()
+            ->sortBy(
+                fn (IndicatorCategory $record): string => self::normalizeCategoryOption(
+                    ($record->parentCategory?->display_name ?? '').' '.$record->display_name,
+                ),
+                SORT_NATURAL,
+            );
+    }
+
+    private static function categoryOptionLabel(IndicatorCategory $record): string
+    {
+        $group = $record->parentCategory?->display_name;
+        $option = $record->display_name;
+
+        return filled($group) ? "{$group} - {$option}" : $option;
+    }
+
+    private static function normalizeCategoryOption(string $value): string
+    {
+        return (string) Str::of($value)->ascii()->lower()->squish();
+    }
+
+    private static function priorityLimitReached(Get $get, ?Model $record): bool
+    {
+        $locationId = $get('location_id');
+
+        if (blank($locationId)) {
+            return false;
+        }
+
+        if ($record instanceof HealthIndicatorValue && (bool) $record->priority) {
+            return false;
+        }
+
+        return HealthIndicatorValue::query()
+            ->where('location_id', $locationId)
+            ->where('priority', true)
+            ->count() >= 10;
     }
 }

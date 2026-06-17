@@ -7,14 +7,19 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\TrainingInstitutions\Pages\CreateTrainingInstitution;
 use App\Filament\Resources\TrainingInstitutions\Pages\EditTrainingInstitution;
 use App\Filament\Resources\TrainingInstitutions\Pages\ListTrainingInstitutions;
+use App\Models\Country;
+use App\Models\InstitutionProgramme;
+use App\Models\InstitutionType;
 use App\Models\TrainingInstitution;
+use App\Support\SelectOptions;
+use App\Support\TranslatedReferenceForm;
 use App\Support\UserCountryAccess;
-use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -64,7 +69,58 @@ class TrainingInstitutionResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return WarehouseForm::configure($schema, static::getModel());
+        return TranslatedReferenceForm::configure(
+            schema: $schema,
+            modelClass: static::getModel(),
+            translationFields: [
+                'name',
+                'accreditation',
+                'accreditation_info',
+                'regulator',
+                'address',
+                'posta',
+                'email',
+                'phone_number',
+                'url',
+                'latitude',
+                'longitude',
+                'faculty',
+                'language',
+            ],
+            baseComponents: [
+                Select::make('type_id')
+                    ->label(__('aho.fields.type'))
+                    ->relationship('type', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                    ->getOptionLabelFromRecordUsing(fn (InstitutionType $record): string => $record->display_name)
+                    ->options(fn (): array => SelectOptions::fromDisplayNameQuery(InstitutionType::query(), keyName: 'type_id'))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(InstitutionType::query(), $search, 'type_id'))
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Select::make('location_id')
+                    ->label(__('aho.fields.location'))
+                    ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(Country::query()),
+                        keyName: 'location_id',
+                    ))
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(Country::query()),
+                        $search,
+                        'location_id',
+                    ))
+                    ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
+                    ->searchable()
+                    ->required(),
+                Select::make('programmes')
+                    ->label(__('aho.fields.programmes'))
+                    ->relationship('programmes', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                    ->getOptionLabelFromRecordUsing(fn (InstitutionProgramme $record): string => $record->display_name)
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
+            ],
+            includeIdentityComponents: false,
+        );
     }
 
     public static function table(Table $table): Table

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GeneratedCode;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,15 @@ class FacilityServiceReadiness extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (FacilityServiceReadiness $readiness): void {
+            GeneratedCode::ensureUuid($readiness);
+            GeneratedCode::ensure($readiness, 'code', 'FSR', 45);
+            $readiness->user_id ??= auth()->id() ?? 1;
+        });
     }
 
     public function facility(): BelongsTo

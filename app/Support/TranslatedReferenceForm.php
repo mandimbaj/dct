@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Country;
 use App\Models\HealthServiceProgramme;
+use App\Models\Indicator;
 use App\Models\UhcClockIndicator;
 use App\Models\UhcClockTheme;
 use App\Models\User;
@@ -15,6 +16,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -149,16 +152,57 @@ class TranslatedReferenceForm
 
     public static function healthServiceProgramme(Schema $schema, string $modelClass): Schema
     {
-        return self::configure($schema, $modelClass, baseComponents: [
-            TextInput::make('level')
-                ->label(__('aho.fields.level'))
-                ->numeric()
-                ->required(),
-            Select::make('parent_id')
-                ->label(__('aho.fields.parent'))
-                ->options(fn (): array => SelectOptions::fromDisplayNameQuery(HealthServiceProgramme::query(), keyName: 'domain_id'))
-                ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(HealthServiceProgramme::query(), $search, 'domain_id'))
-                ->searchable(),
+        return $schema->components([
+            Hidden::make('translation_language_code')
+                ->default(fn (): string => WarehouseLocale::current()),
+
+            Section::make(__('aho.form_sections.programme_attributes'))
+                ->schema([
+                    TextInput::make('translation_name')
+                        ->label(__('aho.fields.name'))
+                        ->required()
+                        ->maxLength(200),
+                    TextInput::make('translation_shortname')
+                        ->label(__('aho.fields.short_name'))
+                        ->maxLength(200),
+                    Select::make('parent_id')
+                        ->label(__('aho.fields.parent'))
+                        ->options(fn (): array => SelectOptions::fromDisplayNameQuery(HealthServiceProgramme::query(), keyName: 'domain_id'))
+                        ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(HealthServiceProgramme::query(), $search, 'domain_id'))
+                        ->searchable(),
+                    Select::make('level')
+                        ->label(__('aho.fields.level'))
+                        ->options([
+                            1 => __('aho.fields.level').' 1',
+                            2 => __('aho.fields.level').' 2',
+                            3 => __('aho.fields.level').' 3',
+                            4 => __('aho.fields.level').' 4',
+                        ])
+                        ->required(),
+                ])
+                ->columns(2),
+
+            Section::make(__('aho.form_sections.domain_description'))
+                ->schema([
+                    Textarea::make('translation_description')
+                        ->label(__('aho.fields.description'))
+                        ->rows(4)
+                        ->columnSpanFull(),
+                    Select::make('indicators')
+                        ->label(__('aho.fields.indicators'))
+                        ->relationship('indicators', 'afrocode', modifyQueryUsing: fn (Builder $query): Builder => $query
+                            ->with('translations')
+                            ->whereHas('reference', function (Builder $query): Builder {
+                                return $query->where('code', 'GIR0005')->orWhere('reference_id', 5);
+                            })
+                            ->orderBy('afrocode'))
+                        ->getOptionLabelFromRecordUsing(fn (Indicator $record): string => trim(($record->afrocode ? $record->afrocode.' - ' : '').$record->display_name))
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
         ]);
     }
 
@@ -228,10 +272,29 @@ class TranslatedReferenceForm
                         ->getOptionLabelFromRecordUsing(fn (UhcClockTheme $record): string => $record->display_name)
                         ->multiple()
                         ->preload()
-                        ->searchable(),
+                        ->searchable()
+                        ->live()
+                        ->afterStateUpdated(fn (Set $set): mixed => $set('indicators', [])),
                     Select::make('indicators')
                         ->label(__('aho.fields.indicators'))
-                        ->relationship('indicators', 'id')
+                        ->relationship('indicators', 'id', modifyQueryUsing: function (Builder $query, Get $get): Builder {
+                            $themeIds = array_filter((array) $get('themes'));
+
+                            if ($themeIds !== []) {
+                                $groupIds = UhcClockTheme::query()
+                                    ->whereIn('domain_id', $themeIds)
+                                    ->pluck('group_id')
+                                    ->filter()
+                                    ->values()
+                                    ->all();
+
+                                $query->when($groupIds !== [], fn (Builder $query): Builder => $query->whereIn('group_id', $groupIds));
+                            }
+
+                            return $query
+                                ->with(['indicator.translations'])
+                                ->orderBy('indicator_id');
+                        })
                         ->getOptionLabelFromRecordUsing(fn (UhcClockIndicator $record): string => trim(($record->indicator?->afrocode ? $record->indicator->afrocode.' - ' : '').($record->indicator?->display_name ?? $record->id)))
                         ->multiple()
                         ->preload()

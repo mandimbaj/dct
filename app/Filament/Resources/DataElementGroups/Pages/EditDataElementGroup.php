@@ -3,17 +3,9 @@
 namespace App\Filament\Resources\DataElementGroups\Pages;
 
 use App\Filament\Resources\DataElementGroups\DataElementGroupResource;
-use Filament\Actions\DeleteAction;
-use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
+use App\Filament\Resources\Pages\EditTranslatedRecord as EditRecord;
 
 class EditDataElementGroup extends EditRecord
 {
     protected static string $resource = DataElementGroupResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            DeleteAction::make(),
-        ];
-    }
 }

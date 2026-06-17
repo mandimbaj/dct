@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,6 +24,14 @@ class HealthServiceProgramme extends Model
     public const CREATED_AT = 'date_created';
 
     public const UPDATED_AT = 'date_lastupdated';
+
+    protected static function booted(): void
+    {
+        static::creating(function (HealthServiceProgramme $programme): void {
+            GeneratedCode::ensureUuid($programme);
+            GeneratedCode::ensure($programme, 'code', 'HSC', 45);
+        });
+    }
 
     protected function casts(): array
     {

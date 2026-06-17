@@ -52,6 +52,7 @@ class DataIntegrationConnectionForm
                     ->schema([
                         TextInput::make('server_name')
                             ->label(__('aho.data_integration.fields.server_name'))
+                            ->live(onBlur: true)
                             ->maxLength(255)
                             ->required(fn (Get $get): bool => $get('integration_method') === DataIntegrationConnection::METHOD_DIRECT),
                         TextInput::make('port')
@@ -68,6 +69,10 @@ class DataIntegrationConnectionForm
                             ->label(__('aho.data_integration.fields.database_name'))
                             ->maxLength(255)
                             ->required(fn (Get $get): bool => $get('integration_method') === DataIntegrationConnection::METHOD_DIRECT),
+                        TextInput::make('data_scope.source_table')
+                            ->label(__('aho.data_integration.fields.source_table'))
+                            ->helperText(__('aho.data_integration.help.source_table'))
+                            ->maxLength(255),
                     ])
                     ->columns(2)
                     ->visible(fn (Get $get): bool => $get('integration_method') === DataIntegrationConnection::METHOD_DIRECT),
@@ -133,7 +138,10 @@ class DataIntegrationConnectionForm
                             ->password()
                             ->revealable()
                             ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (Get $get, string $operation): bool => $operation === 'create' && ($get('integration_method') === DataIntegrationConnection::METHOD_DIRECT || $get('auth_type') === 'basic')),
+                            ->required(fn (Get $get, string $operation): bool => $operation === 'create' && (
+                                ($get('integration_method') === DataIntegrationConnection::METHOD_DIRECT && DataIntegrationConnection::requiresDirectConnectionPassword($get('server_name')))
+                                || ($get('integration_method') === DataIntegrationConnection::METHOD_API && $get('auth_type') === 'basic')
+                            )),
                     ])
                     ->columns(2)
                     ->visible(fn (Get $get): bool => $get('integration_method') === DataIntegrationConnection::METHOD_DIRECT || $get('auth_type') === 'basic'),

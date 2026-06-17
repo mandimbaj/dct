@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Country;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -67,10 +68,51 @@ class UserCountryAccess
             }
         }
 
-        return self::$allowedLocationIds = array_values(array_unique([
+        $rootLocationIds = array_values(array_unique([
             (int) $countryLocationId,
             ...$assigned,
         ]));
+
+        return self::$allowedLocationIds = self::withDescendantLocationIds($rootLocationIds);
+    }
+
+    /**
+     * @param  array<int, int>  $rootLocationIds
+     * @return array<int, int>
+     */
+    private static function withDescendantLocationIds(array $rootLocationIds): array
+    {
+        if ($rootLocationIds === []) {
+            return [];
+        }
+
+        try {
+            $locationsByParent = Country::query()
+                ->get(['location_id', 'parent_id'])
+                ->groupBy(fn (Country $location): int => (int) $location->parent_id);
+        } catch (Throwable) {
+            return $rootLocationIds;
+        }
+
+        $allowed = array_fill_keys($rootLocationIds, true);
+        $queue = $rootLocationIds;
+
+        while ($queue !== []) {
+            $parentId = array_shift($queue);
+
+            foreach ($locationsByParent->get((int) $parentId, collect()) as $child) {
+                $childId = (int) $child->location_id;
+
+                if (isset($allowed[$childId])) {
+                    continue;
+                }
+
+                $allowed[$childId] = true;
+                $queue[] = $childId;
+            }
+        }
+
+        return array_keys($allowed);
     }
 
     public static function forgetCachedLocations(): void

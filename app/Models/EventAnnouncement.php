@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPreferredTranslationName;
+use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,6 +29,23 @@ class EventAnnouncement extends Model
     public const CREATED_AT = 'date_created';
 
     public const UPDATED_AT = 'date_lastupdated';
+
+    protected static function booted(): void
+    {
+        static::creating(function (EventAnnouncement $announcement): void {
+            GeneratedCode::ensureUuid($announcement);
+            GeneratedCode::ensure($announcement, 'code', 'ANN', 45);
+            $announcement->status ??= 'active';
+        });
+
+        static::saving(function (EventAnnouncement $announcement): void {
+            if (filled($announcement->start_year) && filled($announcement->end_year)) {
+                $announcement->period = ((int) $announcement->start_year === (int) $announcement->end_year)
+                    ? (string) (int) $announcement->start_year
+                    : ((int) $announcement->start_year).'-'.((int) $announcement->end_year);
+            }
+        });
+    }
 
     /**
      * Multilingual announcement title and message rows.

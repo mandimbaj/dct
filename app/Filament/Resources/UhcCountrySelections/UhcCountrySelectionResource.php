@@ -2,23 +2,23 @@
 
 namespace App\Filament\Resources\UhcCountrySelections;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use App\Support\TranslatedReferenceForm;
-use App\Filament\Resources\UhcCountrySelections\Pages\EditUhcCountrySelection;
-use App\Filament\Resources\UhcCountrySelections\Pages\CreateUhcCountrySelection;
 use App\Filament\Clusters\UhcClock;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
+use App\Filament\Resources\UhcCountrySelections\Pages\CreateUhcCountrySelection;
+use App\Filament\Resources\UhcCountrySelections\Pages\EditUhcCountrySelection;
 use App\Filament\Resources\UhcCountrySelections\Pages\ListUhcCountrySelections;
 use App\Filament\Resources\UhcPriorityIndicators\UhcPriorityIndicatorResource;
 use App\Models\UhcCountrySelection;
 use App\Support\FilamentSearch;
+use App\Support\TranslatedReferenceForm;
 use App\Support\UserCountryAccess;
 use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -39,7 +39,7 @@ class UhcCountrySelectionResource extends Resource
 
     protected static ?string $slug = 'country-selections';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 4;
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {

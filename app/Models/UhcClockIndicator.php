@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class UhcClockIndicator extends Model
 {
@@ -25,5 +26,17 @@ class UhcClockIndicator extends Model
     public function indicator(): BelongsTo
     {
         return $this->belongsTo(Indicator::class, 'indicator_id', 'indicator_id');
+    }
+
+    public function themes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            UhcClockTheme::class,
+            'stg_uhclock_indicator_themes_indicators',
+            'stguhclockindicators_id',
+            'stguhcindicatortheme_id',
+            'id',
+            'domain_id',
+        );
     }
 }

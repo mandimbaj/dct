@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DataIntegrationConnections\Tables;
 
 use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
 use App\Models\DataIntegrationConnection;
+use App\Support\StatusColor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -39,12 +40,7 @@ class DataIntegrationConnectionsTable
                 TextColumn::make('status')
                     ->label(__('aho.data_integration.fields.status'))
                     ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        DataIntegrationConnection::STATUS_ACTIVE => 'success',
-                        DataIntegrationConnection::STATUS_PAUSED => 'warning',
-                        DataIntegrationConnection::STATUS_ERROR => 'danger',
-                        default => 'gray',
-                    })
+                    ->color(fn (?string $state): string => StatusColor::for($state))
                     ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::statusOptions()[$state] ?? (string) $state)
                     ->sortable(),
                 TextColumn::make('server_name')

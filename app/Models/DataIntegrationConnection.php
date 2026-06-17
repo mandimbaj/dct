@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Http;
 
 class DataIntegrationConnection extends Model
 {
@@ -136,15 +137,20 @@ class DataIntegrationConnection extends Model
         $missing = [];
 
         if ($this->integration_method === self::METHOD_DIRECT) {
+            $directFields = [
+                'server_name' => __('aho.data_integration.fields.server_name'),
+                'database_driver' => __('aho.data_integration.fields.database_driver'),
+                'database_name' => __('aho.data_integration.fields.database_name'),
+                'username' => __('aho.data_integration.fields.username'),
+            ];
+
+            if (self::requiresDirectConnectionPassword($this->server_name)) {
+                $directFields['password'] = __('aho.data_integration.fields.password');
+            }
+
             $missing = [
                 ...$missing,
-                ...$this->missingFields([
-                    'server_name' => __('aho.data_integration.fields.server_name'),
-                    'database_driver' => __('aho.data_integration.fields.database_driver'),
-                    'database_name' => __('aho.data_integration.fields.database_name'),
-                    'username' => __('aho.data_integration.fields.username'),
-                    'password' => __('aho.data_integration.fields.password'),
-                ]),
+                ...$this->missingFields($directFields),
             ];
         }
 
@@ -188,6 +194,10 @@ class DataIntegrationConnection extends Model
             ];
         }
 
+        if ($this->provider === self::PROVIDER_DHIS2 && $this->integration_method === self::METHOD_API) {
+            return $this->validateDhis2ApiConnection();
+        }
+
         return [
             'ok' => true,
             'message' => __('aho.data_integration.validation.ready'),
@@ -226,6 +236,17 @@ class DataIntegrationConnection extends Model
             ->isNotEmpty();
     }
 
+    public static function requiresDirectConnectionPassword(?string $serverName): bool
+    {
+        $serverName = strtolower(trim((string) $serverName));
+
+        if (str_starts_with($serverName, '[') && str_ends_with($serverName, ']')) {
+            $serverName = trim($serverName, '[]');
+        }
+
+        return ! in_array($serverName, ['localhost', '127.0.0.1', '::1'], true);
+    }
+
     protected static function booted(): void
     {
         static::creating(function (DataIntegrationConnection $connection): void {
@@ -248,5 +269,58 @@ class DataIntegrationConnection extends Model
         }
 
         return $missing;
+    }
+
+    /**
+     * Test the DHIS2 API with the configured credentials.
+     *
+     * The endpoint is deliberately lightweight: /system/info confirms that the
+     * server is reachable, credentials work, and DHIS2 returns a valid API payload.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    private function validateDhis2ApiConnection(): array
+    {
+        try {
+            $request = Http::timeout(20)->acceptJson();
+
+            $request = match ($this->auth_type) {
+                'basic' => $request->withBasicAuth((string) $this->username, (string) $this->password),
+                'bearer' => $request->withToken((string) $this->api_token),
+                'api_key' => $request->withHeaders([(string) $this->api_key_name => (string) $this->api_key_value]),
+                default => $request,
+            };
+
+            $response = $request->get($this->dhis2Endpoint('system/info'));
+
+            if (! $response->successful()) {
+                return [
+                    'ok' => false,
+                    'message' => 'DHIS2 API returned HTTP '.$response->status().'.',
+                ];
+            }
+
+            $payload = $response->json();
+            $system = $payload['systemName'] ?? 'DHIS2';
+            $version = $payload['version'] ?? 'unknown version';
+
+            return [
+                'ok' => true,
+                'message' => "Connected to {$system} ({$version}).",
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'message' => 'DHIS2 API connection failed: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    private function dhis2Endpoint(string $path): string
+    {
+        $baseUrl = rtrim((string) $this->api_url, '/');
+        $apiBaseUrl = str_ends_with($baseUrl, '/api') ? $baseUrl : $baseUrl.'/api';
+
+        return $apiBaseUrl.'/'.ltrim($path, '/');
     }
 }

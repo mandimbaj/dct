@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class HealthWorkforceValue extends Model
 {
@@ -26,6 +28,23 @@ class HealthWorkforceValue extends Model
             'date_created' => 'datetime',
             'date_lastupdated' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (HealthWorkforceValue $value): void {
+            $value->uuid ??= (string) Str::uuid();
+            $value->user_id ??= auth()->id() ?? 1;
+            $value->status ??= ApprovalWorkflow::STATUS_PENDING;
+        });
+
+        static::saving(function (HealthWorkforceValue $value): void {
+            if (filled($value->start_year) && filled($value->end_year)) {
+                $value->period = ((int) $value->start_year === (int) $value->end_year)
+                    ? (string) (int) $value->start_year
+                    : ((int) $value->start_year).'-'.((int) $value->end_year);
+            }
+        });
     }
 
     public function cadre(): BelongsTo

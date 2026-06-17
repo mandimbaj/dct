@@ -4,6 +4,9 @@ namespace App\Filament\Resources\HealthFacilities;
 
 use App\Filament\Clusters\Facilities;
 use App\Filament\Resources\AhoResource as Resource;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceAvailabilitiesRelationManager;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceCapacitiesRelationManager;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceReadinessRelationManager;
 use App\Filament\Resources\HealthFacilities\Pages\CreateHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\EditHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\ListHealthFacilities;
@@ -14,6 +17,7 @@ use App\Models\FacilityType;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
+use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -240,7 +244,15 @@ class HealthFacilityResource extends Resource
                 TextColumn::make('type.display_name')->label(__('aho.fields.type'))->toggleable(),
                 TextColumn::make('owner.display_name')->label(__('aho.fields.owner'))->toggleable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.location'))->toggleable(),
-                TextColumn::make('status')->label(__('aho.fields.status'))->badge()->toggleable(),
+                TextColumn::make('status')
+                    ->label(__('aho.fields.status'))
+                    ->badge()
+                    ->color(fn (?string $state): string => StatusColor::for($state))
+                    ->formatStateUsing(fn (?string $state): string => [
+                        'active' => __('aho.status.active'),
+                        'closed' => __('aho.status.closed'),
+                    ][$state] ?? (string) $state)
+                    ->toggleable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
             ])
@@ -282,6 +294,15 @@ class HealthFacilityResource extends Resource
             parent::getEloquentQuery()->with(['location.translations', 'type.translations', 'owner.translations']),
             'location_id',
         );
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            ServiceAvailabilitiesRelationManager::class,
+            ServiceCapacitiesRelationManager::class,
+            ServiceReadinessRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

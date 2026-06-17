@@ -2,12 +2,6 @@
 
 namespace App\Filament\Resources\HealthServiceIndicators;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use App\Filament\Resources\Indicators\Schemas\IndicatorForm;
 use App\Filament\Resources\HealthServiceIndicators\Pages\EditHealthServiceIndicator;
 use App\Filament\Resources\HealthServiceIndicators\Pages\CreateHealthServiceIndicator;
 use App\Filament\Clusters\HealthServices;
@@ -16,12 +10,27 @@ use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
 use App\Filament\Resources\HealthServiceValues\HealthServiceValueResource;
 use App\Filament\Resources\HealthServiceIndicators\Pages\ListHealthServiceIndicators;
 use App\Models\Indicator;
+use App\Models\IndicatorReference;
 use App\Support\FilamentSearch;
+use App\Support\SelectOptions;
+use App\Support\UserPermissions;
+use App\Support\WarehouseLocale;
 use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class HealthServiceIndicatorResource extends Resource
@@ -62,7 +71,71 @@ class HealthServiceIndicatorResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return IndicatorForm::configure($schema);
+        return $schema->components([
+            Hidden::make('uuid'),
+            Hidden::make('afrocode'),
+            Hidden::make('gen_code'),
+            Hidden::make('translation_language_code')
+                ->default(fn (): string => WarehouseLocale::current()),
+
+            Section::make(__('aho.form_sections.primary_attributes'))
+                ->schema([
+                    TextInput::make('translation_name')
+                        ->label(__('aho.fields.name'))
+                        ->required()
+                        ->maxLength(200),
+                    TextInput::make('translation_shortname')
+                        ->label(__('aho.fields.short_name'))
+                        ->maxLength(200),
+                    Textarea::make('translation_definition')
+                        ->label(__('aho.fields.definition'))
+                        ->rows(4)
+                        ->columnSpanFull(),
+                    Select::make('reference_id')
+                        ->label(__('aho.fields.reference'))
+                        ->options(fn (): array => SelectOptions::fromDisplayNameQuery(static::hscReferenceQuery(), keyName: 'reference_id'))
+                        ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(static::hscReferenceQuery(), $search, 'reference_id'))
+                        ->default(fn (): ?int => static::hscReferenceId())
+                        ->searchable()
+                        ->required(),
+                ])
+                ->columns(2),
+
+            Section::make(__('aho.form_sections.secondary_attributes'))
+                ->schema([
+                    Textarea::make('translation_numerator_description')
+                        ->label(__('aho.fields.numerator_description'))
+                        ->rows(4),
+                    Textarea::make('translation_denominator_description')
+                        ->label(__('aho.fields.denominator_description'))
+                        ->rows(4),
+                    Textarea::make('translation_preferred_datasources')
+                        ->label(__('aho.fields.preferred_datasources'))
+                        ->rows(4)
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_CREATE);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_UPDATE);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_DELETE);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::canUseInheritedPermission(UserPermissions::ACTION_DELETE);
     }
 
     public static function table(Table $table): Table
@@ -104,14 +177,50 @@ class HealthServiceIndicatorResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with(['translations', 'reference.translations'])
-            ->whereHas('reference', function (Builder $query): Builder {
-                return $query->where('code', 'GIR0005')->orWhere('reference_id', 5);
-            });
+            ->whereHas('reference', fn (Builder $query): Builder => static::applyHscReferenceConstraint($query));
+    }
+
+    public static function hscReferenceId(): ?int
+    {
+        return static::hscReferenceQuery()->value('reference_id') ?? 5;
+    }
+
+    public static function hscReferenceQuery(): Builder
+    {
+        return static::applyHscReferenceConstraint(IndicatorReference::query());
+    }
+
+    private static function applyHscReferenceConstraint(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where('code', 'GIR0005')->orWhere('reference_id', 5);
+        });
     }
 
     protected static function fallbackPermissionResources(): array
     {
         return [HealthServiceValueResource::class];
+    }
+
+    private static function canUseInheritedPermission(string $action): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->is_super_admin) {
+            return true;
+        }
+
+        foreach ([static::class, ...static::fallbackPermissionResources()] as $resourceClass) {
+            if (UserPermissions::allowsResource($user, $resourceClass, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function getPages(): array
