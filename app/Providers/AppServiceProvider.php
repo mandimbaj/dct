@@ -14,6 +14,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Schema::defaultStringLength(191);
         AdminActivityNotifier::observeApplicationModels();
 
         Select::configureUsing(static function (Select $select): void {
@@ -72,5 +74,6 @@ class AppServiceProvider extends ServiceProvider
 
             return UserPermissions::allowsModel($user, $arguments[0] ?? null, $action);
         });
+         
     }
 }
