@@ -38,7 +38,6 @@ php artisan view:clear || true
 php artisan cache:clear || true
 php artisan package:discover --ansi || true
 php artisan config:cache
-php artisan route:cache
 php artisan view:cache
 
 echo "=== [4] Configure PHP-FPM to listen on 127.0.0.1:9000 ==="
