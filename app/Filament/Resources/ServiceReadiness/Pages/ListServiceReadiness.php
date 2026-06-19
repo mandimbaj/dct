@@ -48,4 +48,9 @@ class ListServiceReadiness extends ListRecords
             'facility_id' => $record->getKey(),
         ]);
     }
+
+    protected function serviceRelationIndex(): int
+    {
+        return 2;
+    }
 }

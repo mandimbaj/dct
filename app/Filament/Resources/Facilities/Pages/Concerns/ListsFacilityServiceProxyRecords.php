@@ -27,6 +27,8 @@ trait ListsFacilityServiceProxyRecords
 
     abstract protected function serviceCreateUrl(HealthFacility $record): string;
 
+    abstract protected function serviceRelationIndex(): int;
+
     protected function getTableQuery(): Builder
     {
         $relationship = $this->serviceRelationship();
@@ -44,6 +46,7 @@ trait ListsFacilityServiceProxyRecords
     {
         return $table
             ->defaultSort('facility_id', 'desc')
+            ->recordUrl(fn (HealthFacility $record): string => $this->facilityServicesUrl($record))
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
                     query: $query,
@@ -90,10 +93,7 @@ trait ListsFacilityServiceProxyRecords
             ->recordActions([
                 Action::make('manage_services')
                     ->label(__('aho.actions.manage_services'))
-                    ->url(fn (HealthFacility $record): string => HealthFacilityResource::getUrl('edit', [
-                        'country' => $this->countryRouteParameter(),
-                        'record' => $record,
-                    ])),
+                    ->url(fn (HealthFacility $record): string => $this->facilityServicesUrl($record)),
                 Action::make('add_service_record')
                     ->label(fn (): string => $this->serviceCreateLabel())
                     ->url(fn (HealthFacility $record): string => $this->serviceCreateUrl($record)),
@@ -104,5 +104,14 @@ trait ListsFacilityServiceProxyRecords
     protected function countryRouteParameter(): string
     {
         return (string) (request()->route('country') ?: request()->segment(2) ?: 'af');
+    }
+
+    protected function facilityServicesUrl(HealthFacility $record): string
+    {
+        return HealthFacilityResource::getUrl('edit', [
+            'country' => $this->countryRouteParameter(),
+            'record' => $record,
+            'relation' => $this->serviceRelationIndex(),
+        ]);
     }
 }

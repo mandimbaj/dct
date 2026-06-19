@@ -24,7 +24,7 @@ class DashboardCache
 
         return implode(':', [
             'dashboard',
-            'v13',
+            'v15',
             app()->getLocale(),
             $scope,
             $key,

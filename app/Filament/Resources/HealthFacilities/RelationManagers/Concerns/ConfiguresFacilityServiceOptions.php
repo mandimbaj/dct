@@ -16,8 +16,18 @@ trait ConfiguresFacilityServiceOptions
      */
     protected static function domainOptions(int $category, ?string $level = null, ?string $search = null): array
     {
+        $query = static::domainQuery($category, $level);
+
+        if (! $query->exists() && filled($level)) {
+            $query = static::domainQuery($category);
+        }
+
+        if (! $query->exists()) {
+            $query = FacilityServiceDomain::query()->with('translations');
+        }
+
         return SelectOptions::fromDisplayNameQuery(
-            static::domainQuery($category, $level),
+            $query,
             $search,
             'domain_id',
         );
@@ -28,7 +38,6 @@ trait ConfiguresFacilityServiceOptions
         return FacilityServiceDomain::query()
             ->with('translations')
             ->where('category', $category)
-            ->whereNotNull('parent_id')
             ->when(
                 filled($level),
                 fn (Builder $query): Builder => $query->whereRaw('LOWER(level) = ?', [strtolower((string) $level)]),

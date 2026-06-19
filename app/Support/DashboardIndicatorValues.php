@@ -66,6 +66,13 @@ class DashboardIndicatorValues
 
     public static function groupedCountsWithArchiveFallback(string $column, ?Closure $callback = null): Collection
     {
+        // Active and archived rows are two lifecycle partitions of the same
+        // indicator dataset. A single active row must not hide a country's
+        // historical values from dashboard rankings.
+        if (! UserCountryAccess::canViewRegionalDashboard()) {
+            return self::groupedCounts($column, $callback);
+        }
+
         $rows = self::currentGroupedCounts($column, $callback);
 
         return $rows->isNotEmpty()
@@ -141,6 +148,10 @@ class DashboardIndicatorValues
 
     public static function indicatorCountryUseWithArchiveFallback(): Collection
     {
+        if (! UserCountryAccess::canViewRegionalDashboard()) {
+            return self::indicatorCountryUse();
+        }
+
         $rows = self::currentIndicatorCountryUse();
 
         return $rows->isNotEmpty()
@@ -155,7 +166,7 @@ class DashboardIndicatorValues
     {
         return collect($tables)
             ->flatMap(function (string $table) use ($column, $callback): Collection {
-                $query = self::scopedTable($table)
+                $query = self::withoutArchivedDuplicates(self::scopedTable($table), $table)
                     ->select("{$table}.{$column}", DB::raw('count(*) as total'))
                     ->whereNotNull("{$table}.{$column}")
                     ->groupBy("{$table}.{$column}");
@@ -208,7 +219,7 @@ class DashboardIndicatorValues
     {
         return collect($tables)
             ->flatMap(function (string $table): Collection {
-                $query = self::scopedTable($table)
+                $query = self::withoutArchivedDuplicates(self::scopedTable($table), $table)
                     ->leftJoin('stg_location as value_locations', 'value_locations.location_id', '=', "{$table}.location_id")
                     ->select(
                         "{$table}.indicator_id",
@@ -268,6 +279,28 @@ class DashboardIndicatorValues
     private static function scopedTable(string $table): QueryBuilder
     {
         return self::scopeDashboard(DB::connection('warehouse')->table($table), $table);
+    }
+
+    private static function withoutArchivedDuplicates(QueryBuilder $query, string $table): QueryBuilder
+    {
+        if (
+            $table !== self::ARCHIVE_TABLE
+            || ! Schema::connection('warehouse')->hasColumn(self::LIVE_TABLE, 'uuid')
+            || ! Schema::connection('warehouse')->hasColumn(self::ARCHIVE_TABLE, 'uuid')
+        ) {
+            return $query;
+        }
+
+        return $query->where(function (QueryBuilder $archiveQuery) use ($table): void {
+            $archiveQuery
+                ->whereNull("{$table}.uuid")
+                ->orWhereNotExists(function (QueryBuilder $activeQuery) use ($table): void {
+                    $activeQuery
+                        ->selectRaw('1')
+                        ->from(self::LIVE_TABLE.' as active_values')
+                        ->whereColumn('active_values.uuid', "{$table}.uuid");
+                });
+        });
     }
 
     private static function scopeDashboard(QueryBuilder $query, string $table): QueryBuilder
