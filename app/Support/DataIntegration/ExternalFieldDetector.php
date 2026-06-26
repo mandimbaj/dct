@@ -5,10 +5,7 @@ namespace App\Support\DataIntegration;
 use App\Models\DataIntegrationConnection;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema as DatabaseSchema;
 
 class ExternalFieldDetector
 {
@@ -136,25 +133,19 @@ class ExternalFieldDetector
             return collect();
         }
 
-        $connectionName = 'external_data_integration_'.$connection->getKey();
-
-        Config::set("database.connections.{$connectionName}", self::databaseConnectionConfig($connection));
-        DB::purge($connectionName);
-
         try {
-            if (! DatabaseSchema::connection($connectionName)->hasTable($tableName)) {
-                return collect();
-            }
-
-            return collect(DatabaseSchema::connection($connectionName)->getColumnListing($tableName));
-        } finally {
-            DB::disconnect($connectionName);
-            DB::purge($connectionName);
+            return collect(ExternalDatabaseMetadata::columns($connection, $tableName));
+        } catch (\Throwable $e) {
+            throw ExternalDatabaseConnection::friendlyFailure($e);
         }
     }
 
     private static function sourceTableName(DataIntegrationConnection $connection): ?string
     {
+        if (filled($connection->source_table)) {
+            return (string) $connection->source_table;
+        }
+
         $scope = $connection->data_scope ?? [];
 
         foreach (['source_table', 'table', 'table_name', 'view', 'view_name', 'dataset'] as $key) {
@@ -164,35 +155,6 @@ class ExternalFieldDetector
         }
 
         return null;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function databaseConnectionConfig(DataIntegrationConnection $connection): array
-    {
-        $driver = (string) $connection->database_driver;
-
-        if ($driver === 'sqlite') {
-            return [
-                'driver' => 'sqlite',
-                'database' => (string) $connection->database_name,
-                'prefix' => '',
-            ];
-        }
-
-        return [
-            'driver' => $driver,
-            'host' => (string) $connection->server_name,
-            'port' => $connection->port,
-            'database' => (string) $connection->database_name,
-            'username' => (string) $connection->username,
-            'password' => (string) $connection->password,
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'prefix_indexes' => true,
-        ];
     }
 
     /**
@@ -226,7 +188,6 @@ class ExternalFieldDetector
     }
 
     /**
-     * @param  mixed  $payload
      * @return Collection<int, string>
      */
     private static function extractFieldPaths(mixed $payload, ?string $prefix = null, int $depth = 0): Collection

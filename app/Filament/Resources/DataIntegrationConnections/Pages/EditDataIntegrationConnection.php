@@ -4,12 +4,18 @@ namespace App\Filament\Resources\DataIntegrationConnections\Pages;
 
 use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
 use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
+use App\Support\UserCountryAccess;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 
 class EditDataIntegrationConnection extends EditRecord
 {
     protected static string $resource = DataIntegrationConnectionResource::class;
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return UserCountryAccess::enforceLocationData($data);
+    }
 
     protected function getHeaderActions(): array
     {

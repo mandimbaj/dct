@@ -355,7 +355,7 @@
 
 /* Remove top gap between sidebar header and first nav item */
 .fi-sidebar-nav {
-    padding-top: 0;
+    padding-top: 0.75rem;
 }
 
 .fi-sidebar-item-btn {
@@ -2185,6 +2185,145 @@
     color: #e5e7eb;
 }
 
+/* API Tokens: keep every custom surface readable in dark mode. */
+:root.dark .aho-api__eyebrow {
+    color: #7dd3fc;
+}
+
+:root.dark .aho-api__summary,
+:root.dark .aho-api-stat,
+:root.dark .aho-api-panel__header,
+:root.dark .aho-api-examples__header {
+    background: #1f2937;
+    border-color: #475569;
+}
+
+:root.dark .aho-api-stat:hover,
+:root.dark .aho-api-stat.is-active {
+    background: #334155;
+    border-color: #64748b;
+}
+
+:root.dark .aho-api-token-copy {
+    background: #2d2410;
+    border-color: #8a651b;
+}
+
+:root.dark .aho-api-danger {
+    background: #3d1a1a;
+    border-color: #7f1d1d;
+}
+
+:root.dark .aho-api-badge--active {
+    background: #173c2a;
+    color: #86efac;
+}
+
+:root.dark .aho-api-badge--expired {
+    background: #4a3512;
+    color: #fcd34d;
+}
+
+:root.dark .aho-api-badge--revoked {
+    background: #4c1d1d;
+    color: #fca5a5;
+}
+
+/* Reduced topbar: stack the signed-in user above a narrower global search. */
+@media (max-width: 1180px) {
+    .fi-topbar,
+    .fi-topbar-start,
+    .fi-topbar-end {
+        height: 72px;
+        min-height: 72px;
+    }
+
+    .fi-sidebar {
+        height: calc(100vh - 72px);
+        top: 72px;
+    }
+
+    .aho-topbar-brand__app,
+    .aho-topbar-welcome__separator {
+        display: none;
+    }
+
+    .aho-topbar-welcome {
+        display: inline-flex;
+        left: 50%;
+        margin: 0;
+        max-width: min(15rem, 40vw);
+        position: absolute;
+        top: 0.35rem;
+        transform: translateX(-50%);
+        z-index: 3;
+    }
+
+    .aho-topbar-welcome__text {
+        color: rgba(255, 255, 255, 0.9);
+        display: block;
+        font-size: 0.75rem;
+        max-width: 100%;
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: block;
+        left: 50%;
+        margin: 0;
+        max-width: 13rem;
+        min-width: 7rem;
+        position: absolute;
+        top: auto;
+        bottom: 0.35rem;
+        transform: translateX(-50%);
+        width: clamp(7rem, 19vw, 13rem);
+        z-index: 2;
+    }
+}
+
+@media (max-width: 900px) {
+    .fi-topbar .fi-global-search-ctn {
+        display: block;
+        max-width: 10rem;
+        min-width: 6.5rem;
+        width: clamp(6.5rem, 24vw, 10rem);
+    }
+
+    .aho-topbar-welcome {
+        max-width: min(12rem, 34vw);
+    }
+}
+
+@media (max-width: 640px) {
+    .aho-topbar-brand__label,
+    .aho-topbar-welcome,
+    .aho-topbar-welcome__text {
+        display: inline-flex;
+    }
+
+    .aho-topbar-brand__label {
+        max-width: 0;
+    }
+
+    .aho-topbar-brand__logo {
+        max-width: 7rem;
+    }
+
+    .aho-topbar-welcome {
+        max-width: min(10rem, 34vw);
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        max-width: 8.5rem;
+        min-width: 6rem;
+        width: clamp(6rem, 28vw, 8.5rem);
+    }
+}
+
 :root.dark .fi-sidebar-item-btn,
 :root.dark .fi-sidebar-group-btn {
     background: transparent;
@@ -2304,6 +2443,62 @@
     }
 }
 
+/* Custom Icons: show a real visual preview beside the Font Awesome code. */
+.aho-fa-preview {
+    align-items: center;
+    background: color-mix(in srgb, var(--who-afro-blue) 9%, white);
+    border: 1px solid color-mix(in srgb, var(--who-afro-blue) 22%, white);
+    border-radius: 999px;
+    color: var(--who-afro-blue-dark);
+    display: inline-flex;
+    font-size: 1.05rem;
+    height: 2rem;
+    justify-content: center;
+    width: 2rem;
+}
+
+.aho-fa-preview i {
+    line-height: 1;
+}
+
+.aho-fa-preview--fallback {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+:root.dark .aho-fa-preview {
+    background: #16253a;
+    border-color: #334155;
+    color: #7dd3fc;
+}
+
+/* Sidebar: keep navigation icons vertically aligned with their labels. */
+.fi-main-sidebar .fi-sidebar-item-btn,
+.fi-main-sidebar .fi-sidebar-group-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-item-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group-btn {
+    align-items: center;
+}
+
+.fi-main-sidebar .fi-sidebar-item-btn svg,
+.fi-main-sidebar .fi-sidebar-group-btn svg,
+.fi-page-sub-navigation-sidebar .fi-sidebar-item-btn svg,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group-btn svg {
+    align-self: center;
+    flex: 0 0 auto;
+    height: 1.1rem;
+    margin-block-start: 0;
+    width: 1.1rem;
+}
+
+.fi-main-sidebar .fi-sidebar-item-label,
+.fi-main-sidebar .fi-sidebar-group-label,
+.fi-page-sub-navigation-sidebar .fi-sidebar-item-label,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group-label {
+    align-self: center;
+}
+
 /* Desktop toggleable main sidebar. */
 @media (min-width: 1024px) and (hover: hover) {
     :root {
@@ -2407,11 +2602,40 @@
 }
 
 .fi-sidebar-nav {
-    padding-top: 0;
+    padding-top: 0.75rem;
 }
 
 .fi-sidebar-nav-groups {
     margin-top: 0;
+}
+
+/* Keep the sidebar readable: preserve visible spacing between menus while
+   hiding the scrollbar track from the main navigation. */
+.fi-sidebar,
+.fi-sidebar-nav {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.fi-sidebar::-webkit-scrollbar,
+.fi-sidebar-nav::-webkit-scrollbar {
+    display: none;
+    height: 0;
+    width: 0;
+}
+
+.fi-sidebar-item-btn,
+.fi-sidebar-group-btn {
+    border-radius: 0.75rem;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding-block: 0.55rem;
+    padding-inline: 0.85rem;
+}
+
+.fi-main-sidebar .fi-sidebar-item-label,
+.fi-main-sidebar .fi-sidebar-group-label {
+    line-height: 1.2;
 }
 
 /* Lightweight, non-interactive country context card. */

@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\HealthFacilities\RelationManagers;
 
 use App\Filament\Resources\HealthFacilities\RelationManagers\Concerns\ConfiguresFacilityServiceOptions;
+use App\Models\FacilityServiceCapacity;
+use App\Support\FacilityServiceRecordUniqueness;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -60,6 +62,15 @@ class ServiceCapacitiesRelationManager extends RelationManager
                 DatePicker::make('date_assessed')
                     ->label(__('aho.fields.date_assessed'))
                     ->default(now())
+                    ->rule(fn (Get $get, ?Model $record) => FacilityServiceRecordUniqueness::rule(
+                        FacilityServiceCapacity::class,
+                        [
+                            'facility_id' => $this->getOwnerRecord()->facility_id,
+                            'domain_id' => $get('domain_id'),
+                            'units_id' => $get('units_id'),
+                        ],
+                        $record,
+                    ))
                     ->required(),
             ])
             ->columns(2);

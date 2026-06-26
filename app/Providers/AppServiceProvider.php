@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\NationalObservatory;
 use App\Models\User;
 use App\Support\AdminActivityNotifier;
 use App\Support\SelectOptions;
+use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -72,8 +74,17 @@ class AppServiceProvider extends ServiceProvider
                 return $user->is_super_admin ? true : null;
             }
 
-            return UserPermissions::allowsModel($user, $arguments[0] ?? null, $action);
+            $model = $arguments[0] ?? null;
+
+            if (
+                $model instanceof NationalObservatory
+                && in_array($action, [UserPermissions::ACTION_UPDATE, UserPermissions::ACTION_DELETE], true)
+            ) {
+                return UserCountryAccess::allowsLocationId($model->location_id);
+            }
+
+            return UserPermissions::allowsModel($user, $model, $action);
         });
-         
+
     }
 }

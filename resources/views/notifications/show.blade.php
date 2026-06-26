@@ -68,7 +68,7 @@
             <h1>{{ $title }}</h1>
             <p class="meta">
                 {{ __('aho.notifications.read.received_at') }}
-                {{ optional($notification->created_at)->format('Y-m-d H:i') }}
+                {{ optional($receivedAt)->format('Y-m-d H:i') }}
             </p>
 
             <div class="body">{{ $body }}</div>

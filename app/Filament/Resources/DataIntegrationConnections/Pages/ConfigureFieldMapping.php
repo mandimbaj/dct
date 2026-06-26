@@ -6,6 +6,7 @@ use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionR
 use App\Models\DataIntegrationConnection;
 use App\Models\DataIntegrationFieldMapping;
 use App\Support\DataIntegration\ExternalFieldDetector;
+use App\Support\UserCountryAccess;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -19,6 +20,8 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 
@@ -34,6 +37,11 @@ class ConfigureFieldMapping extends Page
 
     public function mount(DataIntegrationConnection $record): void
     {
+        abort_unless(
+            UserCountryAccess::canViewAllCountries() || UserCountryAccess::allowsLocationId($record->location_id),
+            403,
+        );
+
         $this->record = $record;
         $this->externalFields = collect();
 
@@ -62,17 +70,29 @@ class ConfigureFieldMapping extends Page
                                 ->icon('heroicon-o-arrow-path')
                                 ->color('gray')
                                 ->action(fn (): null => $this->refreshExternalFields()),
+                            Action::make('suggest_mappings')
+                                ->label(__('aho.data_integration.actions.suggest_mappings'))
+                                ->icon('heroicon-o-sparkles')
+                                ->color('primary')
+                                ->action(fn (): null => $this->suggestMappings()),
                         ])
                             ->columnSpanFull(),
                         Repeater::make('field_mappings')
                             ->label(__('aho.data_integration.fields.field_mappings'))
                             ->schema([
-                                Grid::make(3)
+                                Grid::make(2)
                                     ->schema([
                                         Select::make('local_field')
                                             ->label(__('aho.data_integration.fields.local_field'))
                                             ->options(DataIntegrationFieldMapping::localFieldOptions())
                                             ->searchable()
+                                            ->live()
+                                            ->afterStateUpdated(function (Set $set, ?string $state): void {
+                                                $isReference = DataIntegrationFieldMapping::isReferenceField($state);
+                                                $set('field_type', $isReference ? 'lookup' : 'direct');
+                                                $set('reference_match', $isReference ? 'auto' : null);
+                                            })
+                                            ->helperText(__('aho.data_integration.help.mapping_identifier_strategy'))
                                             ->required()
                                             ->columnSpan(1),
                                         Select::make('external_field')
@@ -92,6 +112,14 @@ class ConfigureFieldMapping extends Page
                                             ->label(__('aho.data_integration.fields.field_type'))
                                             ->options(DataIntegrationFieldMapping::fieldTypeOptions())
                                             ->default('direct')
+                                            ->columnSpan(1),
+                                        Select::make('reference_match')
+                                            ->label(__('aho.data_integration.fields.reference_match'))
+                                            ->options(DataIntegrationFieldMapping::referenceMatchOptions())
+                                            ->default('auto')
+                                            ->helperText(__('aho.data_integration.help.reference_match'))
+                                            ->visible(fn (Get $get): bool => DataIntegrationFieldMapping::isReferenceField($get('local_field')))
+                                            ->required(fn (Get $get): bool => DataIntegrationFieldMapping::isReferenceField($get('local_field')))
                                             ->columnSpan(1),
                                     ]),
                                 Toggle::make('is_required')
@@ -144,6 +172,7 @@ class ConfigureFieldMapping extends Page
                 'local_field' => $mapping->local_field,
                 'external_field' => $mapping->external_field,
                 'field_type' => $mapping->field_type,
+                'reference_match' => $mapping->transformation_config['reference_match'] ?? 'auto',
                 'is_required' => $mapping->is_required,
                 'default_value' => $mapping->transformation_config['default_value'] ?? null,
                 'transformation_rule' => $mapping->transformation_config['rule'] ?? null,
@@ -200,6 +229,29 @@ class ConfigureFieldMapping extends Page
         return null;
     }
 
+    public function suggestMappings(): null
+    {
+        $mappings = DataIntegrationFieldMapping::suggestMappings($this->externalFields->all());
+
+        if ($mappings === []) {
+            Notification::make()
+                ->warning()
+                ->title(__('aho.data_integration.messages.no_mapping_suggestions'))
+                ->send();
+
+            return null;
+        }
+
+        $this->form->fill(['field_mappings' => $mappings]);
+
+        Notification::make()
+            ->success()
+            ->title(__('aho.data_integration.messages.mappings_suggested', ['count' => count($mappings)]))
+            ->send();
+
+        return null;
+    }
+
     public function save(): void
     {
         $data = $this->form->getState();
@@ -218,6 +270,9 @@ class ConfigureFieldMapping extends Page
                 'transformation_config' => array_filter([
                     'default_value' => $mapping['default_value'] ?? null,
                     'rule' => $mapping['transformation_rule'] ?? null,
+                    'reference_match' => DataIntegrationFieldMapping::isReferenceField($mapping['local_field'] ?? null)
+                        ? ($mapping['reference_match'] ?? 'auto')
+                        : null,
                 ], fn (mixed $value): bool => filled($value)),
                 'notes' => $mapping['notes'] ?? null,
                 'sort_order' => $index,

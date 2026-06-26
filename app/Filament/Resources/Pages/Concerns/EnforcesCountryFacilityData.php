@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Pages\Concerns;
 
 use App\Models\HealthFacility;
+use App\Support\FacilityServiceRecordUniqueness;
 use App\Support\UserCountryAccess;
 use Illuminate\Validation\ValidationException;
 
@@ -14,7 +15,11 @@ trait EnforcesCountryFacilityData
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return $this->enforceCountryFacilityData($data);
+        $data = $this->enforceCountryFacilityData($data);
+
+        $this->preventDuplicateFacilityServiceRecord($data);
+
+        return $data;
     }
 
     /**
@@ -23,7 +28,11 @@ trait EnforcesCountryFacilityData
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        return $this->enforceCountryFacilityData($data);
+        $data = $this->enforceCountryFacilityData($data);
+
+        $this->preventDuplicateFacilityServiceRecord($data);
+
+        return $data;
     }
 
     /**
@@ -43,5 +52,24 @@ trait EnforcesCountryFacilityData
         throw ValidationException::withMessages([
             'data.facility_id' => __('validation.exists', ['attribute' => __('aho.fields.facility')]),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function preventDuplicateFacilityServiceRecord(array $data): void
+    {
+        $resource = static::getResource();
+        $modelClass = $resource::getModel();
+
+        if (! FacilityServiceRecordUniqueness::supports($modelClass)) {
+            return;
+        }
+
+        FacilityServiceRecordUniqueness::validateOrFail(
+            modelClass: $modelClass,
+            data: $data,
+            ignoreRecord: $this->record ?? null,
+        );
     }
 }
