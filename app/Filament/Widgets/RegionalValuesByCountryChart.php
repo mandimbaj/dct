@@ -34,6 +34,41 @@ class RegionalValuesByCountryChart extends ChartWidget
         'xl' => 1,
     ];
 
+    public static function canView(): bool
+    {
+        return ! (self::countryDashboardForRequest() instanceof Country);
+    }
+
+    public static function countryDashboardForRequest(): ?Country
+    {
+        $countryCode = strtolower(trim((string) (request()->route('country') ?: request()->segment(2))));
+
+        if ($countryCode !== '' && ! in_array($countryCode, ['af', 'global'], true)) {
+            $country = Country::with('translations')
+                ->where('locationlevel_id', 2)
+                ->where(function ($query) use ($countryCode): void {
+                    $query
+                        ->whereRaw('lower(iso_alpha) like ?', [$countryCode.'%'])
+                        ->orWhereRaw('lower(code) = ?', [$countryCode]);
+                })
+                ->first();
+
+            if ($country instanceof Country) {
+                return $country;
+            }
+        }
+
+        if (UserCountryAccess::canViewRegionalDashboard() || blank(UserCountryAccess::locationId())) {
+            return null;
+        }
+
+        return Country::query()
+            ->with('translations')
+            ->where('locationlevel_id', 2)
+            ->whereKey(UserCountryAccess::locationId())
+            ->first();
+    }
+
     protected function getType(): string
     {
         return $this->countryDashboard() instanceof Country ? 'bar' : 'doughnut';
@@ -265,32 +300,7 @@ class RegionalValuesByCountryChart extends ChartWidget
 
     private function countryDashboard(): ?Country
     {
-        $countryCode = strtolower(trim((string) (request()->route('country') ?: request()->segment(2))));
-
-        if ($countryCode !== '' && ! in_array($countryCode, ['af', 'global'], true)) {
-            $country = Country::with('translations')
-                ->where('locationlevel_id', 2)
-                ->where(function ($query) use ($countryCode): void {
-                    $query
-                        ->whereRaw('lower(iso_alpha) like ?', [$countryCode.'%'])
-                        ->orWhereRaw('lower(code) = ?', [$countryCode]);
-                })
-                ->first();
-
-            if ($country instanceof Country) {
-                return $country;
-            }
-        }
-
-        if (UserCountryAccess::canViewRegionalDashboard() || blank(UserCountryAccess::locationId())) {
-            return null;
-        }
-
-        return Country::query()
-            ->with('translations')
-            ->where('locationlevel_id', 2)
-            ->whereKey(UserCountryAccess::locationId())
-            ->first();
+        return self::countryDashboardForRequest();
     }
 
     private static function reportedYear(mixed $row): ?int

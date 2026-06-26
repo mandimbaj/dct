@@ -12,7 +12,7 @@ class NotificationReadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_open_and_mark_own_notification_as_read(): void
+    public function test_user_can_open_and_delete_own_notification_after_reading(): void
     {
         $user = User::factory()->create([
             'is_super_admin' => true,
@@ -29,7 +29,7 @@ class NotificationReadTest extends TestCase
             ->assertSee('Test message')
             ->assertSee('Message body');
 
-        $this->assertNotNull($notification->fresh()->read_at);
+        $this->assertNull($notification->fresh());
     }
 
     public function test_user_cannot_open_another_users_notification(): void

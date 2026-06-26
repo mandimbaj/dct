@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\DataIntegrationConnections;
 
 use App\Filament\Resources\AhoResource as Resource;
-use App\Models\DataIntegrationConnection;
 use App\Models\DataIntegrationFieldMapping;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;

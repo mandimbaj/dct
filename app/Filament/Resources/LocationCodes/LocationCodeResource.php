@@ -2,22 +2,22 @@
 
 namespace App\Filament\Resources\LocationCodes;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use App\Support\TranslatedReferenceForm;
-use App\Filament\Resources\LocationCodes\Pages\EditLocationCode;
-use App\Filament\Resources\LocationCodes\Pages\CreateLocationCode;
 use App\Filament\Clusters\Regions;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
 use App\Filament\Resources\Countries\CountryResource;
+use App\Filament\Resources\LocationCodes\Pages\CreateLocationCode;
+use App\Filament\Resources\LocationCodes\Pages\EditLocationCode;
 use App\Filament\Resources\LocationCodes\Pages\ListLocationCodes;
 use App\Models\LocationCode;
 use App\Support\FilamentSearch;
+use App\Support\TranslatedReferenceForm;
 use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -84,12 +84,7 @@ class LocationCodeResource extends Resource
                 TextColumn::make('country_code')->label(__('aho.fields.dial_code'))->sortable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
-            ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->with('location.translations')
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
@@ -99,6 +94,11 @@ class LocationCodeResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('location.translations');
     }
 
     protected static function fallbackPermissionResources(): array

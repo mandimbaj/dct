@@ -11,10 +11,12 @@ use App\Filament\Resources\DataIntegrationConnections\Pages\ListDataIntegrationC
 use App\Filament\Resources\DataIntegrationConnections\Schemas\DataIntegrationConnectionForm;
 use App\Filament\Resources\DataIntegrationConnections\Tables\DataIntegrationConnectionsTable;
 use App\Models\DataIntegrationConnection;
+use App\Support\UserCountryAccess;
 use BackedEnum;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
@@ -67,6 +69,11 @@ class DataIntegrationConnectionResource extends Resource
     public static function table(Table $table): Table
     {
         return DataIntegrationConnectionsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return UserCountryAccess::scope(parent::getEloquentQuery(), 'location_id');
     }
 
     public static function getPages(): array

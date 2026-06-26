@@ -16,7 +16,12 @@ class RecordUserPageVisit
         $response = $next($request);
 
         if ($this->shouldRecord($request, (int) $response->getStatusCode())) {
-            rescue(fn () => UserPageVisit::create($this->payload($request)), report: false);
+            $payload = $this->payload($request);
+
+            app()->terminating(
+                fn () => rescue(fn () => UserPageVisit::create($payload), report: false),
+            );
+
             $this->rememberRecordedVisit($request);
         }
 

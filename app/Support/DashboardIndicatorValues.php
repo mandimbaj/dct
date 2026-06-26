@@ -14,6 +14,13 @@ class DashboardIndicatorValues
 
     private const ARCHIVE_TABLE = 'fact_data_archive';
 
+    private static ?bool $hasArchiveTable = null;
+
+    /**
+     * @var array<string, bool>
+     */
+    private static array $hasColumnCache = [];
+
     public static function currentCount(): int
     {
         return self::countForTable(self::LIVE_TABLE);
@@ -285,8 +292,8 @@ class DashboardIndicatorValues
     {
         if (
             $table !== self::ARCHIVE_TABLE
-            || ! Schema::connection('warehouse')->hasColumn(self::LIVE_TABLE, 'uuid')
-            || ! Schema::connection('warehouse')->hasColumn(self::ARCHIVE_TABLE, 'uuid')
+            || ! self::hasColumn(self::LIVE_TABLE, 'uuid')
+            || ! self::hasColumn(self::ARCHIVE_TABLE, 'uuid')
         ) {
             return $query;
         }
@@ -318,13 +325,20 @@ class DashboardIndicatorValues
 
     private static function hasArchiveTable(): bool
     {
-        return Schema::connection('warehouse')->hasTable(self::ARCHIVE_TABLE);
+        return self::$hasArchiveTable ??= Schema::connection('warehouse')->hasTable(self::ARCHIVE_TABLE);
     }
 
     private static function statusColumn(string $table): string
     {
-        return Schema::connection('warehouse')->hasColumn($table, ApprovalWorkflow::STATUS_COLUMN)
+        return self::hasColumn($table, ApprovalWorkflow::STATUS_COLUMN)
             ? ApprovalWorkflow::STATUS_COLUMN
             : ApprovalWorkflow::MIRROR_COLUMN;
+    }
+
+    private static function hasColumn(string $table, string $column): bool
+    {
+        $key = "{$table}.{$column}";
+
+        return self::$hasColumnCache[$key] ??= Schema::connection('warehouse')->hasColumn($table, $column);
     }
 }

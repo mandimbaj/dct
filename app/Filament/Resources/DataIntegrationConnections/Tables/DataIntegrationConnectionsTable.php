@@ -3,8 +3,11 @@
 namespace App\Filament\Resources\DataIntegrationConnections\Tables;
 
 use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
+use App\Models\Country;
 use App\Models\DataIntegrationConnection;
+use App\Support\SelectOptions;
 use App\Support\StatusColor;
+use App\Support\UserCountryAccess;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -27,6 +30,16 @@ class DataIntegrationConnectionsTable
                     ->searchable()
                     ->sortable()
                     ->wrap(),
+                TextColumn::make('location_id')
+                    ->label(__('aho.data_integration.fields.country'))
+                    ->state(fn (DataIntegrationConnection $record): string => $record->location?->display_name
+                        ?? __('aho.data_integration.regional_or_unassigned'))
+                    ->searchable(query: fn ($query, string $search) => $query->whereIn(
+                        'location_id',
+                        Country::query()
+                            ->whereHas('translations', fn ($translations) => $translations->where('name', 'like', "%{$search}%"))
+                            ->pluck('location_id'),
+                    )),
                 TextColumn::make('provider')
                     ->label(__('aho.data_integration.fields.provider'))
                     ->badge()
@@ -47,6 +60,15 @@ class DataIntegrationConnectionsTable
                     ->label(__('aho.data_integration.fields.server_name'))
                     ->placeholder(__('aho.data_integration.not_applicable'))
                     ->limit(30)
+                    ->toggleable(),
+                TextColumn::make('ssl_mode')
+                    ->label(__('aho.data_integration.fields.ssl_mode'))
+                    ->state(fn (DataIntegrationConnection $record): ?string => $record->integration_method === DataIntegrationConnection::METHOD_DIRECT
+                        ? $record->ssl_mode
+                        : null)
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => DataIntegrationConnection::sslModeOptions()[$state] ?? (string) $state)
+                    ->placeholder(__('aho.data_integration.not_applicable'))
                     ->toggleable(),
                 TextColumn::make('api_url')
                     ->label(__('aho.data_integration.fields.api_url'))
@@ -97,6 +119,12 @@ class DataIntegrationConnectionsTable
                 SelectFilter::make('status')
                     ->label(__('aho.data_integration.fields.status'))
                     ->options(fn (): array => DataIntegrationConnection::statusOptions()),
+                SelectFilter::make('location_id')
+                    ->label(__('aho.data_integration.fields.country'))
+                    ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
+                        UserCountryAccess::scopeLocations(Country::query()->where('locationlevel_id', 2)),
+                        keyName: 'location_id',
+                    )),
             ])
             ->recordActions([
                 Action::make('configure_mapping')
@@ -107,8 +135,6 @@ class DataIntegrationConnectionsTable
                 Action::make('validate_configuration')
                     ->label(__('aho.actions.validate_configuration'))
                     ->icon('heroicon-o-check-circle')
-                    ->disabled(fn (DataIntegrationConnection $record): bool => ! $record->hasConfiguredFieldMappings())
-                    ->tooltip(fn (DataIntegrationConnection $record): ?string => $record->hasConfiguredFieldMappings() ? null : __('aho.data_integration.validation.mapping_missing'))
                     ->action(function (DataIntegrationConnection $record): void {
                         $result = $record->validateConfiguration();
 

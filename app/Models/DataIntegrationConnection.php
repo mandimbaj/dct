@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\DataIntegration\ExternalDatabaseConnection;
+use App\Support\UserCountryAccess;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,6 +33,12 @@ class DataIntegrationConnection extends Model
 
     public const STATUS_ERROR = 'error';
 
+    public const SSL_MODE_DISABLED = 'disabled';
+
+    public const SSL_MODE_REQUIRED = 'required';
+
+    public const SSL_MODE_VERIFY_IDENTITY = 'verify_identity';
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -44,6 +52,8 @@ class DataIntegrationConnection extends Model
             'field_mapping' => 'array',
             'last_synced_at' => 'datetime',
             'last_tested_at' => 'datetime',
+            'connection_timeout' => 'integer',
+            'location_id' => 'integer',
         ];
     }
 
@@ -118,6 +128,18 @@ class DataIntegrationConnection extends Model
     /**
      * @return array<string, string>
      */
+    public static function sslModeOptions(): array
+    {
+        return [
+            self::SSL_MODE_DISABLED => __('aho.data_integration.ssl_modes.disabled'),
+            self::SSL_MODE_REQUIRED => __('aho.data_integration.ssl_modes.required'),
+            self::SSL_MODE_VERIFY_IDENTITY => __('aho.data_integration.ssl_modes.verify_identity'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public static function syncFrequencyOptions(): array
     {
         return [
@@ -135,6 +157,7 @@ class DataIntegrationConnection extends Model
     public function validateConfiguration(): array
     {
         $missing = [];
+        $directConnectionResult = null;
 
         if ($this->integration_method === self::METHOD_DIRECT) {
             $directFields = [
@@ -183,10 +206,6 @@ class DataIntegrationConnection extends Model
             ];
         }
 
-        if (! $this->hasConfiguredFieldMappings()) {
-            $missing[] = __('aho.data_integration.fields.field_mapping');
-        }
-
         if ($missing !== []) {
             return [
                 'ok' => false,
@@ -194,8 +213,36 @@ class DataIntegrationConnection extends Model
             ];
         }
 
+        if ($this->integration_method === self::METHOD_DIRECT) {
+            try {
+                $directConnectionResult = ExternalDatabaseConnection::test($this);
+            } catch (\Throwable $e) {
+                return [
+                    'ok' => false,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        if (! $this->hasConfiguredFieldMappings()) {
+            return [
+                'ok' => false,
+                'message' => $directConnectionResult
+                    ? __('aho.data_integration.validation.connection_ready_mapping_missing', [
+                        'connection' => $directConnectionResult['message'],
+                    ])
+                    : __('aho.data_integration.validation.missing', [
+                        'fields' => __('aho.data_integration.fields.field_mapping'),
+                    ]),
+            ];
+        }
+
         if ($this->provider === self::PROVIDER_DHIS2 && $this->integration_method === self::METHOD_API) {
             return $this->validateDhis2ApiConnection();
+        }
+
+        if ($directConnectionResult !== null) {
+            return $directConnectionResult;
         }
 
         return [
@@ -207,6 +254,11 @@ class DataIntegrationConnection extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'location_id', 'location_id');
     }
 
     /**
@@ -251,6 +303,12 @@ class DataIntegrationConnection extends Model
     {
         static::creating(function (DataIntegrationConnection $connection): void {
             $connection->user_id ??= auth()->id();
+        });
+
+        static::saving(function (DataIntegrationConnection $connection): void {
+            if (UserCountryAccess::user() && ! UserCountryAccess::canViewAllCountries()) {
+                $connection->location_id = UserCountryAccess::locationId();
+            }
         });
     }
 

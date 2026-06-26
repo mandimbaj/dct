@@ -28,16 +28,15 @@ class NotificationController extends Controller
         $data = $notification->data;
         $title = $data['title'] ?? __('aho.notifications.read.title');
         $body = $data['body'] ?? $data['message'] ?? '';
+        $receivedAt = $notification->created_at;
 
-        if (blank($notification->read_at)) {
-            $notification->markAsRead();
-            TopbarAlerts::forgetForUser($user, $country);
-        }
+        $notification->delete();
+        TopbarAlerts::forgetForUser($user, $country);
 
         return view('notifications.show', [
             'backUrl' => URL::to('/admin/'.($country ?: 'af')),
             'body' => $body,
-            'notification' => $notification,
+            'receivedAt' => $receivedAt,
             'title' => $title,
         ]);
     }
