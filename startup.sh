@@ -25,6 +25,9 @@ if ! command -v composer >/dev/null 2>&1; then
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 fi
 
+rm -f bootstrap/cache/packages.php
+rm -f bootstrap/cache/services.php
+
 if [ ! -f vendor/autoload.php ]; then
     composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 else
