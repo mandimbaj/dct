@@ -12,6 +12,9 @@ echo "App directory: ${APP_DIR}"
 echo "Nginx port: ${PORT}"
 cd "${APP_DIR}"
 
+rm -f bootstrap/cache/packages.php
+rm -f bootstrap/cache/services.php
+
 echo "=== [1] Storage and cache folders ==="
 mkdir -p storage/framework/views
 mkdir -p storage/framework/cache/data
