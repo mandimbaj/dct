@@ -64,7 +64,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'af-aho-dct'
+          app-name: 'dct-egbdejb5dydjbpea'
           slot-name: 'Production'
           package: .
           startup-command: 'bash /home/site/wwwroot/startup.sh'
