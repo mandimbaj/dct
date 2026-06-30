@@ -2,18 +2,17 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for country National Health Observatory customisation.
  *
  * This mirrors the legacy Django "National Observatory" admin module.
  */
-class NationalObservatory extends Cluster
+class NationalObservatory extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
+    protected static ?string $ahoNavigationIcon = AhoIcon::NATIONAL_OBSERVATORY;
 
     protected static ?int $navigationSort = 8;
 

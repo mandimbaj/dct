@@ -188,9 +188,11 @@ class CountryContext
             return null;
         }
 
-        $country = $user->relationLoaded('location')
-            ? $user->location
-            : $user->location()->with('translations')->first();
+        if (! $user->relationLoaded('location')) {
+            $user->loadMissing('location.translations');
+        }
+
+        $country = $user->location;
 
         if (! $country instanceof Country) {
             return null;

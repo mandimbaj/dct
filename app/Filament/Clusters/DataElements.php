@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for data element definitions, groups and country-scoped data element values.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * This module is separate from indicators because data elements are lower-level warehouse
  * inputs that can feed indicators or external integrations.
  */
-class DataElements extends Cluster
+class DataElements extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCircleStack;
+    protected static ?string $ahoNavigationIcon = AhoIcon::DATA_ELEMENTS;
 
     protected static ?int $navigationSort = 6;
 

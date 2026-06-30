@@ -159,7 +159,6 @@ class HealthIndicatorArchivesTable
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                     ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                     ->searchable()
-                    ->preload()
                     ->native(false)
                     ->optionsLimit(SelectOptions::LIMIT),
                 CountryTableFilter::make(),
@@ -171,7 +170,6 @@ class HealthIndicatorArchivesTable
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                     ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
                     ->searchable()
-                    ->preload()
                     ->native(false)
                     ->optionsLimit(SelectOptions::LIMIT),
                 SelectFilter::make('comment')

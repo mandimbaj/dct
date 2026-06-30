@@ -31,10 +31,8 @@ class HealthIndicatorArchiveForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'afrocode')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), keyName: 'indicator_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                             ->searchable()
-                            ->preload()
                             ->optionsLimit(SelectOptions::LIMIT)
                             ->required(),
 
@@ -44,17 +42,12 @@ class HealthIndicatorArchiveForm
                                 SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
                             ))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
-                                UserCountryAccess::scopeLocations(Country::query()),
-                                keyName: 'location_id',
-                            ))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
                                 UserCountryAccess::scopeLocations(Country::query()),
                                 $search,
                                 'location_id',
                             ))
                             ->searchable()
-                            ->preload()
                             ->optionsLimit(SelectOptions::LIMIT)
                             ->required(),
 
@@ -84,10 +77,8 @@ class HealthIndicatorArchiveForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(IndicatorCategory::query(), keyName: 'categoryoption_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IndicatorCategory::query(), $search, 'categoryoption_id'))
                             ->searchable()
-                            ->preload()
                             ->optionsLimit(SelectOptions::LIMIT)
                             ->required(),
 
@@ -97,10 +88,8 @@ class HealthIndicatorArchiveForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), keyName: 'datasource_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
                             ->searchable()
-                            ->preload()
                             ->optionsLimit(SelectOptions::LIMIT)
                             ->required(),
 
@@ -110,10 +99,8 @@ class HealthIndicatorArchiveForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(MeasureMethod::query(), keyName: 'measuremethod_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(MeasureMethod::query(), $search, 'measuremethod_id'))
                             ->searchable()
-                            ->preload()
                             ->optionsLimit(SelectOptions::LIMIT)
                             ->required(),
                     ])

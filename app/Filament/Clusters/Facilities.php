@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for facility master data and facility service measurements.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * Data resources hold facility records and service availability/capacity/readiness facts;
  * reference resources hold the service taxonomy used by those facts.
  */
-class Facilities extends Cluster
+class Facilities extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
+    protected static ?string $ahoNavigationIcon = AhoIcon::FACILITIES;
 
     protected static ?int $navigationSort = 3;
 

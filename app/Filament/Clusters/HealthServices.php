@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for health-service fact values.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * The current cluster is intentionally narrow: it exposes service values while reusing
  * indicator, source, method and location references from the shared warehouse models.
  */
-class HealthServices extends Cluster
+class HealthServices extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHeart;
+    protected static ?string $ahoNavigationIcon = AhoIcon::HEALTH_SERVICES;
 
     protected static ?int $navigationSort = 5;
 

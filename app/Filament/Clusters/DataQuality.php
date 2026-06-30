@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for data-quality checks and issue-resolution tables.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * These resources surface invalid references, missing values, consistency checks and failed
  * imports without changing the source fact tables directly.
  */
-class DataQuality extends Cluster
+class DataQuality extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckBadge;
+    protected static ?string $ahoNavigationIcon = AhoIcon::DATA_QUALITY;
 
     protected static ?int $navigationSort = 10;
 

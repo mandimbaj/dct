@@ -39,10 +39,8 @@ class HealthIndicatorValueForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'afrocode')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), keyName: 'indicator_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                             ->searchable()
-                            ->preload()
                             ->required(),
 
                         Select::make('location_id')
@@ -51,10 +49,6 @@ class HealthIndicatorValueForm
                                 SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
                             ))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
-                                UserCountryAccess::scopeLocations(Country::query()),
-                                keyName: 'location_id',
-                            ))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
                                 UserCountryAccess::scopeLocations(Country::query()),
                                 $search,
@@ -63,7 +57,6 @@ class HealthIndicatorValueForm
                             ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
                             ->searchable()
                             ->live()
-                            ->preload()
                             ->required(),
 
                         TextInput::make('start_period')
@@ -87,10 +80,8 @@ class HealthIndicatorValueForm
                                 ->with(['translations', 'parentCategory.translations'])
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn (IndicatorCategory $record): string => self::categoryOptionLabel($record))
-                            ->options(fn (): array => self::categoryOptionOptions())
                             ->getSearchResultsUsing(fn (?string $search): array => self::categoryOptionSearchResults($search))
                             ->searchable()
-                            ->preload()
                             ->required(),
 
                         Select::make('datasource_id')
@@ -99,10 +90,8 @@ class HealthIndicatorValueForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), keyName: 'datasource_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
                             ->searchable()
-                            ->preload()
                             ->required(),
 
                         Select::make('measuremethod_id')
@@ -111,10 +100,8 @@ class HealthIndicatorValueForm
                                 ->with('translations')
                                 ->tap(fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code')))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
-                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(MeasureMethod::query(), keyName: 'measuremethod_id'))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(MeasureMethod::query(), $search, 'measuremethod_id'))
                             ->searchable()
-                            ->preload()
                             ->required(),
                     ])
                     ->columns(3)
@@ -201,21 +188,6 @@ class HealthIndicatorValueForm
             auth()->user()
             && UserPermissions::allowsResource(auth()->user(), HealthIndicatorValueResource::class, UserPermissions::ACTION_APPROVE)
         );
-    }
-
-    /**
-     * @return array<int|string, string|array<int, string>>
-     */
-    private static function categoryOptionOptions(): array
-    {
-        return self::categoryOptionRecords()
-            ->groupBy(fn (IndicatorCategory $record): string => $record->parentCategory?->display_name ?: __('aho.data_integration.other'))
-            ->map(fn ($group): array => $group
-                ->mapWithKeys(fn (IndicatorCategory $record): array => [
-                    $record->categoryoption_id => $record->display_name,
-                ])
-                ->all())
-            ->all();
     }
 
     /**

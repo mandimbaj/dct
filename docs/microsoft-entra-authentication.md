@@ -31,8 +31,10 @@ Create an app registration in the WHO Microsoft Entra admin center:
 
 1. Choose **Accounts in this organizational directory only**.
 2. Add a **Web** redirect URI for every environment:
-   - Local: `http://127.0.0.1:8002/auth/microsoft/callback`
-   - Production: `https://dct.afro.who.int/auth/microsoft/callback`
+   - Local: `http://127.0.0.1:8000/microsoft_authentication/callback`
+   - Production: `https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/microsoft_authentication/callback`
+   - French compatibility: `https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/fr/microsoft_authentication/callback`
+   - Portuguese compatibility: `https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/pt/microsoft_authentication/callback`
 3. Create a client secret and store it only in the secured environment configuration.
 4. Add the delegated Microsoft Graph permission `User.Read`.
 5. Record the **Directory (tenant) ID**, **Application (client) ID** and client secret.
@@ -53,7 +55,7 @@ MICROSOFT_ENTRA_ENABLED=true
 MICROSOFT_ENTRA_TENANT=<WHO directory tenant ID>
 MICROSOFT_ENTRA_CLIENT_ID=<application client ID>
 MICROSOFT_ENTRA_CLIENT_SECRET=<client secret>
-MICROSOFT_ENTRA_REDIRECT_URI=https://dct.afro.who.int/auth/microsoft/callback
+MICROSOFT_ENTRA_REDIRECT_URI=https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/microsoft_authentication/callback
 MICROSOFT_ENTRA_SCOPES="openid profile email User.Read"
 MICROSOFT_ENTRA_LOCAL_LOGIN_ENABLED=true
 ```
@@ -71,6 +73,38 @@ Run the deployment commands:
 php artisan migrate --force
 php artisan optimize:clear
 ```
+
+## GitHub Actions and Azure App Service
+
+Deploying the repository does not copy the local `.env` file to Azure. The deployment workflow
+expects a GitHub Actions repository secret named `AZURE_MICROSOFT_ENTRA_SETTINGS` and applies it to
+the `af-aho-dct` App Service before deploying the application.
+
+In GitHub, open **Settings > Secrets and variables > Actions > New repository secret**, use
+`AZURE_MICROSOFT_ENTRA_SETTINGS` as the name, and store this JSON as its value after replacing the
+three placeholders:
+
+```json
+[
+  {"name":"APP_URL","value":"https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_ENABLED","value":"true","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_TENANT","value":"<WHO directory tenant ID>","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_CLIENT_ID","value":"<application client ID>","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_CLIENT_SECRET","value":"<client secret value>","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_REDIRECT_URI","value":"https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/microsoft_authentication/callback","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_SCOPES","value":"openid profile email User.Read","slotSetting":false},
+  {"name":"MICROSOFT_ENTRA_LOCAL_LOGIN_ENABLED","value":"true","slotSetting":false},
+  {"name":"SESSION_SAME_SITE","value":"lax","slotSetting":false}
+]
+```
+
+The workflow deliberately stops with a clear error when this secret is absent. This prevents a
+successful deployment from silently publishing a login page without Microsoft authentication.
+It also configures `startup.sh` as the Linux App Service startup command so that Azure serves the
+Laravel application instead of retaining a previous application runtime.
+
+The redirect URI above must also be registered as a **Web** redirect URI in the Microsoft Entra app
+registration. Use the client secret **value**, not its secret ID.
 
 ## Local login fallback
 

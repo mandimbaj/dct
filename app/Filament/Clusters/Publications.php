@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for knowledge products and publication reference data.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * Health workforce also exposes a filtered view of some publication models; keep global
  * publication behavior here unfiltered.
  */
-class Publications extends Cluster
+class Publications extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNewspaper;
+    protected static ?string $ahoNavigationIcon = AhoIcon::PUBLICATIONS;
 
     protected static ?int $navigationSort = 7;
 

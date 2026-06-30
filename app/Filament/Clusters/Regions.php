@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for locations and location levels.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * The user-facing label comes from the translation files; the class name remains Regions
  * because this was the original cluster name and route namespace.
  */
-class Regions extends Cluster
+class Regions extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeEuropeAfrica;
+    protected static ?string $ahoNavigationIcon = AhoIcon::REGIONS;
 
     protected static ?int $navigationSort = 8;
 

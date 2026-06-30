@@ -2,15 +2,14 @@
 
 namespace App\Support;
 
+use App\Models\Country;
 use App\Models\FailedImportRow;
 use App\Models\UserPageVisit;
 use App\Notifications\SystemNotification;
-use App\Observers\AdminActivityObserver;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
-use ReflectionClass;
 use Throwable;
 
 class AdminActivityNotifier
@@ -33,10 +32,14 @@ class AdminActivityNotifier
             return;
         }
 
-        foreach (self::modelClasses() as $modelClass) {
-            if (self::isObservableModel($modelClass)) {
-                $modelClass::observe(AdminActivityObserver::class);
-            }
+        foreach (['created', 'updated', 'deleted'] as $modelEvent) {
+            Event::listen("eloquent.{$modelEvent}: *", function (string $eventName, array $payload) use ($modelEvent): void {
+                $model = $payload[0] ?? null;
+
+                if ($model instanceof Model) {
+                    self::record($modelEvent, $model);
+                }
+            });
         }
     }
 
@@ -146,41 +149,11 @@ class AdminActivityNotifier
         }
 
         try {
-            $country = \App\Models\Country::query()->find($locationId);
+            $country = Country::query()->find($locationId);
 
             return $country?->iso_alpha ? strtolower((string) $country->iso_alpha) : null;
         } catch (Throwable) {
             return null;
-        }
-    }
-
-    /**
-     * @return array<int, class-string<Model>>
-     */
-    private static function modelClasses(): array
-    {
-        return collect(File::allFiles(app_path('Models')))
-            ->map(function ($file): string {
-                $relative = Str::of($file->getPathname())
-                    ->after(app_path('Models').DIRECTORY_SEPARATOR)
-                    ->replace(DIRECTORY_SEPARATOR, '\\')
-                    ->beforeLast('.php');
-
-                return 'App\\Models\\'.$relative;
-            })
-            ->filter(fn (string $class): bool => class_exists($class))
-            ->values()
-            ->all();
-    }
-
-    private static function isObservableModel(string $class): bool
-    {
-        try {
-            $reflection = new ReflectionClass($class);
-
-            return $reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract();
-        } catch (Throwable) {
-            return false;
         }
     }
 }

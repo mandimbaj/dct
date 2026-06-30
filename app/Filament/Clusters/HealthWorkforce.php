@@ -2,18 +2,17 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for workforce values, workforce reference tables and workforce publication subsets.
  *
  * See docs/health-workforce.md for the Django-to-Laravel mapping and warehouse table details.
  */
-class HealthWorkforce extends Cluster
+class HealthWorkforce extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+    protected static ?string $ahoNavigationIcon = AhoIcon::HEALTH_WORKFORCE;
 
     protected static ?int $navigationSort = 4;
 

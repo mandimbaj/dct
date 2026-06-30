@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MicrosoftEntraController;
 use App\Http\Controllers\NotificationController;
@@ -24,12 +25,27 @@ Route::get('/admin/{country}/microsoft/login', [MicrosoftEntraController::class,
     ->middleware(['guest', 'throttle:10,1'])
     ->name('microsoft-entra.redirect');
 
-Route::get('/auth/microsoft/callback', [MicrosoftEntraController::class, 'callback'])
+Route::redirect('/microsoft_authentication/login', '/admin/af/microsoft/login');
+
+Route::get('/microsoft_authentication/callback', [MicrosoftEntraController::class, 'callback'])
     ->middleware(['guest', 'throttle:10,1'])
     ->name('microsoft-entra.callback');
 
+Route::get('/fr/microsoft_authentication/callback', [MicrosoftEntraController::class, 'callback'])
+    ->middleware(['guest', 'throttle:10,1']);
+
+Route::get('/pt/microsoft_authentication/callback', [MicrosoftEntraController::class, 'callback'])
+    ->middleware(['guest', 'throttle:10,1']);
+
+Route::get('/auth/microsoft/callback', [MicrosoftEntraController::class, 'callback'])
+    ->middleware(['guest', 'throttle:10,1']);
+
 Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
     ->name('admin.notifications.show');
+
+Route::post('/assistant/chat', [AssistantController::class, 'chat'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('assistant.chat');
 
 Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 

@@ -1881,6 +1881,126 @@
     }
 }
 
+/* ── Assistant: header actions (clear + close) ── */
+.aho-ai__header-actions {
+    align-items: center;
+    display: flex;
+    gap: 0.375rem;
+}
+
+.aho-ai__clear {
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    color: white;
+    display: inline-flex;
+    height: 2rem;
+    justify-content: center;
+    width: 2rem;
+}
+
+.aho-ai__clear:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.aho-ai__action-icon {
+    height: 1rem;
+    width: 1rem;
+}
+
+/* ── Assistant: status dot ── */
+.aho-ai__status {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.35rem;
+}
+
+.aho-ai__status-dot {
+    animation: aho-ai-pulse 2s ease-in-out infinite;
+    background: #4ade80;
+    border-radius: 50%;
+    display: inline-block;
+    height: 0.475rem;
+    width: 0.475rem;
+}
+
+@keyframes aho-ai-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+
+/* ── Assistant: typing indicator ── */
+.aho-ai-message--typing {
+    align-items: center;
+    display: flex;
+    min-height: 2.1rem;
+    padding-block: 0.6rem;
+}
+
+.aho-ai-dots {
+    display: inline-flex;
+    gap: 0.3rem;
+}
+
+.aho-ai-dots span {
+    animation: aho-ai-bounce 1.1s ease-in-out infinite;
+    background: var(--who-afro-blue);
+    border-radius: 50%;
+    display: inline-block;
+    height: 0.45rem;
+    width: 0.45rem;
+}
+
+.aho-ai-dots span:nth-child(2) { animation-delay: 0.18s; }
+.aho-ai-dots span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes aho-ai-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30%            { transform: translateY(-0.35rem); opacity: 1; }
+}
+
+:root.dark .aho-ai-dots span {
+    background: #60a5fa;
+}
+
+/* ── Assistant: suggestion chips ── */
+.aho-ai-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.125rem 0 0.25rem;
+}
+
+.aho-ai-suggestion-chip {
+    background: color-mix(in srgb, var(--who-afro-blue) 8%, white);
+    border: 1px solid color-mix(in srgb, var(--who-afro-blue) 24%, white);
+    border-radius: 999px;
+    color: var(--who-afro-blue-dark);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 0.3rem 0.65rem;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.aho-ai-suggestion-chip:hover {
+    background: color-mix(in srgb, var(--who-afro-blue) 14%, white);
+    border-color: color-mix(in srgb, var(--who-afro-blue) 40%, white);
+}
+
+:root.dark .aho-ai-suggestion-chip {
+    background: #1e3a5f;
+    border-color: #2d5a8a;
+    color: #93c5fd;
+}
+
+:root.dark .aho-ai-suggestion-chip:hover {
+    background: #264a78;
+    border-color: #3a6fa0;
+}
+
 /* Responsive topbar refinements */
 .fi-topbar {
     display: flex;
@@ -2444,6 +2564,17 @@
 }
 
 /* Custom Icons: show a real visual preview beside the Font Awesome code. */
+.aho-custom-icon {
+    align-items: center;
+    color: inherit;
+    display: inline-flex;
+    font-size: 1em;
+    height: 1em;
+    justify-content: center;
+    line-height: 1;
+    width: 1em;
+}
+
 .aho-fa-preview {
     align-items: center;
     background: color-mix(in srgb, var(--who-afro-blue) 9%, white);

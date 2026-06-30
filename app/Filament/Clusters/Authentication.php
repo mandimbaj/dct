@@ -2,18 +2,17 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for users, roles, permissions and user page-visit history.
  *
  * Permissions are menu/action based and are enforced through App\Support\UserPermissions.
  */
-class Authentication extends Cluster
+class Authentication extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
+    protected static ?string $ahoNavigationIcon = AhoIcon::AUTHENTICATION;
 
     protected static ?int $navigationSort = 12;
 

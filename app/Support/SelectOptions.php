@@ -12,11 +12,29 @@ final class SelectOptions
     public const LIMIT = 10000;
 
     /**
+     * Columns that can meaningfully identify an option in a search field.
+     *
+     * @var array<int, string>
+     */
+    private const SEARCHABLE_COLUMNS = [
+        'name',
+        'shortname',
+        'title',
+        'label',
+        'code',
+        'afrocode',
+        'gen_code',
+        'iso_alpha',
+        'iso_number',
+    ];
+
+    /**
      * @return array<int|string, string>
      */
     public static function fromDisplayNameQuery(Builder $query, ?string $search = null, ?string $keyName = null): array
     {
         $model = $query->getModel();
+        self::applyContainsSearch($query, $search);
 
         if (method_exists($model, 'translations')) {
             $query->with('translations');
@@ -115,7 +133,83 @@ final class SelectOptions
             return true;
         }
 
-        return str_starts_with(self::normalize($label), self::normalize($search));
+        return str_contains(self::normalize($label), self::normalize($search));
+    }
+
+    private static function applyContainsSearch(Builder $query, ?string $search): void
+    {
+        $search = trim((string) $search);
+
+        if ($search === '') {
+            return;
+        }
+
+        $model = $query->getModel();
+        $modelColumns = self::searchableColumns($model);
+        $translationColumns = [];
+
+        if (method_exists($model, 'translations')) {
+            try {
+                $translationColumns = self::searchableColumns(
+                    $model->translations()->getRelated(),
+                    assumeNameColumn: true,
+                );
+            } catch (Throwable) {
+                $translationColumns = [];
+            }
+        }
+
+        if ($modelColumns === [] && $translationColumns === []) {
+            return;
+        }
+
+        $query->where(function (Builder $searchQuery) use ($model, $modelColumns, $translationColumns, $search): void {
+            $isFirstConstraint = true;
+
+            foreach ($modelColumns as $column) {
+                $method = $isFirstConstraint ? 'where' : 'orWhere';
+                $searchQuery->{$method}($model->qualifyColumn($column), 'like', "%{$search}%");
+                $isFirstConstraint = false;
+            }
+
+            if ($translationColumns === []) {
+                return;
+            }
+
+            $translationSearch = function (Builder $translationQuery) use ($translationColumns, $search): void {
+                $translationModel = $translationQuery->getModel();
+
+                $translationQuery->where(function (Builder $columnQuery) use ($translationModel, $translationColumns, $search): void {
+                    foreach ($translationColumns as $index => $column) {
+                        $method = $index === 0 ? 'where' : 'orWhere';
+                        $columnQuery->{$method}($translationModel->qualifyColumn($column), 'like', "%{$search}%");
+                    }
+                });
+            };
+
+            if ($isFirstConstraint) {
+                $searchQuery->whereHas('translations', $translationSearch);
+
+                return;
+            }
+
+            $searchQuery->orWhereHas('translations', $translationSearch);
+        });
+
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function searchableColumns(Model $model, bool $assumeNameColumn = false): array
+    {
+        $columns = array_values(array_intersect(self::SEARCHABLE_COLUMNS, $model->getFillable()));
+
+        if ($columns === [] && $assumeNameColumn) {
+            return ['name'];
+        }
+
+        return $columns;
     }
 
     private static function normalize(string $value): string

@@ -2,9 +2,8 @@
 
 namespace App\Filament\Clusters;
 
-use BackedEnum;
-use Filament\Clusters\Cluster;
-use Filament\Support\Icons\Heroicon;
+use App\Filament\AhoCluster;
+use App\Support\AhoIcon;
 
 /**
  * Main menu for API token status and token lifecycle actions.
@@ -12,9 +11,9 @@ use Filament\Support\Icons\Heroicon;
  * This cluster is page-based instead of resource-based because token creation/revocation is
  * a focused workflow rather than a general CRUD table.
  */
-class ApiTokens extends Cluster
+class ApiTokens extends AhoCluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
+    protected static ?string $ahoNavigationIcon = AhoIcon::API_TOKENS;
 
     protected static ?int $navigationSort = 11;
 

@@ -18,7 +18,9 @@ class HealthOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
 
-    protected static bool $isLazy = false;
+    // The archive aggregates can take several hundred milliseconds on a cold
+    // cache. Let the dashboard shell render first, then load the cards.
+    protected static bool $isLazy = true;
 
     protected ?string $pollingInterval = null;
 

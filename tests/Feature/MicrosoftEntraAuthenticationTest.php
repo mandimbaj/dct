@@ -29,6 +29,60 @@ class MicrosoftEntraAuthenticationTest extends TestCase
             ->assertSee('Sign in with Microsoft');
     }
 
+    public function test_example_environment_uses_the_real_callback_route(): void
+    {
+        $example = file_get_contents(base_path('.env.example'));
+
+        $this->assertIsString($example);
+        $this->assertStringContainsString(
+            'MICROSOFT_ENTRA_REDIRECT_URI=http://127.0.0.1:8000/microsoft_authentication/callback',
+            $example,
+        );
+        $this->assertStringNotContainsString('https://http://', $example);
+    }
+
+    public function test_production_and_localized_callback_paths_are_supported(): void
+    {
+        $this->configureMicrosoftEntra();
+
+        $this->assertSame(
+            '/microsoft_authentication/callback',
+            parse_url(route('microsoft-entra.callback'), PHP_URL_PATH),
+        );
+
+        foreach ([
+            '/microsoft_authentication/callback',
+            '/fr/microsoft_authentication/callback',
+            '/pt/microsoft_authentication/callback',
+            '/auth/microsoft/callback',
+        ] as $callback) {
+            $this->get($callback)
+                ->assertRedirect(route('filament.admin.auth.login', ['country' => 'af']));
+        }
+    }
+
+    public function test_legacy_microsoft_login_path_forwards_to_the_current_login_flow(): void
+    {
+        $this->get('/microsoft_authentication/login')
+            ->assertRedirect('/admin/af/microsoft/login');
+    }
+
+    public function test_azure_workflow_requires_and_applies_entra_app_settings(): void
+    {
+        $workflow = file_get_contents(base_path('.github/workflows/main_dct.yml'));
+
+        $this->assertIsString($workflow);
+        $this->assertStringContainsString('secrets.AZURE_MICROSOFT_ENTRA_SETTINGS', $workflow);
+        $this->assertStringContainsString('azure/appservice-settings@v1', $workflow);
+        $this->assertStringContainsString('MICROSOFT_ENTRA_REDIRECT_URI', $workflow);
+        $this->assertStringContainsString("app-name: 'af-aho-dct'", $workflow);
+        $this->assertStringContainsString("startup-command: 'bash /home/site/wwwroot/startup.sh'", $workflow);
+        $this->assertLessThan(
+            strpos($workflow, 'uses: azure/webapps-deploy@v3'),
+            strpos($workflow, 'uses: azure/appservice-settings@v1'),
+        );
+    }
+
     public function test_incomplete_configuration_returns_a_safe_login_error(): void
     {
         $this->configureMicrosoftEntra();
@@ -129,7 +183,7 @@ class MicrosoftEntraAuthenticationTest extends TestCase
                     'started_at' => now()->timestamp,
                 ],
             ])
-            ->get('/auth/microsoft/callback?'.http_build_query([
+            ->get('/microsoft_authentication/callback?'.http_build_query([
                 'state' => $state,
                 'code' => 'authorization-code',
             ]));
@@ -176,7 +230,7 @@ class MicrosoftEntraAuthenticationTest extends TestCase
             'services.microsoft_entra.tenant' => self::TENANT_ID,
             'services.microsoft_entra.client_id' => self::CLIENT_ID,
             'services.microsoft_entra.client_secret' => 'test-client-secret',
-            'services.microsoft_entra.redirect_uri' => 'http://localhost/auth/microsoft/callback',
+            'services.microsoft_entra.redirect_uri' => 'http://localhost/microsoft_authentication/callback',
             'services.microsoft_entra.scopes' => ['openid', 'profile', 'email', 'User.Read'],
             'services.microsoft_entra.local_login_enabled' => true,
         ]);
