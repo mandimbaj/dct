@@ -5,11 +5,9 @@ namespace App\Filament\Resources\InstitutionProgrammes;
 use App\Filament\Clusters\HealthWorkforce;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
-use App\Filament\Resources\HealthCadres\HealthCadreResource;
 use App\Filament\Resources\InstitutionProgrammes\Pages\CreateInstitutionProgramme;
 use App\Filament\Resources\InstitutionProgrammes\Pages\EditInstitutionProgramme;
 use App\Filament\Resources\InstitutionProgrammes\Pages\ListInstitutionProgrammes;
-use App\Filament\Resources\TrainingInstitutions\TrainingInstitutionResource;
 use App\Models\InstitutionProgramme;
 use App\Support\WarehouseForm;
 use BackedEnum;
@@ -45,15 +43,9 @@ class InstitutionProgrammeResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
-    /**
-     * Reuse the existing workforce reference permissions for this newly exposed lookup table.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            HealthCadreResource::class,
-            TrainingInstitutionResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

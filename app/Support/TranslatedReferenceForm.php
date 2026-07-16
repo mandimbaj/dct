@@ -5,10 +5,12 @@ namespace App\Support;
 use App\Models\Country;
 use App\Models\HealthServiceProgramme;
 use App\Models\Indicator;
+use App\Models\KnowledgeProduct;
 use App\Models\UhcClockIndicator;
 use App\Models\UhcClockTheme;
 use App\Models\User;
 use Filament\Forms\Components\Field;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -23,6 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 
 class TranslatedReferenceForm
@@ -92,7 +95,7 @@ class TranslatedReferenceForm
                             ->distinct()
                             ->required(),
                         ...$columns
-                            ->map(fn (array $column) => self::translationComponent($column))
+                            ->map(fn (array $column) => self::translationComponent($column, $modelClass))
                             ->all(),
                     ])
                     ->default([
@@ -357,11 +360,53 @@ class TranslatedReferenceForm
     /**
      * @param  array<string, mixed>  $column
      */
-    private static function translationComponent(array $column)
+    private static function translationComponent(array $column, string $modelClass)
     {
         $field = (string) $column['name'];
         $type = strtolower((string) ($column['type'] ?? ''));
         $typeName = strtolower((string) ($column['type_name'] ?? ''));
+
+        if ($modelClass === KnowledgeProduct::class && $field === 'internal_url') {
+            return FileUpload::make($field)
+                ->label(self::label($field))
+                ->helperText(__('aho.knowledge_products.help.internal_url'))
+                ->disk('public')
+                ->directory('production/files')
+                ->fetchFileInformation(false)
+                ->getUploadedFileUsing(fn (string $file): array => PublicationFileStorage::metadata($file))
+                ->saveUploadedFileUsing(fn (TemporaryUploadedFile $file): string => PublicationFileStorage::store($file, 'production/files'))
+                ->acceptedFileTypes([
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-powerpoint',
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    'text/csv',
+                    'text/plain',
+                ])
+                ->maxSize(51200)
+                ->downloadable()
+                ->openable()
+                ->columnSpanFull();
+        }
+
+        if ($modelClass === KnowledgeProduct::class && $field === 'cover_image') {
+            return FileUpload::make($field)
+                ->label(self::label($field))
+                ->disk('public')
+                ->directory('production/images')
+                ->fetchFileInformation(false)
+                ->getUploadedFileUsing(fn (string $file): array => PublicationFileStorage::metadata($file))
+                ->saveUploadedFileUsing(fn (TemporaryUploadedFile $file): string => PublicationFileStorage::store($file, 'production/images'))
+                ->image()
+                ->maxSize(10240)
+                ->downloadable()
+                ->openable()
+                ->columnSpanFull();
+        }
+
         $component = self::isLongText($field, $typeName)
             ? Textarea::make($field)->rows(4)
             : TextInput::make($field);

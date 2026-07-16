@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -59,6 +60,24 @@ class User extends Authenticatable implements FilamentUser
     public function pageVisits(): HasMany
     {
         return $this->hasMany(UserPageVisit::class);
+    }
+
+    public function warehouseIdentity(): HasOne
+    {
+        return $this->hasOne(WarehouseAuthenticationUser::class, 'email', 'email');
+    }
+
+    public function getIdentitySourceAttribute(): string
+    {
+        $hasEntraIdentity = filled($this->entra_object_id);
+        $hasWarehouseIdentity = $this->warehouseIdentity !== null;
+
+        return match (true) {
+            $hasEntraIdentity && $hasWarehouseIdentity => 'entra_django',
+            $hasEntraIdentity => 'entra',
+            $hasWarehouseIdentity => 'django',
+            default => 'local',
+        };
     }
 
     public function canViewAllCountries(): bool

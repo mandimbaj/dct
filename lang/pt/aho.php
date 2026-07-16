@@ -410,6 +410,8 @@ return [
         'remarks' => 'Observações',
         'users_count' => 'Utilizadores',
         'system_role' => 'Função do sistema',
+        'identity_source' => 'Origem da identidade',
+        'django_status' => 'Estado Django',
     ],
     'facility_service_categories' => [
         'availability' => 'Disponibilidade',
@@ -462,6 +464,17 @@ return [
     'auth_management' => [
         'role_permissions_navigation' => 'Funções e permissões',
         'direct_permissions' => 'Permissões dos utilizadores',
+        'identity_sources' => [
+            'entra_django' => 'Microsoft Entra + DCT Django',
+            'entra' => 'Microsoft Entra',
+            'django' => 'DCT Django',
+            'local' => 'Local',
+        ],
+        'sync' => [
+            'title' => 'Utilizadores Django sincronizados',
+            'body' => ':created conta(s) adicionada(s) e :matched conta(s) já existente(s) de :total conta(s) Django.',
+            'failed' => 'Falha na sincronização dos utilizadores Django',
+        ],
         'sections' => [
             'user_access' => 'Âmbito e governação',
             'role_identity' => 'Perfil da função',
@@ -621,7 +634,7 @@ return [
             'files' => 'Ficheiros e ligações',
         ],
         'help' => [
-            'internal_url' => 'Caminho local do ficheiro. Ele sera aberto pelo URL de armazenamento AHO; links externos http/https ficam inalterados.',
+            'internal_url' => 'Selecione um ficheiro de publicação no seu computador. Use Ligação externa apenas para conteúdo alojado noutro local.',
         ],
     ],
     'charts' => [
@@ -894,6 +907,7 @@ return [
         'other' => 'Outro',
     ],
     'actions' => [
+        'sync_django_users' => 'Sincronizar utilizadores Django',
         'import_csv' => 'Importar CSV',
         'import_data' => 'Importar dados',
         'ok' => 'OK',

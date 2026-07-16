@@ -15,6 +15,15 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'publications' => [
+        'enabled' => (bool) env('AZURE_PUBLICATION_STORAGE_ENABLED', false),
+        'account' => env('AZURE_ACCOUNT', 'afahobckpstorageaccount'),
+        'account_key' => env('STORAGE_ACCOUNT_KEY', ''),
+        'container' => env('AZURE_CONTAINER', 'afahobckpcontainer'),
+        'sas_token' => env('AZURE_STORAGE_SAS_TOKEN', ''),
+        'endpoint' => env('AZURE_STORAGE_ENDPOINT', 'https://afahobckpstorageaccount.blob.core.windows.net'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

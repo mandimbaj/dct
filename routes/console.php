@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('indicators:archive-approved')
     ->cron('40 9 */3 * *')
     ->withoutOverlapping();
+
+Schedule::command('users:sync-warehouse')
+    ->dailyAt('02:15')
+    ->withoutOverlapping();

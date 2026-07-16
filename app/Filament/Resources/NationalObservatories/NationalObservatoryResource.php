@@ -5,7 +5,6 @@ namespace App\Filament\Resources\NationalObservatories;
 use App\Filament\Clusters\NationalObservatory as NationalObservatoryCluster;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
-use App\Filament\Resources\Countries\CountryResource;
 use App\Filament\Resources\NationalObservatories\Pages\CreateNationalObservatory;
 use App\Filament\Resources\NationalObservatories\Pages\EditNationalObservatory;
 use App\Filament\Resources\NationalObservatories\Pages\ListNationalObservatories;
@@ -16,6 +15,7 @@ use App\Models\NationalObservatory;
 use App\Support\FilamentSearch;
 use App\Support\NationalObservatoryNotifier;
 use App\Support\UserCountryAccess;
+use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -132,24 +132,27 @@ class NationalObservatoryResource extends Resource
 
     public static function canCreate(): bool
     {
-        return static::canAccess() && static::canCreateForAvailableCountry();
+        return static::canUsePermission(UserPermissions::ACTION_CREATE)
+            && static::canCreateForAvailableCountry();
     }
 
     public static function canEdit(Model $record): bool
     {
         return $record instanceof NationalObservatory
-            && static::canAccess()
+            && static::canUsePermission(UserPermissions::ACTION_UPDATE)
             && UserCountryAccess::allowsLocationId($record->location_id);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canEdit($record);
+        return $record instanceof NationalObservatory
+            && static::canUsePermission(UserPermissions::ACTION_DELETE)
+            && UserCountryAccess::allowsLocationId($record->location_id);
     }
 
     public static function canDeleteAny(): bool
     {
-        return static::canAccess();
+        return static::canUsePermission(UserPermissions::ACTION_DELETE);
     }
 
     /**
@@ -238,7 +241,7 @@ class NationalObservatoryResource extends Resource
 
     protected static function fallbackPermissionResources(): array
     {
-        return [CountryResource::class];
+        return [];
     }
 
     public static function getPages(): array

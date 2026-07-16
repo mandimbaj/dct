@@ -5,7 +5,6 @@ namespace App\Filament\Resources\RecurringEvents;
 use App\Filament\Clusters\HealthWorkforce;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
-use App\Filament\Resources\HealthWorkforceValues\HealthWorkforceValueResource;
 use App\Filament\Resources\RecurringEvents\Pages\CreateRecurringEvent;
 use App\Filament\Resources\RecurringEvents\Pages\EditRecurringEvent;
 use App\Filament\Resources\RecurringEvents\Pages\ListRecurringEvents;
@@ -53,14 +52,9 @@ class RecurringEventResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    /**
-     * Existing country roles with Health workforce values access should see related event data.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            HealthWorkforceValueResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

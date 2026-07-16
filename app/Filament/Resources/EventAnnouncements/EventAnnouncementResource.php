@@ -8,7 +8,6 @@ use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
 use App\Filament\Resources\EventAnnouncements\Pages\CreateEventAnnouncement;
 use App\Filament\Resources\EventAnnouncements\Pages\EditEventAnnouncement;
 use App\Filament\Resources\EventAnnouncements\Pages\ListEventAnnouncements;
-use App\Filament\Resources\HealthWorkforceValues\HealthWorkforceValueResource;
 use App\Models\Country;
 use App\Models\EventAnnouncement;
 use App\Support\CountryTableFilter;
@@ -51,14 +50,9 @@ class EventAnnouncementResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-    /**
-     * Use Health workforce values as the parent permission for this newly exposed data submenu.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            HealthWorkforceValueResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

@@ -33,14 +33,9 @@ class HealthWorkforceResourceTypeResource extends ResourceTypeResource
 
     protected static ?int $navigationSort = 6;
 
-    /**
-     * Reuse the existing Resource types permission while exposing the workforce-filtered subset.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            ResourceTypeResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

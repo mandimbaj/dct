@@ -5,11 +5,9 @@ namespace App\Filament\Resources\InstitutionTypes;
 use App\Filament\Clusters\HealthWorkforce;
 use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
-use App\Filament\Resources\HealthCadres\HealthCadreResource;
 use App\Filament\Resources\InstitutionTypes\Pages\CreateInstitutionType;
 use App\Filament\Resources\InstitutionTypes\Pages\EditInstitutionType;
 use App\Filament\Resources\InstitutionTypes\Pages\ListInstitutionTypes;
-use App\Filament\Resources\TrainingInstitutions\TrainingInstitutionResource;
 use App\Models\InstitutionType;
 use App\Support\WarehouseForm;
 use BackedEnum;
@@ -45,15 +43,9 @@ class InstitutionTypeResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-    /**
-     * Let existing roles that can manage workforce reference data see this new submenu.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            HealthCadreResource::class,
-            TrainingInstitutionResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

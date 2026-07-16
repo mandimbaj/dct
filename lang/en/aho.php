@@ -410,6 +410,8 @@ return [
         'remarks' => 'Remarks',
         'users_count' => 'Users',
         'system_role' => 'System role',
+        'identity_source' => 'Identity source',
+        'django_status' => 'Django status',
     ],
     'facility_service_categories' => [
         'availability' => 'Availability',
@@ -462,6 +464,17 @@ return [
     'auth_management' => [
         'role_permissions_navigation' => 'Roles & permissions',
         'direct_permissions' => 'User permissions',
+        'identity_sources' => [
+            'entra_django' => 'Microsoft Entra + DCT Django',
+            'entra' => 'Microsoft Entra',
+            'django' => 'DCT Django',
+            'local' => 'Local',
+        ],
+        'sync' => [
+            'title' => 'Django users synchronized',
+            'body' => ':created account(s) added and :matched account(s) already present out of :total Django account(s).',
+            'failed' => 'Django user synchronization failed',
+        ],
         'sections' => [
             'user_access' => 'Scope and governance',
             'role_identity' => 'Role profile',
@@ -621,7 +634,7 @@ return [
             'files' => 'Files and links',
         ],
         'help' => [
-            'internal_url' => 'Local file path. It will open from the AHO backup storage URL; external http/https links stay unchanged.',
+            'internal_url' => 'Select a publication file from your computer. Use External link only for content hosted elsewhere.',
         ],
     ],
     'charts' => [
@@ -894,6 +907,7 @@ return [
         'other' => 'Other',
     ],
     'actions' => [
+        'sync_django_users' => 'Synchronize Django users',
         'import_csv' => 'Import CSV',
         'import_data' => 'Import data',
         'ok' => 'OK',

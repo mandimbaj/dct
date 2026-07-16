@@ -33,14 +33,9 @@ class HealthWorkforceResourceCategoryResource extends ResourceCategoryResource
 
     protected static ?int $navigationSort = 7;
 
-    /**
-     * Reuse the existing Resource categories permission for the workforce-specific submenu.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            ResourceCategoryResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

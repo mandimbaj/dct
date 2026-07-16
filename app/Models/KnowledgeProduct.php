@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Support\ApprovalWorkflow;
 use App\Support\GeneratedCode;
+use App\Support\PublicationFileStorage;
 use App\Support\TextEncoding;
 use App\Support\WarehouseLocale;
+use App\Support\WarehouseUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class KnowledgeProduct extends Model
 {
@@ -41,7 +44,7 @@ class KnowledgeProduct extends Model
         static::creating(function (KnowledgeProduct $product): void {
             GeneratedCode::ensureUuid($product);
             GeneratedCode::ensure($product, 'code', 'KP', 45);
-            $product->user_id ??= auth()->id() ?? 1;
+            $product->user_id ??= WarehouseUser::id();
             ApprovalWorkflow::syncStatus($product, $product->comment);
         });
 
@@ -149,7 +152,7 @@ class KnowledgeProduct extends Model
             return null;
         }
 
-        return $coverImage;
+        return PublicationFileStorage::url($coverImage);
     }
 
     private static function publicationFileUrl(string $path): string
@@ -166,6 +169,10 @@ class KnowledgeProduct extends Model
 
         $path = ltrim($path, '/');
 
+        if ($publicUrl = self::publicUploadUrl($path)) {
+            return $publicUrl;
+        }
+
         if (str_contains($path, '/production/files/')) {
             $path = substr($path, strrpos($path, '/production/files/') + strlen('/production/files/'));
         }
@@ -179,6 +186,17 @@ class KnowledgeProduct extends Model
         }
 
         return rtrim(self::INTERNAL_FILE_BASE_URL, '/').'/'.str_replace(' ', '%20', $path);
+    }
+
+    private static function publicUploadUrl(string $path): ?string
+    {
+        $path = ltrim(str_replace('\\', '/', trim($path)), '/');
+
+        if ($path === '' || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     private function preferredTranslation(?string $field = null): ?KnowledgeProductTranslation

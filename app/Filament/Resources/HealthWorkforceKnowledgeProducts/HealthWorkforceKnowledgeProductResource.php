@@ -33,14 +33,9 @@ class HealthWorkforceKnowledgeProductResource extends KnowledgeProductResource
 
     protected static ?int $navigationSort = 2;
 
-    /**
-     * Users who already see Publications can see the workforce-specific resource subset.
-     */
     protected static function fallbackPermissionResources(): array
     {
-        return [
-            KnowledgeProductResource::class,
-        ];
+        return [];
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

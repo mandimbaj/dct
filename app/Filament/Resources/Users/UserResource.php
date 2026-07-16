@@ -104,6 +104,7 @@ class UserResource extends Resource
 
         return (bool) $user
             && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_DELETE)
+            && ! static::hasWarehouseIdentity($record)
             && static::recordIsManageableBy($record, $user);
     }
 
@@ -253,6 +254,22 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')->label(__('aho.fields.name'))->searchable()->sortable(),
                 TextColumn::make('email')->label(__('aho.fields.email'))->searchable()->sortable(),
+                TextColumn::make('identity_source')
+                    ->label(__('aho.fields.identity_source'))
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => __('aho.auth_management.identity_sources.'.$state))
+                    ->color(fn (string $state): string => match ($state) {
+                        'entra', 'entra_django' => 'info',
+                        'django' => 'warning',
+                        default => 'gray',
+                    }),
+                TextColumn::make('warehouseIdentity.is_active')
+                    ->label(__('aho.fields.django_status'))
+                    ->badge()
+                    ->placeholder(__('aho.fields.not_available'))
+                    ->formatStateUsing(fn (?bool $state): string => $state ? __('aho.status.active') : __('aho.status.inactive'))
+                    ->color(fn (?bool $state): string => $state ? 'success' : 'gray')
+                    ->toggleable(),
                 TextColumn::make('entra_user_principal_name')->label(__('aho.fields.entra_user_principal_name'))->placeholder(__('aho.fields.not_available'))->searchable()->toggleable(),
                 TextColumn::make('entra_last_login_at')->label(__('aho.fields.entra_last_login_at'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('location.display_name')->label(__('aho.fields.assigned_country'))->placeholder(__('aho.fields.all_countries'))->toggleable(),
@@ -274,7 +291,8 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->visible(fn (User $record): bool => static::canDelete($record)),
             ]);
     }
 
@@ -297,13 +315,24 @@ class UserResource extends Resource
             && (int) $record->location_id === (int) $user->location_id;
     }
 
+    private static function hasWarehouseIdentity(Model $record): bool
+    {
+        if (! $record instanceof User) {
+            return false;
+        }
+
+        return $record->relationLoaded('warehouseIdentity')
+            ? $record->warehouseIdentity !== null
+            : $record->warehouseIdentity()->exists();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
         if ($user?->is_super_admin) {
-            return $query->with(['location.translations', 'role']);
+            return $query->with(['location.translations', 'role', 'warehouseIdentity']);
         }
 
         if (
@@ -312,8 +341,7 @@ class UserResource extends Resource
             && UserPermissions::allowsResource($user, static::class, UserPermissions::ACTION_VIEW)
         ) {
             return $query
-                ->with(['location.translations'])
-                ->with('role')
+                ->with(['location.translations', 'role', 'warehouseIdentity'])
                 ->where('location_id', $user->location_id)
                 ->where('is_super_admin', false);
         }

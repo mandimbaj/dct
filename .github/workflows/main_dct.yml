@@ -88,6 +88,10 @@ jobs:
             'MICROSOFT_ENTRA_CLIENT_SECRET',
             'MICROSOFT_ENTRA_REDIRECT_URI',
             'SESSION_SAME_SITE',
+            'AZURE_PUBLICATION_STORAGE_ENABLED',
+            'AZURE_ACCOUNT',
+            'AZURE_CONTAINER',
+            'STORAGE_ACCOUNT_KEY',
           ];
           const missing = required.filter((name) => {
             const value = values.get(name) ?? '';
@@ -96,12 +100,17 @@ jobs:
           });
 
           if (missing.length > 0) {
-            console.error(`::error title=Incomplete Microsoft Entra settings::Missing or placeholder values: ${missing.join(', ')}`);
+            console.error(`::error title=Incomplete application settings::Missing or placeholder values: ${missing.join(', ')}`);
             process.exit(1);
           }
 
           if (values.get('MICROSOFT_ENTRA_ENABLED') !== 'true') {
             console.error('::error title=Microsoft Entra disabled::MICROSOFT_ENTRA_ENABLED must be true.');
+            process.exit(1);
+          }
+
+          if (values.get('AZURE_PUBLICATION_STORAGE_ENABLED') !== 'true') {
+            console.error('::error title=Azure publication storage disabled::AZURE_PUBLICATION_STORAGE_ENABLED must be true in production.');
             process.exit(1);
           }
 
