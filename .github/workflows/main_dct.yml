@@ -53,73 +53,6 @@ jobs:
         with:
           name: php-app
 
-      - name: Validate Microsoft Entra application settings
-        env:
-          AZURE_MICROSOFT_ENTRA_SETTINGS: ${{ secrets.AZURE_MICROSOFT_ENTRA_SETTINGS }}
-        run: |
-          node <<'NODE'
-          const raw = process.env.AZURE_MICROSOFT_ENTRA_SETTINGS ?? '';
-
-          if (raw.trim() === '') {
-            console.error('::error title=Missing Microsoft Entra settings::Create the AZURE_MICROSOFT_ENTRA_SETTINGS repository secret before deploying. See docs/microsoft-entra-authentication.md.');
-            process.exit(1);
-          }
-
-          let settings;
-
-          try {
-            settings = JSON.parse(raw);
-          } catch {
-            console.error('::error title=Invalid Microsoft Entra settings::AZURE_MICROSOFT_ENTRA_SETTINGS must contain valid JSON.');
-            process.exit(1);
-          }
-
-          if (!Array.isArray(settings)) {
-            console.error('::error title=Invalid Microsoft Entra settings::AZURE_MICROSOFT_ENTRA_SETTINGS must contain a JSON array.');
-            process.exit(1);
-          }
-
-          const values = new Map(settings.map((setting) => [setting.name, String(setting.value ?? '').trim()]));
-          const required = [
-            'APP_URL',
-            'MICROSOFT_ENTRA_ENABLED',
-            'MICROSOFT_ENTRA_TENANT',
-            'MICROSOFT_ENTRA_CLIENT_ID',
-            'MICROSOFT_ENTRA_CLIENT_SECRET',
-            'MICROSOFT_ENTRA_REDIRECT_URI',
-            'SESSION_SAME_SITE',
-            'AZURE_PUBLICATION_STORAGE_ENABLED',
-            'AZURE_ACCOUNT',
-            'AZURE_CONTAINER',
-            'STORAGE_ACCOUNT_KEY',
-          ];
-          const missing = required.filter((name) => {
-            const value = values.get(name) ?? '';
-
-            return value === '' || /^<.*>$/.test(value);
-          });
-
-          if (missing.length > 0) {
-            console.error(`::error title=Incomplete application settings::Missing or placeholder values: ${missing.join(', ')}`);
-            process.exit(1);
-          }
-
-          if (values.get('MICROSOFT_ENTRA_ENABLED') !== 'true') {
-            console.error('::error title=Microsoft Entra disabled::MICROSOFT_ENTRA_ENABLED must be true.');
-            process.exit(1);
-          }
-
-          if (values.get('AZURE_PUBLICATION_STORAGE_ENABLED') !== 'true') {
-            console.error('::error title=Azure publication storage disabled::AZURE_PUBLICATION_STORAGE_ENABLED must be true in production.');
-            process.exit(1);
-          }
-
-          if (values.get('MICROSOFT_ENTRA_REDIRECT_URI') !== 'https://af-aho-dct-f8hnfwbcb4e6c0bg.westeurope-01.azurewebsites.net/microsoft_authentication/callback') {
-            console.error('::error title=Invalid Microsoft Entra callback::The production redirect URI must match the documented callback URL.');
-            process.exit(1);
-          }
-          NODE
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -127,17 +60,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E9E74FA156494D14AE18B101ED7A0354 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5542F71BFC994D25A0D6FDE2B8DE63CC }}
 
-      - name: Configure Microsoft Entra on Azure App Service
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'af-aho-dct'
-          app-settings-json: '${{ secrets.AZURE_MICROSOFT_ENTRA_SETTINGS }}'
-
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'af-aho-dct'
+          app-name: 'dct'
           slot-name: 'Production'
           package: .
           startup-command: 'bash /home/site/wwwroot/startup.sh'
