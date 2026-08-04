@@ -56,6 +56,16 @@ class FacilityServiceReadiness extends Model
         return $this->belongsTo(FacilityProvisionUnit::class, 'units_id', 'infra_id');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return implode(' / ', array_filter([

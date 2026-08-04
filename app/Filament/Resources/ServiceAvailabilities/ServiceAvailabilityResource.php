@@ -16,6 +16,7 @@ use App\Models\HealthFacility;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
+use App\Support\UserDisplayName;
 use App\Support\WarehouseForm;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -123,6 +124,20 @@ class ServiceAvailabilityResource extends Resource
                 TextColumn::make('date_assessed')->label(__('aho.fields.date_assessed'))->date()->sortable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (FacilityServiceAvailability $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (FacilityServiceAvailability $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('facility_id')

@@ -4,21 +4,22 @@ namespace App\Filament\Resources\HealthFacilities;
 
 use App\Filament\Clusters\Facilities;
 use App\Filament\Resources\AhoResource as Resource;
-use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceAvailabilitiesRelationManager;
-use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceCapacitiesRelationManager;
-use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceReadinessRelationManager;
 use App\Filament\Resources\HealthFacilities\Pages\CreateHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\EditHealthFacility;
 use App\Filament\Resources\HealthFacilities\Pages\ListHealthFacilities;
-use App\Models\HealthFacility;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceAvailabilitiesRelationManager;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceCapacitiesRelationManager;
+use App\Filament\Resources\HealthFacilities\RelationManagers\ServiceReadinessRelationManager;
 use App\Models\Country;
 use App\Models\FacilityOwner;
 use App\Models\FacilityType;
+use App\Models\HealthFacility;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
+use App\Support\UserDisplayName;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -126,16 +127,14 @@ class HealthFacilityResource extends Resource
                             ->required(),
                         Select::make('owner_id')
                             ->label(__('aho.fields.owner'))
-                            ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
-                                SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
-                            ))
+                            ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                             ->options(fn (): array => SelectOptions::fromDisplayNameQuery(
-                                UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                                FacilityOwner::query(),
                                 keyName: 'owner_id',
                             ))
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
-                                UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                                FacilityOwner::query(),
                                 $search,
                                 'owner_id',
                             ))
@@ -255,6 +254,20 @@ class HealthFacilityResource extends Resource
                     ->toggleable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (HealthFacility $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (HealthFacility $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->toggleable(),
             ])
             ->filters([
                 CountryTableFilter::make(),
@@ -266,12 +279,10 @@ class HealthFacilityResource extends Resource
                     ->searchable(),
                 SelectFilter::make('owner_id')
                     ->label(__('aho.fields.owner'))
-                    ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => UserCountryAccess::scopeLocations(
-                        SelectOptions::orderByDisplayName($query->with('translations'), 'code'),
-                    ))
+                    ->relationship('owner', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                     ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(
-                        UserCountryAccess::scopeLocations(FacilityOwner::query()),
+                        FacilityOwner::query(),
                         $search,
                         'owner_id',
                     ))
@@ -291,7 +302,13 @@ class HealthFacilityResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with(['location.translations', 'type.translations', 'owner.translations']),
+            parent::getEloquentQuery()->with([
+                'location.translations',
+                'type.translations',
+                'owner.translations',
+                'uploadedBy',
+                'warehouseUploadedBy',
+            ]),
             'location_id',
         );
     }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\HealthFacilities\RelationManagers;
 use App\Filament\Resources\HealthFacilities\RelationManagers\Concerns\ConfiguresFacilityServiceOptions;
 use App\Models\FacilityServiceCapacity;
 use App\Support\FacilityServiceRecordUniqueness;
+use App\Support\UserDisplayName;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -88,6 +89,20 @@ class ServiceCapacitiesRelationManager extends RelationManager
                 TextColumn::make('date_assessed')->label(__('aho.fields.date_assessed'))->date()->sortable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (FacilityServiceCapacity $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (FacilityServiceCapacity $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->toggleable(),
             ])
             ->headerActions([
                 CreateAction::make(),

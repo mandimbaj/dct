@@ -4,10 +4,8 @@ namespace App\Filament\Resources\HealthFacilities\Pages;
 
 use App\Filament\Resources\HealthFacilities\HealthFacilityResource;
 use App\Filament\Resources\Pages\EditRecordAndReturnToList as EditRecord;
-use App\Models\FacilityOwner;
 use App\Support\UserCountryAccess;
 use Filament\Actions\DeleteAction;
-use Illuminate\Validation\ValidationException;
 
 class EditHealthFacility extends EditRecord
 {
@@ -35,18 +33,6 @@ class EditHealthFacility extends EditRecord
      */
     private function enforceCountryData(array $data): array
     {
-        $data = UserCountryAccess::enforceLocationData($data);
-
-        if (
-            ! UserCountryAccess::canViewAllCountries()
-            && filled($data['owner_id'] ?? null)
-            && ! UserCountryAccess::scopedRecordExists(FacilityOwner::class, $data['owner_id'])
-        ) {
-            throw ValidationException::withMessages([
-                'data.owner_id' => __('validation.exists', ['attribute' => __('aho.fields.owner')]),
-            ]);
-        }
-
-        return $data;
+        return UserCountryAccess::enforceLocationData($data);
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 #[Fillable([
     'uuid',
@@ -40,6 +41,8 @@ class HealthIndicatorValue extends Model
 {
     use HasFactory;
 
+    public const PRIORITY_LIMIT_PER_LOCATION = 10;
+
     protected $connection = 'warehouse';
 
     protected $table = 'fact_data_indicators';
@@ -68,6 +71,20 @@ class HealthIndicatorValue extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (HealthIndicatorValue $value): void {
+            if (! (bool) $value->priority || blank($value->location_id)) {
+                return;
+            }
+
+            if (! static::priorityLimitReachedForLocation((int) $value->location_id, $value->exists ? $value : null)) {
+                return;
+            }
+
+            throw ValidationException::withMessages([
+                'priority' => __('aho.indicator_values.priority_limit_reached'),
+            ]);
+        });
+
         static::creating(function (HealthIndicatorValue $value): void {
             $value->uuid ??= (string) Str::uuid();
             $value->priority ??= false;
@@ -144,5 +161,36 @@ class HealthIndicatorValue extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
+    public static function priorityLimitReachedForLocation(?int $locationId, ?self $currentRecord = null): bool
+    {
+        if (blank($locationId)) {
+            return false;
+        }
+
+        return static::priorityCountForLocation($locationId, $currentRecord) >= static::PRIORITY_LIMIT_PER_LOCATION;
+    }
+
+    public static function priorityCountForLocation(int $locationId, ?self $currentRecord = null): int
+    {
+        return static::query()
+            ->where('location_id', $locationId)
+            ->where('priority', true)
+            ->when(
+                $currentRecord?->getKey(),
+                fn ($query, int $factId) => $query->whereKeyNot($factId),
+            )
+            ->count();
     }
 }

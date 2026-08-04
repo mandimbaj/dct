@@ -71,6 +71,16 @@ class DataElementValue extends Model
         return $this->belongsTo(ValueDataType::class, 'valuetype_id', 'valuetype_id');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
     private static function periodFromYears(mixed $startYear, mixed $endYear): string
     {
         if (blank($startYear) || blank($endYear)) {

@@ -16,6 +16,7 @@ use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
+use App\Support\UserDisplayName;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -176,6 +177,20 @@ class KnowledgeProductResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (KnowledgeProduct $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (KnowledgeProduct $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->toggleable(),
             ])
             ->filters([
                 CountryTableFilter::make(),
@@ -231,6 +246,8 @@ class KnowledgeProductResource extends Resource
                 'location.translations',
                 'type.translations',
                 'category.translations',
+                'uploadedBy',
+                'warehouseUploadedBy',
             ]),
         );
     }

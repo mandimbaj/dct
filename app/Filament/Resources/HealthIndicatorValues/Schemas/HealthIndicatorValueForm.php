@@ -41,6 +41,7 @@ class HealthIndicatorValueForm
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(Indicator::query(), $search, 'indicator_id'))
                             ->searchable()
+                            ->preload()
                             ->required(),
 
                         Select::make('location_id')
@@ -56,6 +57,7 @@ class HealthIndicatorValueForm
                             ))
                             ->default(fn (): ?int => UserCountryAccess::canViewAllCountries() ? null : UserCountryAccess::locationId())
                             ->searchable()
+                            ->preload()
                             ->live()
                             ->required(),
 
@@ -82,6 +84,7 @@ class HealthIndicatorValueForm
                             ->getOptionLabelFromRecordUsing(fn (IndicatorCategory $record): string => self::categoryOptionLabel($record))
                             ->getSearchResultsUsing(fn (?string $search): array => self::categoryOptionSearchResults($search))
                             ->searchable()
+                            ->preload()
                             ->required(),
 
                         Select::make('datasource_id')
@@ -92,6 +95,7 @@ class HealthIndicatorValueForm
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(DataSource::query(), $search, 'datasource_id'))
                             ->searchable()
+                            ->preload()
                             ->required(),
 
                         Select::make('measuremethod_id')
@@ -102,6 +106,7 @@ class HealthIndicatorValueForm
                             ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                             ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(MeasureMethod::query(), $search, 'measuremethod_id'))
                             ->searchable()
+                            ->preload()
                             ->required(),
                     ])
                     ->columns(3)
@@ -243,13 +248,17 @@ class HealthIndicatorValueForm
             return false;
         }
 
-        if ($record instanceof HealthIndicatorValue && (bool) $record->priority) {
+        if (
+            $record instanceof HealthIndicatorValue
+            && (bool) $record->priority
+            && (int) $record->location_id === (int) $locationId
+        ) {
             return false;
         }
 
-        return HealthIndicatorValue::query()
-            ->where('location_id', $locationId)
-            ->where('priority', true)
-            ->count() >= 10;
+        return HealthIndicatorValue::priorityLimitReachedForLocation(
+            (int) $locationId,
+            $record instanceof HealthIndicatorValue ? $record : null,
+        );
     }
 }

@@ -4,11 +4,11 @@ namespace App\Filament\Resources\HealthIndicatorArchives;
 
 use App\Filament\Clusters\Indicators;
 use App\Filament\Resources\AhoResource as Resource;
-use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Filament\Resources\HealthIndicatorArchives\Pages\EditHealthIndicatorArchive;
 use App\Filament\Resources\HealthIndicatorArchives\Pages\ListHealthIndicatorArchives;
 use App\Filament\Resources\HealthIndicatorArchives\Schemas\HealthIndicatorArchiveForm;
 use App\Filament\Resources\HealthIndicatorArchives\Tables\HealthIndicatorArchivesTable;
+use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Models\HealthIndicatorArchive;
 use App\Support\ApprovalWorkflow;
 use App\Support\UserCountryAccess;
@@ -158,6 +158,10 @@ class HealthIndicatorArchiveResource extends Resource
                 'categoryOption.translations',
                 'dataSource.translations',
                 'measureMethod.translations',
+                'uploadedBy',
+                'activeValue.uploadedBy',
+                'activeValue.warehouseUploadedBy',
+                'warehouseUploadedBy',
             ]),
         );
     }

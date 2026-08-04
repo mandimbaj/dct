@@ -71,4 +71,14 @@ class HealthWorkforceValue extends Model
     {
         return $this->belongsTo(MeasureMethod::class, 'measuremethod_id', 'measuremethod_id');
     }
+
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
 }

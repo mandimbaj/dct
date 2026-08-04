@@ -23,10 +23,6 @@ trait ListsFacilityServiceProxyRecords
 
     abstract protected function serviceLatestAssessmentColumn(): string;
 
-    abstract protected function serviceCreateLabel(): string;
-
-    abstract protected function serviceCreateUrl(HealthFacility $record): string;
-
     abstract protected function serviceRelationIndex(): int;
 
     protected function getTableQuery(): Builder
@@ -94,9 +90,6 @@ trait ListsFacilityServiceProxyRecords
                 Action::make('manage_services')
                     ->label(__('aho.actions.manage_services'))
                     ->url(fn (HealthFacility $record): string => $this->facilityServicesUrl($record)),
-                Action::make('add_service_record')
-                    ->label(fn (): string => $this->serviceCreateLabel())
-                    ->url(fn (HealthFacility $record): string => $this->serviceCreateUrl($record)),
             ])
             ->toolbarActions([]);
     }

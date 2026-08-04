@@ -8,6 +8,7 @@ use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
+use App\Support\UserDisplayName;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\PaginationMode;
@@ -136,11 +137,6 @@ class HealthIndicatorArchivesTable
                     ->color(fn (?string $state): string => ApprovalWorkflow::color($state))
                     ->formatStateUsing(fn (?string $state): string => ApprovalWorkflow::label($state))
                     ->sortable(),
-                TextColumn::make('user_id')
-                    ->label(__('aho.fields.user'))
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('date_created')
                     ->label(__('aho.fields.creation'))
                     ->dateTime()
@@ -149,6 +145,27 @@ class HealthIndicatorArchivesTable
                     ->label(__('aho.fields.modification'))
                     ->dateTime()
                     ->sortable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn ($record): string => UserDisplayName::uploadedByWithFallback(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                        $record->activeValue?->uploadedBy,
+                        $record->activeValue?->warehouseUploadedBy,
+                        $record->activeValue?->user_id,
+                    ))
+                    ->tooltip(fn ($record): ?string => UserDisplayName::uploadedByTooltipWithFallback(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                        $record->activeValue?->uploadedBy,
+                        $record->activeValue?->warehouseUploadedBy,
+                        $record->activeValue?->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->wrap()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('indicator_id')

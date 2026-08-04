@@ -9,7 +9,7 @@ trait ScopesFacilityCountryAccess
 {
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['uploadedBy', 'warehouseUploadedBy']);
 
         if (UserCountryAccess::canViewAllCountries()) {
             return $query;

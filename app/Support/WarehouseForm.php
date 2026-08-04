@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Country;
+use App\Models\FacilityOwner;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
@@ -250,7 +251,7 @@ class WarehouseForm
         try {
             $query = $model::query();
 
-            if ($model instanceof Country || self::modelHasColumn($model, 'location_id')) {
+            if ($model instanceof Country || (self::modelHasColumn($model, 'location_id') && ! ($model instanceof FacilityOwner))) {
                 UserCountryAccess::scopeLocations($query);
             }
 

@@ -24,6 +24,11 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public function getConnectionName()
+    {
+        return $this->connection ?: config('database.default');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

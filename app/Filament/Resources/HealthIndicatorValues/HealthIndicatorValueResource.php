@@ -131,6 +131,8 @@ class HealthIndicatorValueResource extends Resource
                 'categoryOption.translations',
                 'dataSource.translations',
                 'measureMethod.translations',
+                'uploadedBy',
+                'warehouseUploadedBy',
             ]),
         );
     }

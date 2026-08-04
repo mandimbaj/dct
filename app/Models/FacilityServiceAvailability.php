@@ -64,6 +64,16 @@ class FacilityServiceAvailability extends Model
         return $this->belongsTo(FacilityServiceArea::class, 'service_id', 'area_id');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return implode(' / ', array_filter([

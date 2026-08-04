@@ -73,6 +73,16 @@ class HealthFacility extends Model
         return $this->belongsTo(FacilityType::class, 'type_id', 'type_id');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
     public function serviceAvailabilities(): HasMany
     {
         return $this->hasMany(FacilityServiceAvailability::class, 'facility_id', 'facility_id');

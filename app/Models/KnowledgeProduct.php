@@ -86,6 +86,16 @@ class KnowledgeProduct extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
     public function domains(): BelongsToMany
     {
         return $this->belongsToMany(

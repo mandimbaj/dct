@@ -4,13 +4,14 @@ namespace App\Support;
 
 use App\Filament\Clusters\ApiTokens\Pages\ApiTokenStatus;
 use App\Filament\Clusters\DataQuality\Pages\IndicatorQualityChecks;
+use App\Filament\Clusters\UhcClock\Pages\UhcClockProgress;
 use App\Filament\Resources\DataElementValues\DataElementValueResource;
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Filament\Resources\KnowledgeProducts\KnowledgeProductResource;
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
-use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Model;
@@ -59,6 +60,7 @@ class UserPermissions
     private const PAGE_CLASSES = [
         ApiTokenStatus::class,
         IndicatorQualityChecks::class,
+        UhcClockProgress::class,
     ];
 
     /**
@@ -133,7 +135,7 @@ class UserPermissions
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function formFields(?User $actor = null): array
     {
@@ -272,7 +274,7 @@ class UserPermissions
 
         $rolePermissions = $user->relationLoaded('role')
             ? $user->role?->menu_permissions
-            : $user->role()->first(['id', 'menu_permissions'])?->menu_permissions;
+            : (filled($user->role_id) ? $user->role()->first(['id', 'menu_permissions'])?->menu_permissions : null);
 
         return static::normalize($rolePermissions ?: ($user->menu_permissions ?? []));
     }

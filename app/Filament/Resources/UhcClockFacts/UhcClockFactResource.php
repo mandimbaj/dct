@@ -7,11 +7,15 @@ use App\Filament\Resources\AhoResource as Resource;
 use App\Filament\Resources\Concerns\UsesFallbackResourcePermission;
 use App\Filament\Resources\UhcClockFacts\Pages\ListUhcClockFacts;
 use App\Filament\Resources\UhcPriorityIndicators\UhcPriorityIndicatorResource;
+use App\Models\Country;
 use App\Models\UhcClockFact;
 use App\Support\FilamentReadOnlyTables;
+use App\Support\UserCountryAccess;
 use BackedEnum;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 class UhcClockFactResource extends Resource
@@ -76,6 +80,51 @@ class UhcClockFactResource extends Resource
     protected static function fallbackPermissionResources(): array
     {
         return [UhcPriorityIndicatorResource::class];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (UserCountryAccess::canViewAllCountries()) {
+            return $query;
+        }
+
+        $locationNames = static::allowedLocationNamesForUhcFactView();
+
+        return $locationNames === []
+            ? $query->whereRaw('1 = 0')
+            : $query->whereIn(DB::raw('upper(location)'), $locationNames);
+    }
+
+    /**
+     * The UHC fact view exposes a text location column, not location_id.
+     *
+     * @return array<int, string>
+     */
+    private static function allowedLocationNamesForUhcFactView(): array
+    {
+        $locationIds = UserCountryAccess::allowedLocationIds();
+
+        if ($locationIds === []) {
+            return [];
+        }
+
+        return Country::query()
+            ->with('translations')
+            ->whereIn('location_id', $locationIds)
+            ->get()
+            ->flatMap(fn (Country $country): array => [
+                $country->display_name,
+                $country->code,
+                $country->iso_alpha,
+                ...$country->translations->pluck('name')->all(),
+            ])
+            ->filter(fn (mixed $name): bool => filled($name))
+            ->map(fn (mixed $name): string => mb_strtoupper(trim((string) $name)))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public static function getPages(): array

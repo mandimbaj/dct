@@ -78,12 +78,7 @@ class CreateHealthIndicatorValue extends CreateRecord
             return;
         }
 
-        $priorityCount = HealthIndicatorValue::query()
-            ->where('location_id', $data['location_id'])
-            ->where('priority', true)
-            ->count();
-
-        if ($priorityCount >= 10) {
+        if (HealthIndicatorValue::priorityLimitReachedForLocation((int) $data['location_id'])) {
             throw ValidationException::withMessages([
                 'data.priority' => __('aho.indicator_values.priority_limit_reached'),
             ]);

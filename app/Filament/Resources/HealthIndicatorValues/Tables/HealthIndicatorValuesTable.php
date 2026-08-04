@@ -10,6 +10,7 @@ use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
+use App\Support\UserDisplayName;
 use App\Support\UserPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -115,6 +116,21 @@ class HealthIndicatorValuesTable
                     ->label(__('aho.fields.modification'))
                     ->dateTime()
                     ->sortable()
+                    ->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (HealthIndicatorValue $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (HealthIndicatorValue $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->wrap()
                     ->toggleable(),
             ])
             ->filters([

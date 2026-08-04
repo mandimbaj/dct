@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'uuid',
@@ -77,4 +78,18 @@ class HealthIndicatorArchive extends Model
         return $this->belongsTo(MeasureMethod::class, 'measuremethod_id', 'measuremethod_id');
     }
 
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function warehouseUploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseAuthenticationUser::class, 'user_id', 'id');
+    }
+
+    public function activeValue(): HasOne
+    {
+        return $this->hasOne(HealthIndicatorValue::class, 'uuid', 'uuid');
+    }
 }

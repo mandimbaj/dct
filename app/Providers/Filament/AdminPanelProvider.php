@@ -62,7 +62,7 @@ class AdminPanelProvider extends PanelProvider
                     '<link rel="icon" type="image/png" href="'.asset('favicon.png').'">'.
                     '<link rel="stylesheet" href="'.asset('vendor/fontawesome-free/6.5.2/css/fontawesome.min.css').'">'.
                     '<link rel="stylesheet" href="'.asset('vendor/fontawesome-free/6.5.2/css/solid.min.css').'">'.
-                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260629-2">'.
+                    '<link rel="stylesheet" href="'.asset('css/who-afro-filament.css').'?v=20260803-5">'.
                     '<script defer src="'.asset('js/aho-sidebar-tooltips.js').'?v=20260602-1"></script>'
                 ),
             )

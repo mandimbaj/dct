@@ -8,9 +8,9 @@ use App\Filament\Resources\DataElementValues\Pages\CreateDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\EditDataElementValue;
 use App\Filament\Resources\DataElementValues\Pages\ListDataElementValues;
 use App\Models\Country;
-use App\Models\DataSource;
 use App\Models\DataElement;
 use App\Models\DataElementValue;
+use App\Models\DataSource;
 use App\Models\IndicatorCategory;
 use App\Models\ValueDataType;
 use App\Support\ApprovalWorkflow;
@@ -18,6 +18,7 @@ use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
+use App\Support\UserDisplayName;
 use App\Support\UserPermissions;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -236,6 +237,21 @@ class DataElementValueResource extends Resource
                     ->sortable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (DataElementValue $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (DataElementValue $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->wrap()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('dataelement_id')
@@ -291,6 +307,8 @@ class DataElementValueResource extends Resource
                 'categoryOption.translations',
                 'dataSource.translations',
                 'valueType.translations',
+                'uploadedBy',
+                'warehouseUploadedBy',
             ]),
         );
     }

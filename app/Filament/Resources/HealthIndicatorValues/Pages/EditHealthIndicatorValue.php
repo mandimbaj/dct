@@ -109,17 +109,15 @@ class EditHealthIndicatorValue extends EditRecord
      */
     private function validatePriorityLimit(array $data, HealthIndicatorValue $record): void
     {
-        if (! (bool) ($data['priority'] ?? false) || blank($data['location_id'] ?? null)) {
+        $isPriority = array_key_exists('priority', $data)
+            ? (bool) $data['priority']
+            : (bool) $record->priority;
+
+        if (! $isPriority || blank($data['location_id'] ?? null)) {
             return;
         }
 
-        $priorityCount = HealthIndicatorValue::query()
-            ->where('location_id', $data['location_id'])
-            ->where('priority', true)
-            ->whereKeyNot($record->getKey())
-            ->count();
-
-        if ($priorityCount >= 10 && ! (bool) $record->priority) {
+        if (HealthIndicatorValue::priorityLimitReachedForLocation((int) $data['location_id'], $record)) {
             throw ValidationException::withMessages([
                 'data.priority' => __('aho.indicator_values.priority_limit_reached'),
             ]);

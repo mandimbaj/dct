@@ -13,11 +13,13 @@ use App\Models\HealthCadre;
 use App\Models\HealthWorkforceValue;
 use App\Models\IndicatorCategory;
 use App\Models\MeasureMethod;
+use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
+use App\Support\UserDisplayName;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -203,10 +205,25 @@ class HealthWorkforceValueResource extends Resource
                     ->label(__('aho.fields.status'))
                     ->badge()
                     ->color(fn (?string $state): string => StatusColor::for($state))
-                    ->formatStateUsing(fn (?string $state): string => \App\Support\ApprovalWorkflow::label($state))
+                    ->formatStateUsing(fn (?string $state): string => ApprovalWorkflow::label($state))
                     ->toggleable(),
                 TextColumn::make('date_created')->label(__('aho.fields.creation'))->dateTime()->sortable()->toggleable(),
                 TextColumn::make('date_lastupdated')->label(__('aho.fields.modification'))->dateTime()->sortable()->toggleable(),
+                TextColumn::make('uploadedBy.name')
+                    ->label(__('aho.fields.uploaded_by'))
+                    ->state(fn (HealthWorkforceValue $record): string => UserDisplayName::uploadedBy(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->tooltip(fn (HealthWorkforceValue $record): ?string => UserDisplayName::uploadedByTooltip(
+                        $record->uploadedBy,
+                        $record->warehouseUploadedBy,
+                        $record->user_id,
+                    ))
+                    ->visible(fn (): bool => UserDisplayName::canViewUploaders())
+                    ->wrap()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('cadre_id')
@@ -237,6 +254,8 @@ class HealthWorkforceValueResource extends Resource
                 'categoryOption.translations',
                 'dataSource.translations',
                 'measureMethod.translations',
+                'uploadedBy',
+                'warehouseUploadedBy',
             ]),
         );
     }
