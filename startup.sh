@@ -117,6 +117,16 @@ opcache.revalidate_freq=0
 opcache.validate_timestamps=0
 EOF
 echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
+echo "=== [6.5] Configure PHP settings ==="
+echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
+cat > /usr/local/etc/php/conf.d/opcache.ini << 'EOINI'
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=0
+opcache.validate_timestamps=0
+EOINI
 echo "=== [7] Start PHP-FPM in foreground ==="
 FPM_BIN=""
 for candidate in php-fpm php-fpm8.5 php-fpm8.4 php-fpm8.3 php-fpm8.2; do
