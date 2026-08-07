@@ -46,8 +46,6 @@ php artisan package:discover --ansi || true
 php artisan config:cache
 php artisan view:cache
 
-echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
-
 echo "=== [4] Configure PHP-FPM to listen on 127.0.0.1:9000 ==="
 FPM_POOL_CONFIG=""
 for candidate in \
@@ -110,7 +108,14 @@ if pgrep -f "nginx: master" >/dev/null 2>&1; then
 else
     nginx
 fi
-
+cat > /usr/local/etc/php/conf.d/opcache.ini << 'EOF'
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=0
+opcache.validate_timestamps=0
+EOF
 echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
 echo "=== [7] Start PHP-FPM in foreground ==="
 FPM_BIN=""
