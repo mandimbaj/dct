@@ -14,6 +14,7 @@ use App\Models\ResourceType;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\UserDisplayName;
@@ -119,7 +120,7 @@ class KnowledgeProductResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('product_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
@@ -241,14 +242,14 @@ class KnowledgeProductResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'translations',
-                'location.translations',
-                'type.translations',
-                'category.translations',
-                'uploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'translations',
+                    'location.translations',
+                    'type.translations',
+                    'category.translations',
+                ]),
+            ),
         );
     }
 

@@ -16,6 +16,7 @@ use App\Models\ValueDataType;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\UserDisplayName;
@@ -199,7 +200,7 @@ class DataElementValueResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('fact_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
@@ -301,15 +302,15 @@ class DataElementValueResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'dataElement.translations',
-                'location.translations',
-                'categoryOption.translations',
-                'dataSource.translations',
-                'valueType.translations',
-                'uploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'dataElement.translations',
+                    'location.translations',
+                    'categoryOption.translations',
+                    'dataSource.translations',
+                    'valueType.translations',
+                ]),
+            ),
         );
     }
 

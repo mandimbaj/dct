@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Concerns;
 
+use App\Support\HeavyTable;
 use App\Support\UserCountryAccess;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -9,7 +10,7 @@ trait ScopesFacilityCountryAccess
 {
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['uploadedBy', 'warehouseUploadedBy']);
+        $query = HeavyTable::withUploadersWhenAllowed(parent::getEloquentQuery());
 
         if (UserCountryAccess::canViewAllCountries()) {
             return $query;

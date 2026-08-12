@@ -7,11 +7,11 @@ use App\Models\Indicator;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\UserDisplayName;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,11 +20,8 @@ class HealthIndicatorArchivesTable
 {
     public static function configure(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('fact_id', 'desc')
-            ->paginationMode(PaginationMode::Simple)
-            ->paginationPageOptions([10, 25, 50])
-            ->defaultPaginationPageOption(10)
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
                     query: $query,

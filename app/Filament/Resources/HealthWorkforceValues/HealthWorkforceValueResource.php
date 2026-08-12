@@ -16,6 +16,7 @@ use App\Models\MeasureMethod;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
@@ -171,7 +172,7 @@ class HealthWorkforceValueResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('fact_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
@@ -248,15 +249,15 @@ class HealthWorkforceValueResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'cadre.translations',
-                'location.translations',
-                'categoryOption.translations',
-                'dataSource.translations',
-                'measureMethod.translations',
-                'uploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'cadre.translations',
+                    'location.translations',
+                    'categoryOption.translations',
+                    'dataSource.translations',
+                    'measureMethod.translations',
+                ]),
+            ),
         );
     }
 

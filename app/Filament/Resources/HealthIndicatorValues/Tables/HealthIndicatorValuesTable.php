@@ -9,6 +9,7 @@ use App\Models\Indicator;
 use App\Support\ApprovalWorkflow;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\UserDisplayName;
 use App\Support\UserPermissions;
@@ -26,7 +27,7 @@ class HealthIndicatorValuesTable
 {
     public static function configure(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('fact_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(

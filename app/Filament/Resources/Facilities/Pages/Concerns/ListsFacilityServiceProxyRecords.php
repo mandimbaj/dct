@@ -6,6 +6,7 @@ use App\Filament\Resources\HealthFacilities\HealthFacilityResource;
 use App\Models\HealthFacility;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
@@ -40,7 +41,7 @@ trait ListsFacilityServiceProxyRecords
 
     public function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('facility_id', 'desc')
             ->recordUrl(fn (HealthFacility $record): string => $this->facilityServicesUrl($record))
             ->searchUsing(function (Builder $query, string $search): void {

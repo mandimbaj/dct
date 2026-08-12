@@ -11,6 +11,7 @@ use App\Filament\Resources\HealthIndicatorArchives\Tables\HealthIndicatorArchive
 use App\Filament\Resources\HealthIndicatorValues\HealthIndicatorValueResource;
 use App\Models\HealthIndicatorArchive;
 use App\Support\ApprovalWorkflow;
+use App\Support\HeavyTable;
 use App\Support\UserCountryAccess;
 use App\Support\UserPermissions;
 use BackedEnum;
@@ -152,17 +153,21 @@ class HealthIndicatorArchiveResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'indicator.translations',
-                'location.translations',
-                'categoryOption.translations',
-                'dataSource.translations',
-                'measureMethod.translations',
-                'uploadedBy',
-                'activeValue.uploadedBy',
-                'activeValue.warehouseUploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'indicator.translations',
+                    'location.translations',
+                    'categoryOption.translations',
+                    'dataSource.translations',
+                    'measureMethod.translations',
+                ]),
+                [
+                    'uploadedBy',
+                    'warehouseUploadedBy',
+                    'activeValue.uploadedBy',
+                    'activeValue.warehouseUploadedBy',
+                ],
+            ),
         );
     }
 

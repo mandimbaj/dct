@@ -14,6 +14,7 @@ use App\Models\FacilityServiceDomain;
 use App\Models\FacilityServiceIntervention;
 use App\Models\HealthFacility;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\UserCountryAccess;
 use App\Support\UserDisplayName;
@@ -91,7 +92,7 @@ class ServiceAvailabilityResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('availability_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(

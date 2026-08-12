@@ -3,14 +3,11 @@
 namespace App\Services\UhcClock;
 
 use App\Models\Country;
-use App\Models\User;
-use App\Models\WarehouseAuthenticationUser;
 use App\Support\TextEncoding;
 use App\Support\UserCountryAccess;
-use App\Support\UserDisplayName;
 use App\Support\WarehouseLocale;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -23,6 +20,21 @@ class UhcTargetAttainmentService
     private const BASELINE_YEAR = 2016;
 
     private const LEVELS = ['day', 'hour', 'minute', 'second'];
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $warehouseTables = [];
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $warehouseColumns = [];
+
+    /**
+     * @var Collection<int, array{name: string|null, level: string|null, category: string}>|null
+     */
+    private ?Collection $dataSourceMetadata = null;
 
     private const LOWER_IS_BETTER_CODES = [
         'AFR0008',
@@ -54,6 +66,18 @@ class UhcTargetAttainmentService
      * @return array<string, mixed>
      */
     public function summary(): array
+    {
+        return Cache::remember(
+            $this->summaryCacheKey(),
+            now()->addMinutes(30),
+            fn (): array => $this->calculateSummary(),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function calculateSummary(): array
     {
         $selections = $this->selectedIndicators();
 
@@ -104,6 +128,20 @@ class UhcTargetAttainmentService
 
         return array_merge($summary, [
             'countries' => $countryRows->all(),
+        ]);
+    }
+
+    private function summaryCacheKey(): string
+    {
+        $scope = UserCountryAccess::canViewAllCountries()
+            ? 'global'
+            : 'locations:'.md5(implode(',', UserCountryAccess::allowedLocationIds()));
+
+        return implode(':', [
+            'uhc-clock-progress',
+            'v6',
+            WarehouseLocale::current(),
+            $scope,
         ]);
     }
 
@@ -183,14 +221,17 @@ class UhcTargetAttainmentService
      */
     private function facts(Collection $locationIds, Collection $indicatorIds): Collection
     {
+        if ($locationIds->isEmpty() || $indicatorIds->isEmpty()) {
+            return collect();
+        }
+
         $facts = collect($this->factTables())
             ->flatMap(fn (array $table): Collection => $this->factRowsForTable($table, $locationIds, $indicatorIds))
             ->groupBy(fn (object $fact): string => filled($fact->uuid) ? 'uuid:'.$fact->uuid : $fact->source.':'.$fact->fact_id)
             ->map(fn (Collection $duplicates): object => $this->preferredDuplicate($duplicates))
             ->values();
 
-        return $this->withUploaderNames($facts)
-            ->groupBy(fn (object $fact): string => $this->factKey((int) $fact->location_id, (int) $fact->indicator_id));
+        return $facts->groupBy(fn (object $fact): string => $this->factKey((int) $fact->location_id, (int) $fact->indicator_id));
     }
 
     /**
@@ -198,7 +239,7 @@ class UhcTargetAttainmentService
      */
     private function factTables(): array
     {
-        return Schema::connection('warehouse')->hasTable(self::ARCHIVE_TABLE)
+        return $this->warehouseTableExists(self::ARCHIVE_TABLE)
             ? [
                 ['table' => self::LIVE_TABLE, 'source' => 'active'],
                 ['table' => self::ARCHIVE_TABLE, 'source' => 'archive'],
@@ -217,10 +258,8 @@ class UhcTargetAttainmentService
     private function factRowsForTable(array $table, Collection $locationIds, Collection $indicatorIds): Collection
     {
         $tableName = $table['table'];
-        $locale = WarehouseLocale::current();
-        $hasDatasourceColumn = Schema::connection('warehouse')->hasColumn($tableName, 'datasource_id');
-        $hasDatasourceTable = Schema::connection('warehouse')->hasTable('stg_datasource');
-        $hasDatasourceTranslations = Schema::connection('warehouse')->hasTable('stg_datasource_translation');
+        $hasDatasourceColumn = $this->warehouseColumnExists($tableName, 'datasource_id');
+        $dataSources = $hasDatasourceColumn ? $this->dataSourceMetadata() : collect();
 
         $query = DB::connection('warehouse')
             ->table($tableName)
@@ -229,33 +268,40 @@ class UhcTargetAttainmentService
             ->whereNotNull("{$tableName}.value_received")
             ->where("{$tableName}.end_period", '>=', self::BASELINE_YEAR);
 
-        if ($hasDatasourceColumn && $hasDatasourceTable) {
-            $query->leftJoin('stg_datasource as datasources', 'datasources.datasource_id', '=', "{$tableName}.datasource_id");
-        }
+        $columns = $this->factSelectColumns($table, $hasDatasourceColumn);
 
-        if ($hasDatasourceColumn && $hasDatasourceTranslations) {
-            $query
-                ->leftJoin('stg_datasource_translation as preferred_source_translations', function ($join) use ($tableName, $locale): void {
-                    $join
-                        ->on('preferred_source_translations.master_id', '=', "{$tableName}.datasource_id")
-                        ->where('preferred_source_translations.language_code', '=', $locale);
-                })
-                ->leftJoin('stg_datasource_translation as english_source_translations', function ($join) use ($tableName): void {
-                    $join
-                        ->on('english_source_translations.master_id', '=', "{$tableName}.datasource_id")
-                        ->where('english_source_translations.language_code', '=', 'en');
-                });
-        }
+        return $query
+            ->get($columns)
+            ->map(function (object $fact) use ($dataSources): object {
+                $dataSource = filled($fact->datasource_id)
+                    ? $dataSources->get((int) $fact->datasource_id)
+                    : null;
 
-        if ($tableName === self::ARCHIVE_TABLE) {
-            $query = $this->withoutActiveDuplicate($query, $tableName);
-        }
+                $fact->datasource_name = TextEncoding::clean($dataSource['name'] ?? null)
+                    ?? ($fact->datasource_id !== null ? (string) $fact->datasource_id : null);
+                $fact->datasource_level = TextEncoding::clean($dataSource['level'] ?? null);
+                $fact->datasource_category = $dataSource['category'] ?? $this->dataSourceCategory($fact);
+                $fact->uploaded_by = null;
+                $fact->uploaded_by_tooltip = null;
 
-        $uuidColumn = Schema::connection('warehouse')->hasColumn($tableName, 'uuid')
+                return $fact;
+            });
+    }
+
+    /**
+     * @param  array{table: string, source: string}  $table
+     * @return array<int, mixed>
+     */
+    private function factSelectColumns(
+        array $table,
+        bool $hasDatasourceColumn,
+    ): array {
+        $tableName = $table['table'];
+        $uuidColumn = $this->warehouseColumnExists($tableName, 'uuid')
             ? "{$tableName}.uuid"
             : DB::raw('null as uuid');
 
-        $columns = [
+        return [
             "{$tableName}.fact_id",
             $uuidColumn,
             "{$tableName}.location_id",
@@ -267,108 +313,91 @@ class UhcTargetAttainmentService
             "{$tableName}.end_period",
             "{$tableName}.date_lastupdated",
             DB::raw("'{$table['source']}' as source"),
+            $hasDatasourceColumn ? "{$tableName}.datasource_id" : DB::raw('null as datasource_id'),
+            $this->warehouseColumnExists($tableName, 'user_id') ? "{$tableName}.user_id" : DB::raw('null as user_id'),
         ];
+    }
 
-        if ($hasDatasourceColumn) {
-            $columns[] = "{$tableName}.datasource_id";
-        } else {
-            $columns[] = DB::raw('null as datasource_id');
+    /**
+     * @return Collection<int, array{name: string|null, level: string|null, category: string}>
+     */
+    private function dataSourceMetadata(): Collection
+    {
+        if ($this->dataSourceMetadata !== null) {
+            return $this->dataSourceMetadata;
         }
 
-        $columns[] = Schema::connection('warehouse')->hasColumn($tableName, 'user_id')
-            ? "{$tableName}.user_id"
-            : DB::raw('null as user_id');
-
-        if ($hasDatasourceColumn && $hasDatasourceTranslations) {
-            $fallbackSourceName = $hasDatasourceTable ? 'datasources.code' : "{$tableName}.datasource_id";
-            $columns[] = DB::raw("coalesce(preferred_source_translations.name, preferred_source_translations.shortname, english_source_translations.name, english_source_translations.shortname, {$fallbackSourceName}) as datasource_name");
-            $columns[] = DB::raw('coalesce(preferred_source_translations.level, english_source_translations.level) as datasource_level');
-        } else {
-            $columns[] = $hasDatasourceColumn && $hasDatasourceTable
-                ? DB::raw('datasources.code as datasource_name')
-                : DB::raw('null as datasource_name');
-            $columns[] = DB::raw('null as datasource_level');
+        if (! $this->warehouseTableExists('stg_datasource')) {
+            return $this->dataSourceMetadata = collect();
         }
 
-        return $query
-            ->get($columns)
-            ->map(function (object $fact): object {
-                $fact->datasource_name = TextEncoding::clean($fact->datasource_name) ?? $fact->datasource_name;
-                $fact->datasource_level = TextEncoding::clean($fact->datasource_level) ?? $fact->datasource_level;
-                $fact->datasource_category = $this->dataSourceCategory($fact);
+        $locale = WarehouseLocale::current();
+        $hasTranslations = $this->warehouseTableExists('stg_datasource_translation');
 
-                return $fact;
+        $query = DB::connection('warehouse')
+            ->table('stg_datasource as datasources');
+
+        if ($hasTranslations) {
+            $query
+                ->leftJoin('stg_datasource_translation as preferred_source_translations', function ($join) use ($locale): void {
+                    $join
+                        ->on('preferred_source_translations.master_id', '=', 'datasources.datasource_id')
+                        ->where('preferred_source_translations.language_code', '=', $locale);
+                })
+                ->leftJoin('stg_datasource_translation as english_source_translations', function ($join): void {
+                    $join
+                        ->on('english_source_translations.master_id', '=', 'datasources.datasource_id')
+                        ->where('english_source_translations.language_code', '=', 'en');
+                })
+                ->select([
+                    'datasources.datasource_id',
+                    DB::raw('coalesce(preferred_source_translations.name, preferred_source_translations.shortname, english_source_translations.name, english_source_translations.shortname, datasources.code) as datasource_name'),
+                    DB::raw('coalesce(preferred_source_translations.level, english_source_translations.level) as datasource_level'),
+                ]);
+        } else {
+            $query->select([
+                'datasources.datasource_id',
+                DB::raw('datasources.code as datasource_name'),
+                DB::raw('null as datasource_level'),
+            ]);
+        }
+
+        return $this->dataSourceMetadata = $query
+            ->get()
+            ->mapWithKeys(function (object $source): array {
+                $name = TextEncoding::clean($source->datasource_name) ?? $source->datasource_name;
+                $level = TextEncoding::clean($source->datasource_level) ?? $source->datasource_level;
+
+                return [
+                    (int) $source->datasource_id => [
+                        'name' => $name,
+                        'level' => $level,
+                        'category' => $this->dataSourceCategory((object) [
+                            'datasource_name' => $name,
+                            'datasource_level' => $level,
+                        ]),
+                    ],
+                ];
             });
     }
 
-    private function withoutActiveDuplicate(QueryBuilder $query, string $table): QueryBuilder
+    private function warehouseTableExists(string $table): bool
     {
-        if (
-            ! Schema::connection('warehouse')->hasColumn(self::LIVE_TABLE, 'uuid')
-            || ! Schema::connection('warehouse')->hasColumn(self::ARCHIVE_TABLE, 'uuid')
-        ) {
-            return $query;
-        }
+        return $this->warehouseTables[$table] ??= Schema::connection('warehouse')->hasTable($table);
+    }
 
-        return $query->where(function (QueryBuilder $archiveQuery) use ($table): void {
-            $archiveQuery
-                ->whereNull("{$table}.uuid")
-                ->orWhereNotExists(function (QueryBuilder $activeQuery) use ($table): void {
-                    $activeQuery
-                        ->selectRaw('1')
-                        ->from(self::LIVE_TABLE.' as active_values')
-                        ->whereColumn('active_values.uuid', "{$table}.uuid");
-                });
-        });
+    private function warehouseColumnExists(string $table, string $column): bool
+    {
+        $key = "{$table}.{$column}";
+
+        return $this->warehouseColumns[$key] ??= Schema::connection('warehouse')->hasColumn($table, $column);
     }
 
     private function preferredDuplicate(Collection $duplicates): object
     {
         return $duplicates
-            ->sort(fn (object $left, object $right): int => $this->factSortValues($right) <=> $this->factSortValues($left))
+            ->sort(fn (object $left, object $right): int => $this->duplicateSortValues($right) <=> $this->duplicateSortValues($left))
             ->first();
-    }
-
-    /**
-     * @param  Collection<int, object>  $facts
-     * @return Collection<int, object>
-     */
-    private function withUploaderNames(Collection $facts): Collection
-    {
-        if (! UserDisplayName::canViewUploaders()) {
-            return $facts->map(function (object $fact): object {
-                $fact->uploaded_by = null;
-                $fact->uploaded_by_tooltip = null;
-
-                return $fact;
-            });
-        }
-
-        $userIds = $facts
-            ->pluck('user_id')
-            ->filter(fn (mixed $userId): bool => filled($userId))
-            ->map(fn (mixed $userId): int => (int) $userId)
-            ->unique()
-            ->values();
-
-        $localUsers = Schema::hasTable('users') && $userIds->isNotEmpty()
-            ? User::query()->whereIn('id', $userIds)->get()->keyBy('id')
-            : collect();
-
-        $warehouseUsers = Schema::connection('warehouse')->hasTable('authentication_customuser') && $userIds->isNotEmpty()
-            ? WarehouseAuthenticationUser::query()->whereIn('id', $userIds)->get()->keyBy('id')
-            : collect();
-
-        return $facts->map(function (object $fact) use ($localUsers, $warehouseUsers): object {
-            $userId = filled($fact->user_id) ? (int) $fact->user_id : null;
-            $localUser = $userId ? $localUsers->get($userId) : null;
-            $warehouseUser = $userId ? $warehouseUsers->get($userId) : null;
-
-            $fact->uploaded_by = UserDisplayName::uploadedBy($localUser, $warehouseUser, $userId);
-            $fact->uploaded_by_tooltip = UserDisplayName::uploadedByTooltip($localUser, $warehouseUser, $userId);
-
-            return $fact;
-        });
     }
 
     /**
@@ -671,6 +700,17 @@ class UhcTargetAttainmentService
             strtotime((string) $fact->date_lastupdated) ?: 0,
             $fact->source === 'active' ? 1 : 0,
             (int) $fact->fact_id,
+        ];
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function duplicateSortValues(object $fact): array
+    {
+        return [
+            $fact->source === 'active' ? 1 : 0,
+            ...$this->factSortValues($fact),
         ];
     }
 

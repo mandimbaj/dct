@@ -11,6 +11,7 @@ use App\Filament\Resources\HealthIndicatorValues\Schemas\HealthIndicatorValueFor
 use App\Filament\Resources\HealthIndicatorValues\Tables\HealthIndicatorValuesTable;
 use App\Models\HealthIndicatorValue;
 use App\Support\ApprovalWorkflow;
+use App\Support\HeavyTable;
 use App\Support\UserCountryAccess;
 use BackedEnum;
 use Filament\Schemas\Schema;
@@ -125,15 +126,15 @@ class HealthIndicatorValueResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'indicator.translations',
-                'location.translations',
-                'categoryOption.translations',
-                'dataSource.translations',
-                'measureMethod.translations',
-                'uploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'indicator.translations',
+                    'location.translations',
+                    'categoryOption.translations',
+                    'dataSource.translations',
+                    'measureMethod.translations',
+                ]),
+            ),
         );
     }
 

@@ -149,8 +149,9 @@
 .aho-topbar-brand {
     align-items: center;
     display: flex;
-    flex-shrink: 0;
+    flex: 0 0 auto;
     gap: 0.875rem;
+    max-width: min(38rem, 52vw);
     min-width: 0;
     padding-inline-start: 0.75rem;
 }
@@ -170,27 +171,41 @@
     gap: 0;
     font-weight: 700;
     line-height: 1.2;
-    max-width: min(28rem, 36vw);
+    max-width: min(34rem, 46vw);
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .aho-topbar-brand__app {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex: 0 0 auto;
+    overflow: visible;
+    text-overflow: clip;
     white-space: nowrap;
-    flex-shrink: 1;
 }
 
 .aho-topbar-welcome {
     align-items: center;
     color: rgba(255, 255, 255, 0.78);
     display: inline-flex;
+    flex: 1 1 auto;
     font-size: 0.88rem;
     font-weight: 400;
     gap: 0.4rem;
     margin-left: 0.65rem;
+    max-width: clamp(7rem, 18vw, 16rem);
+    min-width: 0;
+}
+
+.aho-topbar-welcome__separator {
+    flex: 0 0 auto;
+}
+
+.aho-topbar-welcome__text {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .aho-topbar-welcome__flag {
@@ -1857,14 +1872,21 @@
 
     .aho-topbar-brand__label {
         display: inline-flex;
-        max-width: 3rem;
-        overflow: visible;
+        max-width: 7.75rem;
+        overflow: hidden;
     }
 
-    .aho-topbar-brand__app,
     .aho-topbar-welcome__separator,
     .aho-topbar-welcome__text {
         display: none;
+    }
+
+    .aho-topbar-brand__app {
+        display: block;
+        max-width: 7.75rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .aho-topbar-welcome {
@@ -2425,7 +2447,6 @@
         top: 72px;
     }
 
-    .aho-topbar-brand__app,
     .aho-topbar-welcome__separator {
         display: none;
     }
@@ -2488,11 +2509,19 @@
     }
 
     .aho-topbar-brand__label {
-        max-width: 0;
+        max-width: 7.75rem;
     }
 
     .aho-topbar-brand__logo {
         max-width: 7rem;
+    }
+
+    .aho-topbar-brand__app {
+        display: block;
+        max-width: 7.75rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .aho-topbar-welcome {

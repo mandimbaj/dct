@@ -16,6 +16,7 @@ use App\Models\FacilityType;
 use App\Models\HealthFacility;
 use App\Support\CountryTableFilter;
 use App\Support\FilamentSearch;
+use App\Support\HeavyTable;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
@@ -218,7 +219,7 @@ class HealthFacilityResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return HeavyTable::configure($table)
             ->defaultSort('facility_id', 'desc')
             ->searchUsing(function (Builder $query, string $search): void {
                 FilamentSearch::apply(
@@ -302,13 +303,13 @@ class HealthFacilityResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return UserCountryAccess::scope(
-            parent::getEloquentQuery()->with([
-                'location.translations',
-                'type.translations',
-                'owner.translations',
-                'uploadedBy',
-                'warehouseUploadedBy',
-            ]),
+            HeavyTable::withUploadersWhenAllowed(
+                parent::getEloquentQuery()->with([
+                    'location.translations',
+                    'type.translations',
+                    'owner.translations',
+                ]),
+            ),
             'location_id',
         );
     }
