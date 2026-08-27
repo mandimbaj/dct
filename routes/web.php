@@ -4,6 +4,7 @@ use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MicrosoftEntraController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\UserPageVisitController;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,10 @@ Route::get('/admin/{country}/notifications/{notification}', NotificationControll
 Route::post('/assistant/chat', [AssistantController::class, 'chat'])
     ->middleware(['auth', 'throttle:30,1'])
     ->name('assistant.chat');
+
+Route::post('/user-history/record', [UserPageVisitController::class, 'store'])
+    ->middleware(['auth', 'throttle:120,1'])
+    ->name('admin.user-history.record');
 
 Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 

@@ -37,6 +37,12 @@ class EditHealthIndicatorValue extends EditRecord
                     && UserPermissions::allowsResource(auth()->user(), HealthIndicatorValueResource::class, UserPermissions::ACTION_APPROVE))
                 ->action(function (): void {
                     ApprovalWorkflow::approve($this->getRecord());
+                    $this->refreshFormData([
+                        ApprovalWorkflow::STATUS_COLUMN,
+                        ApprovalWorkflow::MIRROR_COLUMN,
+                        'approved_by',
+                        'approved_at',
+                    ]);
                 }),
             DeleteAction::make(),
         ];

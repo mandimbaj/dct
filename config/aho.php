@@ -6,7 +6,7 @@ return [
     ],
 
     'notifications' => [
-        'mail_enabled' => (bool) env('AHO_ADMIN_EMAIL_NOTIFICATIONS', true),
-        'activity_enabled' => (bool) env('AHO_ADMIN_ACTIVITY_NOTIFICATIONS', true),
+        'mail_enabled' => filter_var(env('AHO_ADMIN_EMAIL_NOTIFICATIONS', true), FILTER_VALIDATE_BOOLEAN),
+        'activity_enabled' => filter_var(env('AHO_ADMIN_ACTIVITY_NOTIFICATIONS', true), FILTER_VALIDATE_BOOLEAN),
     ],
 ];

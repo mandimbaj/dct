@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\UserPageVisits\UserPageVisitResource;
 use App\Http\Middleware\RedirectAuthenticatedToCountry;
+use App\Http\Middleware\RecordUserPageVisit;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Support\AhoBrand;
@@ -96,7 +97,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => view('filament.navigation-assistant'),
+                fn () => view('filament.body-end'),
             )
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -124,6 +125,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                RecordUserPageVisit::class,
             ]);
     }
 }

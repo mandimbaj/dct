@@ -4,9 +4,12 @@ namespace App\Support;
 
 use App\Models\Country;
 use App\Models\FailedImportRow;
+use App\Models\User;
 use App\Models\UserPageVisit;
 use App\Notifications\SystemNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -22,6 +25,7 @@ class AdminActivityNotifier
     ];
 
     private const IGNORED_MODELS = [
+        DatabaseNotification::class,
         FailedImportRow::class,
         UserPageVisit::class,
     ];
@@ -49,18 +53,22 @@ class AdminActivityNotifier
             return;
         }
 
-        $adminEmail = trim((string) config('aho.admin.email'));
-
-        if ($adminEmail === '' || ! config('aho.notifications.mail_enabled', true)) {
-            return;
-        }
-
         try {
-            Notification::route('mail', $adminEmail)->notify(new SystemNotification(
+            $countryCode = self::countryCode($model);
+            $notification = new SystemNotification(
                 self::title($event, $model),
                 self::body($event, $model),
-                self::countryCode($model),
-            ));
+                $countryCode,
+            );
+            $recipients = NotificationRecipients::forCountry(self::locationId($model), auth()->id());
+
+            if ($recipients->isNotEmpty()) {
+                Notification::send($recipients, $notification);
+
+                $recipients->each(fn (User $recipient): mixed => TopbarAlerts::forgetForUser($recipient, $countryCode));
+            }
+
+            self::notifyConfiguredAdminEmail($notification, $recipients);
         } catch (Throwable $exception) {
             report($exception);
         }
@@ -142,7 +150,7 @@ class AdminActivityNotifier
 
     private static function countryCode(Model $model): ?string
     {
-        $locationId = $model->getAttribute('location_id');
+        $locationId = self::locationId($model);
 
         if (! $locationId) {
             return null;
@@ -155,5 +163,37 @@ class AdminActivityNotifier
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private static function locationId(Model $model): ?int
+    {
+        $locationId = $model->getAttribute('location_id');
+
+        return filled($locationId) ? (int) $locationId : null;
+    }
+
+    /**
+     * @param  Collection<int, User>  $recipients
+     */
+    private static function notifyConfiguredAdminEmail(SystemNotification $notification, Collection $recipients): void
+    {
+        if (! config('aho.notifications.mail_enabled', true)) {
+            return;
+        }
+
+        $adminEmail = trim((string) config('aho.admin.email'));
+
+        if ($adminEmail === '') {
+            return;
+        }
+
+        $alreadySent = $recipients
+            ->contains(fn (User $user): bool => strcasecmp((string) $user->email, $adminEmail) === 0);
+
+        if ($alreadySent) {
+            return;
+        }
+
+        Notification::route('mail', $adminEmail)->notify($notification);
     }
 }

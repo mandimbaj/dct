@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\NationalObservatory;
 use App\Models\User;
 use App\Notifications\MessageReceived;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
@@ -34,7 +33,7 @@ class NationalObservatoryNotifier
         ]);
 
         $notification = new MessageReceived($title, $body, $countryCode);
-        $recipients = self::recipients($actor);
+        $recipients = self::recipients($actor, $observatory->location_id);
 
         try {
             if ($recipients->isNotEmpty()) {
@@ -52,18 +51,9 @@ class NationalObservatoryNotifier
     /**
      * @return Collection<int, User>
      */
-    private static function recipients(?User $actor): Collection
+    private static function recipients(?User $actor, ?int $locationId): Collection
     {
-        /** @var EloquentCollection<int, User> $admins */
-        $admins = User::query()
-            ->where(function ($query): void {
-                $query
-                    ->where('is_super_admin', true)
-                    ->orWhere('can_view_all_countries', true);
-            })
-            ->get();
-
-        return $admins
+        return NotificationRecipients::forCountry($locationId, $actor?->id)
             ->when($actor instanceof User && $actor->exists, fn (Collection $users): Collection => $users->push($actor))
             ->unique(fn (User $user): int|string => $user->getKey())
             ->values();
