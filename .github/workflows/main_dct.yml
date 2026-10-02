@@ -68,14 +68,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D785D1A9B36B46ECABBABEEA04C3A962 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E9E74FA156494D14AE18B101ED7A0354 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5542F71BFC994D25A0D6FDE2B8DE63CC }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AE7AB5520DA540D08231F81A4B669B24 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_13CB29A0066A46A8BAB5E4FC56612E99 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9AD8DB53E08A40DFB86B56F0C993A337 }}
 
       - name: Apply Azure App Service settings
         uses: azure/appservice-settings@v1
         with:
-          app-name: 'af-aho-dct'
+          app-name: 'dct'
           # AZURE_MICROSOFT_ENTRA_SETTINGS must include MICROSOFT_ENTRA_REDIRECT_URI and the other Microsoft Entra app settings.
           app-settings-json: ${{ secrets.AZURE_MICROSOFT_ENTRA_SETTINGS }}
 
@@ -83,7 +83,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'af-aho-dct'
+          app-name: 'dct'
           slot-name: 'Production'
           package: .
           startup-command: 'bash /home/site/wwwroot/startup.sh'

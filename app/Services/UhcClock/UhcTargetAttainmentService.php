@@ -21,6 +21,8 @@ class UhcTargetAttainmentService
 
     private const LEVELS = ['day', 'hour', 'minute', 'second'];
 
+    private const FACT_PAIR_CHUNK_SIZE = 75;
+
     /**
      * @var array<string, bool>
      */
@@ -96,10 +98,7 @@ class UhcTargetAttainmentService
             ];
         }
 
-        $facts = $this->facts(
-            $selections->pluck('location_id')->unique()->values(),
-            $selections->pluck('indicator_id')->unique()->values(),
-        );
+        $facts = $this->facts($selections);
 
         $countries = Country::query()
             ->with('translations')
@@ -139,7 +138,7 @@ class UhcTargetAttainmentService
 
         return implode(':', [
             'uhc-clock-progress',
-            'v6',
+            'v7',
             WarehouseLocale::current(),
             $scope,
         ]);
@@ -215,23 +214,44 @@ class UhcTargetAttainmentService
     }
 
     /**
-     * @param  Collection<int, int>  $locationIds
-     * @param  Collection<int, int>  $indicatorIds
      * @return Collection<string, Collection<int, object>>
      */
-    private function facts(Collection $locationIds, Collection $indicatorIds): Collection
+    private function facts(Collection $selections): Collection
     {
-        if ($locationIds->isEmpty() || $indicatorIds->isEmpty()) {
+        $pairs = $selections
+            ->map(fn (object $selection): array => [
+                'location_id' => (int) $selection->location_id,
+                'indicator_id' => (int) $selection->indicator_id,
+            ])
+            ->unique(fn (array $pair): string => $this->factKey($pair['location_id'], $pair['indicator_id']))
+            ->values();
+
+        if ($pairs->isEmpty()) {
             return collect();
         }
 
-        $facts = collect($this->factTables())
-            ->flatMap(fn (array $table): Collection => $this->factRowsForTable($table, $locationIds, $indicatorIds))
-            ->groupBy(fn (object $fact): string => filled($fact->uuid) ? 'uuid:'.$fact->uuid : $fact->source.':'.$fact->fact_id)
-            ->map(fn (Collection $duplicates): object => $this->preferredDuplicate($duplicates))
-            ->values();
+        $groups = [];
 
-        return $facts->groupBy(fn (object $fact): string => $this->factKey((int) $fact->location_id, (int) $fact->indicator_id));
+        collect($this->factTables())->each(function (array $table) use ($pairs, &$groups): void {
+            $pairs
+                ->chunk(self::FACT_PAIR_CHUNK_SIZE)
+                ->each(function (Collection $chunk) use ($table, &$groups): void {
+                    $this->accumulateFactRowsForTable($table, $chunk, $groups);
+                });
+        });
+
+        return collect($groups)
+            ->map(function (array $group): Collection {
+                $count = (int) ($group['count'] ?? 0);
+
+                return collect([$group['baseline'] ?? null, $group['current'] ?? null])
+                    ->filter()
+                    ->unique(fn (object $fact): string => $this->retainedFactIdentity($fact))
+                    ->values()
+                    ->each(function (object $fact) use ($count): void {
+                        $fact->available_facts_count = $count;
+                    });
+            });
     }
 
     /**
@@ -251,11 +271,10 @@ class UhcTargetAttainmentService
 
     /**
      * @param  array{table: string, source: string}  $table
-     * @param  Collection<int, int>  $locationIds
-     * @param  Collection<int, int>  $indicatorIds
-     * @return Collection<int, object>
+     * @param  Collection<int, array{location_id: int, indicator_id: int}>  $pairs
+     * @param  array<string, array{count: int, baseline: object|null, current: object|null}>  $groups
      */
-    private function factRowsForTable(array $table, Collection $locationIds, Collection $indicatorIds): Collection
+    private function accumulateFactRowsForTable(array $table, Collection $pairs, array &$groups): void
     {
         $tableName = $table['table'];
         $hasDatasourceColumn = $this->warehouseColumnExists($tableName, 'datasource_id');
@@ -263,29 +282,88 @@ class UhcTargetAttainmentService
 
         $query = DB::connection('warehouse')
             ->table($tableName)
-            ->whereIn("{$tableName}.location_id", $locationIds)
-            ->whereIn("{$tableName}.indicator_id", $indicatorIds)
             ->whereNotNull("{$tableName}.value_received")
             ->where("{$tableName}.end_period", '>=', self::BASELINE_YEAR);
 
+        $this->applyFactPairScope($query, $tableName, $pairs);
+
         $columns = $this->factSelectColumns($table, $hasDatasourceColumn);
 
-        return $query
-            ->get($columns)
-            ->map(function (object $fact) use ($dataSources): object {
-                $dataSource = filled($fact->datasource_id)
-                    ? $dataSources->get((int) $fact->datasource_id)
-                    : null;
-
-                $fact->datasource_name = TextEncoding::clean($dataSource['name'] ?? null)
-                    ?? ($fact->datasource_id !== null ? (string) $fact->datasource_id : null);
-                $fact->datasource_level = TextEncoding::clean($dataSource['level'] ?? null);
-                $fact->datasource_category = $dataSource['category'] ?? $this->dataSourceCategory($fact);
-                $fact->uploaded_by = null;
-                $fact->uploaded_by_tooltip = null;
-
-                return $fact;
+        $query
+            ->select($columns)
+            ->orderBy("{$tableName}.location_id")
+            ->orderBy("{$tableName}.indicator_id")
+            ->orderBy("{$tableName}.end_period")
+            ->cursor()
+            ->each(function (object $fact) use ($dataSources, &$groups): void {
+                $this->accumulateFact($this->hydrateFactMetadata($fact, $dataSources), $groups);
             });
+
+    }
+
+    private function applyFactPairScope(mixed $query, string $tableName, Collection $pairs): void
+    {
+        $query->where(function ($scope) use ($pairs, $tableName): void {
+            $pairs->values()->each(function (array $pair, int $index) use ($scope, $tableName): void {
+                $method = $index === 0 ? 'where' : 'orWhere';
+
+                $scope->{$method}(function ($pairQuery) use ($pair, $tableName): void {
+                    $pairQuery
+                        ->where("{$tableName}.location_id", $pair['location_id'])
+                        ->where("{$tableName}.indicator_id", $pair['indicator_id']);
+                });
+            });
+        });
+    }
+
+    /**
+     * @param  Collection<int, array{name: string|null, level: string|null, category: string}>  $dataSources
+     */
+    private function hydrateFactMetadata(object $fact, Collection $dataSources): object
+    {
+        $dataSource = filled($fact->datasource_id)
+            ? $dataSources->get((int) $fact->datasource_id)
+            : null;
+
+        $fact->datasource_name = TextEncoding::clean($dataSource['name'] ?? null)
+            ?? ($fact->datasource_id !== null ? (string) $fact->datasource_id : null);
+        $fact->datasource_level = TextEncoding::clean($dataSource['level'] ?? null);
+        $fact->datasource_category = $dataSource['category'] ?? $this->dataSourceCategory($fact);
+        $fact->uploaded_by = null;
+        $fact->uploaded_by_tooltip = null;
+
+        return $fact;
+    }
+
+    /**
+     * @param  array<string, array{count: int, baseline: object|null, current: object|null}>  $groups
+     */
+    private function accumulateFact(object $fact, array &$groups): void
+    {
+        $key = $this->factKey((int) $fact->location_id, (int) $fact->indicator_id);
+
+        $groups[$key] ??= [
+            'count' => 0,
+            'baseline' => null,
+            'current' => null,
+        ];
+
+        $groups[$key]['count']++;
+
+        if ($this->isBaselineFact($fact) && $this->isBetterBaselineFact($fact, $groups[$key]['baseline'])) {
+            $groups[$key]['baseline'] = $fact;
+        }
+
+        if ((int) $fact->end_period > self::BASELINE_YEAR && $this->isBetterCurrentFact($fact, $groups[$key]['current'])) {
+            $groups[$key]['current'] = $fact;
+        }
+    }
+
+    private function retainedFactIdentity(object $fact): string
+    {
+        return filled($fact->uuid)
+            ? 'uuid:'.$fact->uuid
+            : $fact->source.':'.$fact->fact_id;
     }
 
     /**
@@ -393,11 +471,22 @@ class UhcTargetAttainmentService
         return $this->warehouseColumns[$key] ??= Schema::connection('warehouse')->hasColumn($table, $column);
     }
 
-    private function preferredDuplicate(Collection $duplicates): object
+    private function isBetterBaselineFact(object $candidate, ?object $current): bool
     {
-        return $duplicates
-            ->sort(fn (object $left, object $right): int => $this->duplicateSortValues($right) <=> $this->duplicateSortValues($left))
-            ->first();
+        if (! $current) {
+            return true;
+        }
+
+        return ($this->baselineFactSortValues($candidate) <=> $this->baselineFactSortValues($current)) > 0;
+    }
+
+    private function isBetterCurrentFact(object $candidate, ?object $current): bool
+    {
+        if (! $current) {
+            return true;
+        }
+
+        return ($this->factSortValues($candidate) <=> $this->factSortValues($current)) > 0;
     }
 
     /**
@@ -410,6 +499,7 @@ class UhcTargetAttainmentService
         $rows = $facts->get($this->factKey((int) $selection->location_id, (int) $selection->indicator_id), collect());
         $baseline = $this->baselineFact($rows);
         $current = $this->currentFact($rows);
+        $factsCount = (int) ($rows->first()?->available_facts_count ?? $rows->count());
 
         $base = [
             'level' => $level,
@@ -419,7 +509,7 @@ class UhcTargetAttainmentService
             'indicator_name' => $selection->indicator_name,
             'indicator_name_en' => $selection->indicator_name_en,
             'group_name' => $selection->group_name,
-            'facts_count' => $rows->count(),
+            'facts_count' => $factsCount,
             'has_baseline' => (bool) $baseline,
             'has_current' => (bool) $current,
             'missing_reason' => $this->missingReason($rows, $baseline, $current),
@@ -700,17 +790,6 @@ class UhcTargetAttainmentService
             strtotime((string) $fact->date_lastupdated) ?: 0,
             $fact->source === 'active' ? 1 : 0,
             (int) $fact->fact_id,
-        ];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    private function duplicateSortValues(object $fact): array
-    {
-        return [
-            $fact->source === 'active' ? 1 : 0,
-            ...$this->factSortValues($fact),
         ];
     }
 

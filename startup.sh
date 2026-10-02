@@ -23,30 +23,19 @@ mkdir -p storage/logs
 mkdir -p bootstrap/cache
 chmod -R ug+rwX storage bootstrap/cache || true
 
-echo "=== [2] Composer dependencies ==="
-if ! command -v composer >/dev/null 2>&1; then
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-fi
+echo "=== [1.1] Configure PHP settings ==="
+mkdir -p /usr/local/etc/php/conf.d || true
+cat > /usr/local/etc/php/conf.d/opcache.ini << 'EOINI'
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=0
+opcache.validate_timestamps=0
+EOINI
+echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
 
-rm -f bootstrap/cache/packages.php
-rm -f bootstrap/cache/services.php
-
-if [ ! -f vendor/autoload.php ]; then
-    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-else
-    composer dump-autoload --no-dev --optimize --no-interaction
-fi
-
-echo "=== [3] Laravel cache warmup ==="
-php artisan config:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
-php artisan cache:clear || true
-php artisan package:discover --ansi || true
-php artisan config:cache
-php artisan view:cache
-
-echo "=== [4] Configure PHP-FPM to listen on 127.0.0.1:9000 ==="
+echo "=== [1.2] Configure PHP-FPM to listen on 127.0.0.1:9000 ==="
 FPM_POOL_CONFIG=""
 for candidate in \
     /usr/local/etc/php-fpm.d/www.conf \
@@ -66,7 +55,7 @@ else
     echo "WARNING: PHP-FPM pool config not found. Using default PHP-FPM listen settings."
 fi
 
-echo "=== [5] Configure Nginx root to Laravel public/ ==="
+echo "=== [1.3] Configure Nginx root to Laravel public/ ==="
 cat > "${NGINX_SITE}" <<EOF
 server {
     listen ${PORT};
@@ -102,32 +91,37 @@ EOF
 ln -sf "${NGINX_SITE}" "${NGINX_ENABLED}" || true
 nginx -t
 
-echo "=== [6] Start or reload Nginx ==="
+echo "=== [1.4] Start or reload Nginx ==="
 if pgrep -f "nginx: master" >/dev/null 2>&1; then
     nginx -s reload
 else
     nginx
 fi
-cat > /usr/local/etc/php/conf.d/opcache.ini << 'EOF'
-opcache.enable=1
-opcache.memory_consumption=256
-opcache.interned_strings_buffer=16
-opcache.max_accelerated_files=10000
-opcache.revalidate_freq=0
-opcache.validate_timestamps=0
-EOF
-echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
-echo "=== [6.5] Configure PHP settings ==="
-echo "memory_limit = 1024M" > /usr/local/etc/php/conf.d/memory.ini
-cat > /usr/local/etc/php/conf.d/opcache.ini << 'EOINI'
-opcache.enable=1
-opcache.memory_consumption=256
-opcache.interned_strings_buffer=16
-opcache.max_accelerated_files=10000
-opcache.revalidate_freq=0
-opcache.validate_timestamps=0
-EOINI
-echo "=== [7] Start PHP-FPM in foreground ==="
+
+echo "=== [2] Composer dependencies ==="
+if ! command -v composer >/dev/null 2>&1; then
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+fi
+
+rm -f bootstrap/cache/packages.php
+rm -f bootstrap/cache/services.php
+
+if [ ! -f vendor/autoload.php ]; then
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || echo "WARNING: composer install failed. Check Azure deployment logs."
+else
+    composer dump-autoload --no-dev --optimize --no-interaction || echo "WARNING: composer dump-autoload failed. Check Azure deployment logs."
+fi
+
+echo "=== [3] Laravel cache warmup ==="
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan cache:clear || true
+php artisan package:discover --ansi || true
+php artisan config:cache || true
+php artisan view:cache || true
+
+echo "=== [4] Start PHP-FPM in foreground ==="
 FPM_BIN=""
 for candidate in php-fpm php-fpm8.5 php-fpm8.4 php-fpm8.3 php-fpm8.2; do
     if command -v "${candidate}" >/dev/null 2>&1; then

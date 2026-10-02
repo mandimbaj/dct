@@ -1,10 +1,10 @@
-# User Manual - Data Capture Tool Laravel
+# User Manual - Data Capture Tool v.2
 
 Last updated: October 2, 2026
 
 ## 1. Purpose of the tool
 
-The Data Capture Tool helps country and regional teams enter, import, review, approve, archive, and use health data. The Laravel version keeps the same reference database while adding a more structured interface, finer permissions, notifications, and data integration through files and APIs.
+Data Capture Tool v.2 helps country and regional teams enter, import, review, approve, archive, and use health data. This version keeps the same reference database while adding a more structured interface, finer permissions, notifications, and data integration through files and APIs.
 
 ## 2. Access and sign-in
 

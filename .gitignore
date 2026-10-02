@@ -24,6 +24,7 @@
 /tmp/
 /vendor
 __pycache__/
+/dct_db.sql
 docs/screenshots/_login-debug.*
 docs/screenshots-jpg/_login-debug.*
 _ide_helper.php

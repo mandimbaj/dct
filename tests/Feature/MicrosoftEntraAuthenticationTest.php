@@ -101,7 +101,7 @@ class MicrosoftEntraAuthenticationTest extends TestCase
         $this->assertStringContainsString('secrets.AZURE_MICROSOFT_ENTRA_SETTINGS', $workflow);
         $this->assertStringContainsString('azure/appservice-settings@v1', $workflow);
         $this->assertStringContainsString('MICROSOFT_ENTRA_REDIRECT_URI', $workflow);
-        $this->assertStringContainsString("app-name: 'af-aho-dct'", $workflow);
+        $this->assertStringContainsString("app-name: 'dct'", $workflow);
         $this->assertStringContainsString("startup-command: 'bash /home/site/wwwroot/startup.sh'", $workflow);
         $this->assertLessThan(
             strpos($workflow, 'uses: azure/webapps-deploy@v3'),

@@ -1,10 +1,10 @@
-# Manuel utilisateur - Data Capture Tool Laravel
+# Manuel utilisateur - Outil de saisie de donnees v.2
 
 Derniere mise a jour: 2 octobre 2026
 
 ## 1. Objectif de l'outil
 
-Le Data Capture Tool permet aux equipes pays et regionales de saisir, importer, verifier, approuver, archiver et exploiter les donnees de sante. L'application Laravel garde la meme base de donnees de reference, mais ajoute une interface plus structuree, des permissions plus fines, des notifications et une integration de donnees via API/fichiers.
+L'Outil de saisie de donnees v.2 permet aux equipes pays et regionales de saisir, importer, verifier, approuver, archiver et exploiter les donnees de sante. Cette version garde la meme base de donnees de reference, mais ajoute une interface plus structuree, des permissions plus fines, des notifications et une integration de donnees via API/fichiers.
 
 ## 2. Acces et connexion
 

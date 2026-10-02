@@ -41,6 +41,7 @@ class Topic:
     checks_en: tuple[str, ...]
     tips_fr: tuple[str, ...] = ()
     tips_en: tuple[str, ...] = ()
+    screenshot_en: str | None = None
 
 
 def value_topic(module_fr: str, module_en: str, title_fr: str, title_en: str, path: str, screenshot: str | None, entity_fr: str, entity_en: str) -> Topic:
@@ -211,10 +212,49 @@ def build_topics() -> None:
     add(Topic(
         "Demarrage",
         "Getting started",
-        "Connexion, langue et contexte pays",
-        "Sign-in, language and country context",
-        "Login page, header, language selector",
-        "Login page, header, language selector",
+        "Page de connexion de l'outil",
+        "Tool sign-in page",
+        "Page de connexion > Se connecter avec Microsoft",
+        "Sign-in page > Sign in with Microsoft",
+        "00-login-dct-microsoft.png",
+        (
+            "Cette page est le point d'entree de l'outil en production.",
+            "Elle permet de choisir la langue, puis de lancer la connexion avec le compte Microsoft de l'OMS.",
+        ),
+        (
+            "This page is the production entry point for the tool.",
+            "It lets users choose the language, then start sign-in with the WHO Microsoft account.",
+        ),
+        (
+            "Ouvrir l'URL de production de l'outil.",
+            "Choisir la langue souhaitee si elle n'est pas deja selectionnee.",
+            "Cliquer Se connecter avec Microsoft.",
+            "Attendre l'ouverture de la page de connexion Microsoft/OMS.",
+        ),
+        (
+            "Open the production URL of the tool.",
+            "Choose the preferred language if it is not already selected.",
+            "Click Sign in with Microsoft.",
+            "Wait for the Microsoft/WHO sign-in page to open.",
+        ),
+        (
+            "Ne pas partager son compte Microsoft avec une autre personne.",
+            "Si le bouton Microsoft n'apparait pas, contacter l'administrateur de l'outil.",
+        ),
+        (
+            "Do not share the Microsoft account with another person.",
+            "If the Microsoft button is not displayed, contact the tool administrator.",
+        ),
+        screenshot_en="00-login-dct-microsoft-en.png",
+    ))
+
+    add(Topic(
+        "Demarrage",
+        "Getting started",
+        "Connexion Microsoft OMS",
+        "WHO Microsoft sign-in",
+        "Page Microsoft/OMS",
+        "Microsoft/WHO page",
         "00-login.png",
         (
             "Cette partie explique comment entrer dans le DCT en production avec le compte Microsoft de l'OMS.",
@@ -651,12 +691,16 @@ def set_rgb(c: canvas.Canvas, color: tuple[int, int, int]) -> None:
     c.setFillColorRGB(color[0] / 255, color[1] / 255, color[2] / 255)
 
 
+def app_title(lang: str) -> str:
+    return "Outil de saisie de donnees v.2" if lang == "fr" else "Data Capture Tool v.2"
+
+
 def draw_header(c: canvas.Canvas, lang: str, section: str, page_no: int) -> None:
     c.setFillColorRGB(BLUE[0] / 255, BLUE[1] / 255, BLUE[2] / 255)
     c.rect(0, PAGE_HEIGHT - 44, PAGE_WIDTH, 44, fill=1, stroke=0)
     c.setFillColorRGB(1, 1, 1)
     c.setFont("Helvetica-Bold", 13)
-    c.drawString(MARGIN, PAGE_HEIGHT - 28, "Data Capture Tool")
+    c.drawString(MARGIN, PAGE_HEIGHT - 28, app_title(lang))
     c.setFont("Helvetica", 8.5)
     c.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - 28, section)
     c.drawRightString(PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 28, f"{'Page' if lang == 'en' else 'Page'} {page_no}")
@@ -667,7 +711,7 @@ def draw_footer(c: canvas.Canvas, lang: str) -> None:
     c.line(MARGIN, 23, PAGE_WIDTH - MARGIN, 23)
     set_rgb(c, MUTED)
     c.setFont("Helvetica", 8)
-    c.drawString(MARGIN, 11, "DCT Laravel - " + ("Manuel utilisateur complet" if lang == "fr" else "Complete user manual"))
+    c.drawString(MARGIN, 11, f"{app_title(lang)} - " + ("Manuel utilisateur complet" if lang == "fr" else "Complete user manual"))
     c.drawRightString(PAGE_WIDTH - MARGIN, 11, "WHO AFRO iAHO")
 
 
@@ -738,7 +782,7 @@ def draw_cover(c: canvas.Canvas, lang: str) -> None:
     c.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, fill=1, stroke=0)
     c.setFillColorRGB(1, 1, 1)
     c.setFont("Helvetica-Bold", 30)
-    c.drawString(MARGIN + 10, PAGE_HEIGHT - 115, "Data Capture Tool Laravel")
+    c.drawString(MARGIN + 10, PAGE_HEIGHT - 115, app_title(lang))
     c.setFont("Helvetica-Bold", 24)
     c.drawString(MARGIN + 10, PAGE_HEIGHT - 153, "Manuel utilisateur complet" if lang == "fr" else "Complete User Manual")
     c.setFont("Helvetica", 12)
@@ -810,7 +854,8 @@ def draw_topic(c: canvas.Canvas, topic: Topic, lang: str, page_no: int) -> None:
     image_w = PAGE_WIDTH - image_x - MARGIN
     image_h = 242
 
-    draw_screenshot(c, topic.screenshot, image_x, PAGE_HEIGHT - 112, image_w, image_h, lang=lang)
+    screenshot = topic.screenshot_en if lang == "en" and topic.screenshot_en else topic.screenshot
+    draw_screenshot(c, screenshot, image_x, PAGE_HEIGHT - 112, image_w, image_h, lang=lang)
 
     y = PAGE_HEIGHT - 120
     y = draw_section(c, str(v["purpose_title"]), tuple(v["purpose"]), text_x, y, text_w)
@@ -836,7 +881,7 @@ def draw_topic(c: canvas.Canvas, topic: Topic, lang: str, page_no: int) -> None:
 def build_manual(lang: str, filename: str) -> Path:
     output = OUTPUT_DIR / filename
     c = canvas.Canvas(str(output), pagesize=landscape(A4))
-    c.setTitle("Data Capture Tool - " + ("Manuel utilisateur complet" if lang == "fr" else "Complete user manual"))
+    c.setTitle(app_title(lang) + " - " + ("Manuel utilisateur complet" if lang == "fr" else "Complete user manual"))
     draw_cover(c, lang)
     c.showPage()
     next_page = draw_toc(c, lang, 2)
@@ -852,8 +897,8 @@ def build_manual(lang: str, filename: str) -> Path:
 def main() -> None:
     ensure_output()
     build_topics()
-    fr = build_manual("fr", "dct-laravel-manuel-utilisateur-complet-fr.pdf")
-    en = build_manual("en", "dct-laravel-complete-user-manual-en.pdf")
+    fr = build_manual("fr", "outil-saisie-donnees-v2-manuel-utilisateur-complet-fr.pdf")
+    en = build_manual("en", "data-capture-tool-v2-complete-user-manual-en.pdf")
     print(fr)
     print(en)
 
