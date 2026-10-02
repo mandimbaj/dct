@@ -29,6 +29,32 @@ class MicrosoftEntraAuthenticationTest extends TestCase
             ->assertSee('Sign in with Microsoft');
     }
 
+    public function test_local_login_page_hides_microsoft_sign_in_button(): void
+    {
+        config([
+            'services.microsoft_entra.enabled' => false,
+            'services.microsoft_entra.local_login_enabled' => true,
+        ]);
+
+        $this->get('/admin/sn/login')
+            ->assertOk()
+            ->assertDontSee('Sign in with Microsoft')
+            ->assertSee('Email address')
+            ->assertSee('Password');
+    }
+
+    public function test_microsoft_only_login_page_hides_local_email_password_form(): void
+    {
+        $this->configureMicrosoftEntra();
+        config(['services.microsoft_entra.local_login_enabled' => false]);
+
+        $this->get('/admin/sn/login')
+            ->assertOk()
+            ->assertSee('Sign in with Microsoft')
+            ->assertDontSee('Email address')
+            ->assertDontSee('Password');
+    }
+
     public function test_example_environment_uses_the_real_callback_route(): void
     {
         $example = file_get_contents(base_path('.env.example'));

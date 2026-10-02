@@ -42,6 +42,7 @@ Route::get('/auth/microsoft/callback', [MicrosoftEntraController::class, 'callba
     ->middleware(['guest', 'throttle:10,1']);
 
 Route::get('/admin/{country}/notifications/{notification}', NotificationController::class)
+    ->middleware(['auth'])
     ->name('admin.notifications.show');
 
 Route::post('/assistant/chat', [AssistantController::class, 'chat'])
@@ -55,6 +56,8 @@ Route::post('/user-history/record', [UserPageVisitController::class, 'store'])
 Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 
 Route::get('/repository/{path}', function (string $path) {
+    abort_unless(app()->environment('local'), 404);
+
     $repositoryRoot = realpath(base_path('../_reference/aho-stage-datacapture/aho-stage-datacapture-main/repository'));
     abort_unless($repositoryRoot, 404);
 

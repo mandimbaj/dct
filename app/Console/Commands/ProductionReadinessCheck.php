@@ -25,6 +25,8 @@ class ProductionReadinessCheck extends Command
             $this->check('Config cached', file_exists(base_path('bootstrap/cache/config.php')), 'critical', 'Run php artisan config:cache or php artisan optimize.'),
             $this->check('Routes cached', $this->routesAreCached(), 'warning', 'Run php artisan route:cache or php artisan optimize.'),
             $this->check('Redis extension/client', extension_loaded('redis') || class_exists('Predis\Client'), 'critical', 'Install phpredis or configure Predis before using Redis.'),
+            $this->mailTransportCheck(),
+            $this->mailFromAddressCheck(),
             $this->connectionCheck('Application database', config('database.default')),
             $this->connectionCheck('Warehouse database', 'warehouse'),
             $this->redisCacheCheck(),
@@ -100,6 +102,52 @@ class ProductionReadinessCheck extends Command
         } catch (Throwable $exception) {
             return $this->check('Redis cache round-trip', false, 'critical', $exception->getMessage());
         }
+    }
+
+    /**
+     * @return array{name: string, passed: bool, level: string, detail: string}
+     */
+    private function mailTransportCheck(): array
+    {
+        if (! config('aho.notifications.mail_enabled', true)) {
+            return $this->check('Mail notifications', true, 'warning', 'Email notifications are disabled.');
+        }
+
+        $mailer = (string) config('mail.default');
+        $isProductionTransport = ! in_array($mailer, ['array', 'log'], true);
+
+        return $this->check(
+            'Mail notifications',
+            $isProductionTransport,
+            'critical',
+            $isProductionTransport
+                ? "MAIL_MAILER={$mailer} is configured for outbound notifications."
+                : 'Configure a real MAIL_MAILER such as smtp, ses, postmark, resend, or mailgun.',
+        );
+    }
+
+    /**
+     * @return array{name: string, passed: bool, level: string, detail: string}
+     */
+    private function mailFromAddressCheck(): array
+    {
+        if (! config('aho.notifications.mail_enabled', true)) {
+            return $this->check('Mail sender', true, 'warning', 'Email notifications are disabled.');
+        }
+
+        $address = (string) config('mail.from.address');
+        $isConfigured = filled($address)
+            && $address !== 'hello@example.com'
+            && filter_var($address, FILTER_VALIDATE_EMAIL) !== false;
+
+        return $this->check(
+            'Mail sender',
+            $isConfigured,
+            'critical',
+            $isConfigured
+                ? "MAIL_FROM_ADDRESS={$address} is configured."
+                : 'Set MAIL_FROM_ADDRESS to a valid DCT sender address.',
+        );
     }
 
     private function routesAreCached(): bool

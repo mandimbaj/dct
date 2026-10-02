@@ -6,8 +6,10 @@ use App\Support\TableExportActions;
 use App\Support\UserPermissions;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Throwable;
 
 abstract class AhoResource extends Resource
 {
@@ -57,6 +59,10 @@ abstract class AhoResource extends Resource
         }
 
         TableExportActions::appendTo($table);
+
+        $table->contentFooter(fn (HasTable $livewire) => view('filament.tables.record-count-footer', [
+            'total' => static::tableRecordCount($livewire),
+        ]));
     }
 
     protected static function canUsePermission(string $action): bool
@@ -65,5 +71,31 @@ abstract class AhoResource extends Resource
 
         return (bool) $user
             && UserPermissions::allowsResource($user, static::class, $action);
+    }
+
+    protected static function tableRecordCount(HasTable $livewire): int
+    {
+        try {
+            $records = $livewire->getTableRecords();
+
+            if (method_exists($records, 'total')) {
+                return (int) $records->total();
+            }
+
+            if (method_exists($records, 'count')) {
+                return (int) $records->count();
+            }
+        } catch (Throwable) {
+        }
+
+        try {
+            return (int) (clone $livewire->getTableQueryForExport())->count();
+        } catch (Throwable) {
+            try {
+                return (int) (clone $livewire->getTableQuery())->count();
+            } catch (Throwable) {
+                return 0;
+            }
+        }
     }
 }

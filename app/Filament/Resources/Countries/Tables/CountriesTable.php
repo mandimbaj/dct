@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Countries\Tables;
 
+use App\Models\IncomeGroup;
 use App\Models\LocationLevel;
+use App\Models\SpecialCategorization;
 use App\Support\FilamentSearch;
 use App\Support\SelectOptions;
 use Filament\Actions\BulkActionGroup;
@@ -30,6 +32,10 @@ class CountriesTable
                         'parent.translations' => ['name'],
                         'locationLevel' => ['code'],
                         'locationLevel.translations' => ['name'],
+                        'specialStatus' => ['code'],
+                        'specialStatus.translations' => ['name'],
+                        'incomeGroup' => ['code'],
+                        'incomeGroup.translations' => ['name'],
                     ],
                     numericColumns: ['location_id', 'locationlevel_id'],
                 );
@@ -54,6 +60,14 @@ class CountriesTable
                 TextColumn::make('locationLevel.display_name')
                     ->label(__('aho.fields.level'))
                     ->placeholder('-'),
+                TextColumn::make('specialStatus.display_name')
+                    ->label(__('aho.fields.special_status'))
+                    ->placeholder('-')
+                    ->toggleable(),
+                TextColumn::make('incomeGroup.display_name')
+                    ->label(__('aho.fields.income_group'))
+                    ->placeholder('-')
+                    ->toggleable(),
                 TextColumn::make('date_created')
                     ->label(__('aho.fields.creation'))
                     ->dateTime()
@@ -71,6 +85,20 @@ class CountriesTable
                     ->relationship('locationLevel', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query, 'code'))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
                     ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(LocationLevel::query(), $search, 'locationlevel_id'))
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('special_id')
+                    ->label(__('aho.fields.special_status'))
+                    ->relationship('specialStatus', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(SpecialCategorization::query(), $search, 'specialstates_id'))
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('wb_income_id')
+                    ->label(__('aho.fields.income_group'))
+                    ->relationship('incomeGroup', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IncomeGroup::query(), $search, 'wb_income_groupid'))
                     ->searchable()
                     ->preload(),
             ])

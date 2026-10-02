@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPreferredTranslationName;
 use App\Support\GeneratedCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['uuid', 'name', 'shortname', 'code', 'description'])]
 class TimePeriod extends Model
 {
+    use HasPreferredTranslationName;
+
     protected $connection = 'warehouse';
 
     protected $table = 'stg_periodicity_type';
@@ -27,8 +31,13 @@ class TimePeriod extends Model
         });
     }
 
+    public function translations(): HasMany
+    {
+        return $this->hasMany(TimePeriodTranslation::class, 'master_id', 'period_id');
+    }
+
     public function getDisplayNameAttribute(): string
     {
-        return $this->name ?: $this->code;
+        return $this->preferredTranslationName($this->name ?: $this->code);
     }
 }

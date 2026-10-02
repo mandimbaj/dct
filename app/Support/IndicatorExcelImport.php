@@ -4,8 +4,8 @@ namespace App\Support;
 
 use App\Models\Country;
 use App\Models\DataSource;
-use App\Models\HealthIndicatorValue;
 use App\Models\HealthIndicatorArchive;
+use App\Models\HealthIndicatorValue;
 use App\Models\ImportRecord;
 use App\Models\Indicator;
 use App\Models\IndicatorCategory;
@@ -15,12 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 use ZipArchive;
@@ -136,19 +133,18 @@ class IndicatorExcelImport
 
     public static function downloadTemplate(): BinaryFileResponse
     {
-        $directory = storage_path('app/import-templates');
-        File::ensureDirectoryExists($directory);
-
-        $path = tempnam($directory, 'indicator-import-template-');
-
-        $writer = new Writer;
-        $writer->openToFile($path);
-        $writer->addRow(Row::fromValues(self::HEADERS));
-        $writer->close();
-
-        return response()
-            ->download($path, 'indicator-data-import-template.xlsx')
-            ->deleteFileAfterSend();
+        return ExcelTemplateBuilder::download(
+            'indicator-import-template-',
+            'indicator-data-import-template.xlsx',
+            self::HEADERS,
+            [
+                'Location' => self::templateOptions('location'),
+                'Indicator Name' => self::templateOptions('indicator'),
+                'Category Option' => self::templateOptions('category'),
+                'Measure Type' => self::templateOptions('measuremethod'),
+                'Data Source' => self::templateOptions('datasource'),
+            ],
+        );
     }
 
     /**
@@ -692,7 +688,7 @@ class IndicatorExcelImport
      * @param  array<string, int>  $map
      * @param  array<int, string>  $errors
      */
-    private static function mappedId(array $map, mixed $value, string $header, int | string $row, array &$errors): ?int
+    private static function mappedId(array $map, mixed $value, string $header, int|string $row, array &$errors): ?int
     {
         $value = self::cell($value);
 
@@ -854,6 +850,7 @@ class IndicatorExcelImport
     private static function searchValues(Model $record, string $type): array
     {
         $values = [
+            self::labelFor($type, $record),
             self::labelCode($type, $record),
             $record->display_name ?? null,
         ];
@@ -910,6 +907,26 @@ class IndicatorExcelImport
         }
 
         return $query->limit($limit)->get();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function templateOptions(string $type): array
+    {
+        $query = self::baseQuery($type);
+
+        if (! $query) {
+            return [];
+        }
+
+        return $query
+            ->limit(SelectOptions::LIMIT)
+            ->get()
+            ->map(fn (Model $record): string => self::labelFor($type, $record))
+            ->filter(fn (string $label): bool => filled($label))
+            ->values()
+            ->all();
     }
 
     private static function baseQuery(string $type): ?Builder

@@ -24,10 +24,10 @@ class TimePeriodsTable
                     ->label(__('aho.fields.code'))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('name')
+                TextColumn::make('display_name')
                     ->label(__('aho.fields.name'))
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(['name', 'shortname', 'code'])
+                    ->wrap(),
                 TextColumn::make('shortname')
                     ->label(__('aho.fields.short_name'))
                     ->searchable()

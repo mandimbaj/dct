@@ -106,8 +106,9 @@ final class SelectOptions
             ->map(fn (Model $record): array => [
                 'key' => $record->getAttribute($keyName) ?? $record->getKey(),
                 'label' => self::label($record),
+                'record' => $record,
             ])
-            ->filter(fn (array $option): bool => filled($option['key']) && self::matchesSearch($option['label'], $search))
+            ->filter(fn (array $option): bool => filled($option['key']) && self::matchesRecord($option['record'], $option['label'], $search))
             ->sortBy(fn (array $option): string => self::normalize($option['label']), SORT_NATURAL)
             ->take(self::LIMIT)
             ->mapWithKeys(fn (array $option): array => [$option['key'] => $option['label']])
@@ -116,7 +117,7 @@ final class SelectOptions
 
     private static function label(Model $record): string
     {
-        foreach (['display_name', 'name', 'title', 'label', 'shortname', 'code'] as $attribute) {
+        foreach (['display_name', 'name', 'title', 'label', 'shortname', 'code', 'afrocode', 'gen_code', 'iso_alpha'] as $attribute) {
             $value = $record->getAttribute($attribute);
 
             if (filled($value)) {
@@ -125,6 +126,37 @@ final class SelectOptions
         }
 
         return (string) $record->getKey();
+    }
+
+    private static function matchesRecord(Model $record, string $label, ?string $search): bool
+    {
+        if (blank($search) || self::matchesSearch($label, $search)) {
+            return true;
+        }
+
+        foreach (self::SEARCHABLE_COLUMNS as $column) {
+            $value = $record->getAttribute($column);
+
+            if (filled($value) && self::matchesSearch((string) $value, $search)) {
+                return true;
+            }
+        }
+
+        if (! $record->relationLoaded('translations')) {
+            return false;
+        }
+
+        foreach ($record->getRelation('translations') as $translation) {
+            foreach (['name', 'shortname', 'title', 'label', 'measure_value', 'definition'] as $field) {
+                $value = $translation->{$field} ?? null;
+
+                if (filled($value) && self::matchesSearch((string) $value, $search)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static function matchesSearch(string $label, ?string $search): bool

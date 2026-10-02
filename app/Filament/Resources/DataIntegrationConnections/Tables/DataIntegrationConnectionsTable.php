@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DataIntegrationConnections\Tables;
 use App\Filament\Resources\DataIntegrationConnections\DataIntegrationConnectionResource;
 use App\Models\Country;
 use App\Models\DataIntegrationConnection;
+use App\Services\DataIntegration\Dhis2IndicatorValueImporter;
 use App\Support\SelectOptions;
 use App\Support\StatusColor;
 use App\Support\UserCountryAccess;
@@ -150,6 +151,22 @@ class DataIntegrationConnectionsTable
 
                         $result['ok'] ? $notification->success() : $notification->warning();
                         $notification->send();
+                    }),
+                Action::make('sync_dhis2')
+                    ->label(__('aho.data_integration.actions.sync_now'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (DataIntegrationConnection $record): bool => $record->provider === DataIntegrationConnection::PROVIDER_DHIS2
+                        && $record->integration_method === DataIntegrationConnection::METHOD_API)
+                    ->action(function (DataIntegrationConnection $record): void {
+                        $result = app(Dhis2IndicatorValueImporter::class)->import($record);
+
+                        Notification::make()
+                            ->success()
+                            ->title(__('aho.data_integration.messages.dhis2_import_complete'))
+                            ->body($result['message'])
+                            ->send();
                     }),
                 EditAction::make(),
                 DeleteAction::make(),

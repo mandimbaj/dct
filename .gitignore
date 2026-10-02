@@ -6,6 +6,7 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
+/.codex-temp/
 /.cursor/
 /.idea
 /.nova
@@ -20,7 +21,11 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/tmp/
 /vendor
+__pycache__/
+docs/screenshots/_login-debug.*
+docs/screenshots-jpg/_login-debug.*
 _ide_helper.php
 Homestead.json
 Homestead.yaml

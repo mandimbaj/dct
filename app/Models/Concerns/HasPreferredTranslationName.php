@@ -43,9 +43,14 @@ trait HasPreferredTranslationName
         $name = $this->translations()
             ->whereIn('language_code', $languages)
             ->whereNotNull($field)
+            ->where($field, '<>', '')
             ->orderByRaw("FIELD(language_code, {$order})")
             ->value($field);
 
-        return TextEncoding::clean($name) ?? $fallback;
+        if (blank($name)) {
+            return $fallback;
+        }
+
+        return TextEncoding::clean($name) ?? $name;
     }
 }

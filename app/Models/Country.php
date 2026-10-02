@@ -62,6 +62,16 @@ class Country extends Model
         return $this->belongsTo(LocationLevel::class, 'locationlevel_id', 'locationlevel_id');
     }
 
+    public function specialStatus(): BelongsTo
+    {
+        return $this->belongsTo(SpecialCategorization::class, 'special_id', 'specialstates_id');
+    }
+
+    public function incomeGroup(): BelongsTo
+    {
+        return $this->belongsTo(IncomeGroup::class, 'wb_income_id', 'wb_income_groupid');
+    }
+
     public function indicatorValues(): HasMany
     {
         return $this->hasMany(HealthIndicatorValue::class, 'location_id', 'location_id');

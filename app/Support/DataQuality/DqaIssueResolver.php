@@ -71,6 +71,12 @@ class DqaIssueResolver
             return self::$resolvedFactIds[$cacheKey];
         }
 
+        $directFactId = self::directFactId($issue);
+
+        if ($directFactId !== null) {
+            return self::$resolvedFactIds[$cacheKey] = $directFactId;
+        }
+
         $record = self::queryForIssue($issue)
             ->latest('fact_id')
             ->first(['fact_id']);
@@ -168,7 +174,20 @@ class DqaIssueResolver
         $period = self::clean($issue->period);
 
         if ($period !== '') {
-            $query->where('period', $period);
+            $query->where(function (Builder $query) use ($period): void {
+                $query
+                    ->where('period', $period)
+                    ->orWhere('start_period', $period)
+                    ->orWhere('end_period', $period);
+
+                if (preg_match('/^(\d{4})\D+(\d{4})$/', $period, $matches) === 1) {
+                    $query->orWhere(function (Builder $query) use ($matches): void {
+                        $query
+                            ->where('start_period', $matches[1])
+                            ->where('end_period', $matches[2]);
+                    });
+                }
+            });
         }
 
         $value = self::clean($issue->value);
@@ -216,6 +235,25 @@ class DqaIssueResolver
         }
 
         return $query;
+    }
+
+    private static function directFactId(DqaReportModel $issue): ?int
+    {
+        foreach (['fact_id', 'factid'] as $attribute) {
+            $value = $issue->getAttribute($attribute);
+
+            if (! is_numeric($value)) {
+                continue;
+            }
+
+            $factId = (int) $value;
+
+            if ($factId > 0 && HealthIndicatorValue::query()->whereKey($factId)->exists()) {
+                return $factId;
+            }
+        }
+
+        return null;
     }
 
     private static function whereIndicator(Builder $query, string $needle): void

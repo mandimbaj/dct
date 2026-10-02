@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Countries\Schemas;
 
 use App\Models\Country;
+use App\Models\IncomeGroup;
 use App\Models\LocationLevel;
+use App\Models\SpecialCategorization;
 use App\Support\SelectOptions;
 use App\Support\TranslatedReferenceForm;
 use App\Support\UserCountryAccess;
@@ -68,14 +70,24 @@ class CountryForm
 
                 Section::make(__('aho.form_sections.socioeconomic_status'))
                     ->schema([
-                        TextInput::make('special_id')
+                        Select::make('special_id')
                             ->label(__('aho.fields.special_status'))
-                            ->required()
-                            ->numeric(),
-                        TextInput::make('wb_income_id')
+                            ->relationship('specialStatus', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(SpecialCategorization::query(), keyName: 'specialstates_id'))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(SpecialCategorization::query(), $search, 'specialstates_id'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Select::make('wb_income_id')
                             ->label(__('aho.fields.income_group'))
-                            ->required()
-                            ->numeric(),
+                            ->relationship('incomeGroup', 'code', modifyQueryUsing: fn (Builder $query): Builder => SelectOptions::orderByDisplayName($query->with('translations'), 'code'))
+                            ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                            ->options(fn (): array => SelectOptions::fromDisplayNameQuery(IncomeGroup::query(), keyName: 'wb_income_groupid'))
+                            ->getSearchResultsUsing(fn (?string $search): array => SelectOptions::fromDisplayNameQuery(IncomeGroup::query(), $search, 'wb_income_groupid'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
                     ])
                     ->columns(2),
 

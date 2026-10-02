@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\MessageReceived;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -20,7 +21,7 @@ class NotificationReadTest extends TestCase
 
         Notification::send($user, new MessageReceived('Test message', 'Message body', 'global'));
 
-        $notification = $user->notifications()->firstOrFail();
+        $notification = $this->notificationWithTitle($user, 'Test message');
 
         $this
             ->actingAs($user)
@@ -39,11 +40,23 @@ class NotificationReadTest extends TestCase
 
         Notification::send($owner, new MessageReceived('Private message', 'Message body', 'global'));
 
-        $notification = $owner->notifications()->firstOrFail();
+        $notification = $this->notificationWithTitle($owner, 'Private message');
 
         $this
             ->actingAs($otherUser)
             ->get(route('admin.notifications.show', ['country' => 'global', 'notification' => $notification]))
             ->assertNotFound();
+    }
+
+    private function notificationWithTitle(User $user, string $title): DatabaseNotification
+    {
+        $notification = $user
+            ->notifications()
+            ->get()
+            ->first(fn ($notification): bool => ($notification->data['title'] ?? null) === $title);
+
+        $this->assertNotNull($notification);
+
+        return $notification;
     }
 }

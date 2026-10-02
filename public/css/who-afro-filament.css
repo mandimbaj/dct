@@ -799,7 +799,8 @@
 
 .fi-wi-stats-overview-stat {
     background: white;
-    border-top: 3px solid var(--who-afro-blue);
+    border-inline-start: 1px solid var(--who-afro-panel-border);
+    border-top: 1px solid var(--who-afro-panel-border);
 }
 
 @media (min-width: 768px) {
@@ -918,7 +919,7 @@
     align-items: center;
     background: white;
     border: 1px solid var(--who-afro-panel-border);
-    border-left: 4px solid var(--who-afro-blue-dark);
+    border-left: 1px solid var(--who-afro-panel-border);
     border-radius: 8px;
     display: flex;
     gap: 1rem;
@@ -989,7 +990,7 @@
 .aho-quality-stat {
     background: white;
     border: 1px solid var(--who-afro-panel-border);
-    border-top: 3px solid var(--who-afro-blue);
+    border-top: 1px solid var(--who-afro-panel-border);
     border-radius: 8px;
     cursor: pointer;
     padding: 1rem;
@@ -1226,7 +1227,7 @@
 
 .aho-api__hero {
     align-items: center;
-    border-left: 4px solid var(--who-afro-blue-dark);
+    border-left: 1px solid var(--who-afro-panel-border);
     display: flex;
     gap: 1rem;
     justify-content: space-between;
@@ -1434,7 +1435,7 @@
 .aho-api-stat {
     background: white;
     border: 1px solid var(--who-afro-panel-border);
-    border-top: 3px solid var(--who-afro-blue);
+    border-top: 1px solid var(--who-afro-panel-border);
     border-radius: 8px;
     cursor: pointer;
     padding: 0.875rem 1rem;
@@ -2654,6 +2655,917 @@
     }
 }
 
+/* Mobile admin shell baseline for tablet and phone. */
+@media (max-width: 1023px) {
+    .fi-topbar-ctn {
+        margin-inline: 0 !important;
+        width: 100% !important;
+    }
+
+    .fi-layout {
+        display: block !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: clip;
+        width: 100% !important;
+    }
+
+    .fi-layout > div:has(> .fi-main-sidebar) {
+        display: contents !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        width: 0 !important;
+    }
+
+    .fi-main-ctn,
+    .fi-main,
+    .fi-page,
+    .fi-page-content {
+        margin-inline: 0 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .fi-main-sidebar {
+        height: 100dvh !important;
+        inset-block: 0 !important;
+        inset-inline-start: 0 !important;
+        max-height: 100dvh !important;
+        max-width: min(19rem, 88vw) !important;
+        position: fixed !important;
+        transform: translateX(-100%);
+        width: min(19rem, 88vw) !important;
+        z-index: 70;
+    }
+
+    .fi-main-sidebar.fi-sidebar-open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 767px) {
+    .fi-topbar,
+    .fi-topbar-start,
+    .fi-topbar-end {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .fi-topbar {
+        align-items: center;
+        display: grid !important;
+        gap: 0.45rem !important;
+        grid-template-areas:
+            "brand menu"
+            "tools tools";
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 0.45rem 0.55rem 0.55rem !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar > .aho-topbar-brand {
+        grid-area: brand;
+    }
+
+    .fi-topbar-open-sidebar-btn,
+    .fi-topbar-close-sidebar-btn {
+        grid-area: menu;
+        justify-self: end;
+        margin: 0 !important;
+        position: static !important;
+    }
+
+    .fi-topbar > .fi-topbar-start {
+        display: none !important;
+    }
+
+    .fi-topbar > .fi-topbar-end {
+        align-items: center !important;
+        display: grid !important;
+        gap: 0.45rem !important;
+        grid-area: tools;
+        grid-template-areas:
+            "search search search"
+            "user flag actions";
+        grid-template-columns: auto auto minmax(0, 1fr);
+        justify-content: stretch !important;
+        margin: 0 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .aho-topbar-brand {
+        align-items: center !important;
+        gap: 0.45rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-inline-start: 0 !important;
+    }
+
+    .aho-topbar-brand__logo {
+        flex: 0 0 auto;
+        height: 2.05rem !important;
+        max-width: 6.75rem !important;
+        min-width: 0;
+    }
+
+    .aho-topbar-brand__label {
+        align-items: flex-start !important;
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        gap: 0.05rem !important;
+        line-height: 1.08 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+    }
+
+    .aho-topbar-brand__app {
+        display: block !important;
+        flex: 0 1 auto !important;
+        font-size: 0.9rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .aho-topbar-welcome {
+        color: rgba(255, 255, 255, 0.8) !important;
+        display: flex !important;
+        flex: 0 1 auto !important;
+        font-size: 0.68rem !important;
+        left: auto !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .aho-topbar-welcome__separator {
+        display: none !important;
+    }
+
+    .aho-topbar-welcome__text {
+        color: inherit !important;
+        display: block !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        text-align: start !important;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: block !important;
+        grid-area: search;
+        left: auto !important;
+        margin: 0 !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        order: initial !important;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-global-search,
+    .fi-topbar .fi-global-search-field,
+    .fi-topbar .fi-input-wrp {
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-user-menu {
+        grid-area: user;
+        justify-self: start;
+    }
+
+    .fi-topbar .aho-topbar-country-flag {
+        grid-area: flag;
+        justify-self: start;
+    }
+
+    .fi-topbar .fi-topbar-actions {
+        align-items: center !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.3rem !important;
+        grid-area: actions;
+        justify-self: end;
+        min-width: 0 !important;
+    }
+
+    .fi-topbar-notifications {
+        align-items: center !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.25rem !important;
+        min-width: 0 !important;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        align-items: center;
+        height: 2.1rem !important;
+        justify-content: center;
+        min-height: 2.1rem !important;
+        min-width: 2.1rem !important;
+        padding-inline: 0.35rem !important;
+    }
+
+    .aho-locale-switcher {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .aho-locale-switcher__label {
+        display: none !important;
+    }
+
+    .aho-locale-switcher select {
+        font-size: 0.75rem !important;
+        height: 2.1rem !important;
+        min-width: 5rem !important;
+        padding-inline: 0.3rem !important;
+        width: 5rem !important;
+    }
+
+    .fi-main {
+        padding: 0.65rem !important;
+    }
+}
+
+@media (max-width: 390px) {
+    .aho-topbar-brand__logo {
+        max-width: 5.6rem !important;
+    }
+
+    .aho-topbar-brand__app {
+        font-size: 0.82rem !important;
+    }
+
+    .aho-topbar-welcome {
+        font-size: 0.64rem !important;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        height: 2rem !important;
+        min-height: 2rem !important;
+        min-width: 2rem !important;
+        padding-inline: 0.25rem !important;
+    }
+
+    .aho-locale-switcher select {
+        min-width: 4.65rem !important;
+        width: 4.65rem !important;
+    }
+}
+
+/* Mobile admin shell: keep the header complete and remove the hidden-sidebar gap. */
+@media (max-width: 1023px) {
+    .fi-topbar-ctn {
+        margin-inline: 0 !important;
+        width: 100%;
+    }
+
+    .fi-layout {
+        display: block !important;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
+        width: 100%;
+    }
+
+    .fi-layout > div:has(> .fi-main-sidebar) {
+        display: contents !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        width: 0 !important;
+    }
+
+    .fi-main-ctn,
+    .fi-main,
+    .fi-page,
+    .fi-page-content {
+        margin-inline: 0 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .fi-main-sidebar {
+        height: 100dvh !important;
+        inset-block: 0 !important;
+        inset-inline-start: 0 !important;
+        max-height: 100dvh !important;
+        max-width: min(19rem, 88vw);
+        position: fixed !important;
+        transform: translateX(-100%);
+        width: min(19rem, 88vw) !important;
+        z-index: 70;
+    }
+
+    .fi-main-sidebar.fi-sidebar-open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 767px) {
+    .fi-body,
+    .fi-panel,
+    .fi-layout,
+    .fi-main-ctn {
+        background: var(--who-afro-body);
+    }
+
+    .fi-topbar,
+    .fi-topbar-start,
+    .fi-topbar-end {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .fi-topbar {
+        align-items: center;
+        display: grid !important;
+        gap: 0.45rem;
+        grid-template-areas:
+            "brand menu"
+            "tools tools";
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 0.45rem 0.55rem 0.55rem;
+        width: 100%;
+    }
+
+    .fi-topbar > .aho-topbar-brand {
+        grid-area: brand;
+    }
+
+    .fi-topbar-open-sidebar-btn,
+    .fi-topbar-close-sidebar-btn {
+        grid-area: menu;
+        justify-self: end;
+        margin: 0 !important;
+        position: static !important;
+    }
+
+    .fi-topbar > .fi-topbar-start {
+        display: none !important;
+    }
+
+    .fi-topbar > .fi-topbar-end {
+        align-items: center;
+        display: grid !important;
+        gap: 0.45rem;
+        grid-area: tools;
+        grid-template-areas:
+            "search search search"
+            "user flag actions";
+        grid-template-columns: auto auto minmax(0, 1fr);
+        justify-content: stretch;
+        margin: 0 !important;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .aho-topbar-brand {
+        align-items: center;
+        gap: 0.45rem;
+        max-width: 100%;
+        min-width: 0;
+        padding-inline-start: 0;
+    }
+
+    .aho-topbar-brand__logo {
+        flex: 0 0 auto;
+        height: 2.05rem;
+        max-width: 6.75rem;
+        min-width: 0;
+    }
+
+    .aho-topbar-brand__label {
+        align-items: flex-start;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 0.05rem;
+        line-height: 1.08;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .aho-topbar-brand__app {
+        display: block;
+        flex: 0 1 auto;
+        font-size: 0.9rem;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .aho-topbar-welcome {
+        color: rgba(255, 255, 255, 0.8);
+        display: flex !important;
+        flex: 0 1 auto;
+        font-size: 0.68rem;
+        left: auto !important;
+        margin: 0;
+        max-width: 100%;
+        min-width: 0;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100%;
+    }
+
+    .aho-topbar-welcome__separator {
+        display: none !important;
+    }
+
+    .aho-topbar-welcome__text {
+        color: inherit;
+        display: block !important;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        text-align: start;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: block !important;
+        grid-area: search;
+        left: auto !important;
+        margin: 0 !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-global-search,
+    .fi-topbar .fi-global-search-field,
+    .fi-topbar .fi-input-wrp {
+        width: 100%;
+    }
+
+    .fi-topbar .fi-input-wrp {
+        min-height: 2.15rem;
+    }
+
+    .fi-topbar .fi-user-menu {
+        grid-area: user;
+        justify-self: start;
+    }
+
+    .fi-topbar .aho-topbar-country-flag {
+        grid-area: flag;
+        justify-self: start;
+    }
+
+    .fi-topbar .fi-topbar-actions {
+        align-items: center;
+        display: inline-flex !important;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.3rem;
+        grid-area: actions;
+        justify-self: end;
+        min-width: 0;
+    }
+
+    .fi-topbar-notifications {
+        align-items: center;
+        display: inline-flex !important;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    .fi-topbar .fi-topbar-item,
+    .fi-topbar .fi-dropdown,
+    .fi-topbar .fi-dropdown-trigger {
+        flex: 0 0 auto;
+        min-width: 0;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        align-items: center;
+        height: 2.1rem;
+        justify-content: center;
+        min-height: 2.1rem;
+        min-width: 2.1rem;
+        padding-inline: 0.35rem;
+    }
+
+    .aho-locale-switcher {
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        margin: 0 !important;
+        min-width: 0;
+    }
+
+    .aho-locale-switcher__label {
+        display: none !important;
+    }
+
+    .aho-locale-switcher select {
+        font-size: 0.75rem;
+        height: 2.1rem;
+        min-width: 5rem;
+        padding-inline: 0.3rem;
+        width: 5rem;
+    }
+
+    .fi-main {
+        padding: 0.65rem !important;
+    }
+
+    .fi-page-content {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 390px) {
+    .fi-topbar {
+        padding-inline: 0.45rem;
+    }
+
+    .aho-topbar-brand__logo {
+        max-width: 5.6rem;
+    }
+
+    .aho-topbar-brand__app {
+        font-size: 0.82rem;
+    }
+
+    .aho-topbar-welcome {
+        font-size: 0.64rem;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        height: 2rem;
+        min-height: 2rem;
+        min-width: 2rem;
+        padding-inline: 0.25rem;
+    }
+
+    .aho-locale-switcher select {
+        min-width: 4.65rem;
+        width: 4.65rem;
+    }
+}
+
+/* Phone layout: keep the admin panel aligned and usable on narrow screens. */
+@media (max-width: 767px) {
+    html,
+    body,
+    .fi-layout,
+    .fi-main-ctn,
+    .fi-main,
+    .fi-page,
+    .fi-page-content {
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .fi-topbar,
+    .fi-topbar-start,
+    .fi-topbar-end {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .fi-topbar {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.45rem;
+        padding: 0.35rem 0.5rem;
+    }
+
+    .fi-topbar-start {
+        flex: 1 1 calc(100% - 9rem);
+        min-width: 0;
+        order: 1;
+    }
+
+    .fi-topbar-end {
+        align-items: center;
+        display: flex;
+        flex: 0 1 auto;
+        gap: 0.35rem;
+        justify-content: flex-end;
+        margin-inline-start: auto;
+        min-width: 0;
+        order: 2;
+    }
+
+    .aho-topbar-brand {
+        gap: 0.45rem;
+        max-width: 100%;
+        min-width: 0;
+        padding-inline-start: 0;
+    }
+
+    .aho-topbar-brand__logo {
+        height: 2rem;
+        max-width: 6.75rem;
+        min-width: 0;
+        object-fit: contain;
+    }
+
+    .aho-topbar-brand__label {
+        display: flex;
+        flex: 1 1 auto;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .aho-topbar-brand__app {
+        display: block;
+        flex: 1 1 auto;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .aho-topbar-welcome {
+        display: none !important;
+    }
+
+    .fi-topbar-actions,
+    .fi-topbar-notifications {
+        align-items: center;
+        display: inline-flex;
+        flex: 0 0 auto;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        align-items: center;
+        display: inline-flex;
+        flex: 0 0 auto;
+        height: 2.15rem;
+        justify-content: center;
+        min-height: 2.15rem;
+        min-width: 2.15rem;
+        padding-inline: 0.35rem;
+    }
+
+    .fi-topbar .fi-badge {
+        position: absolute;
+        right: -0.25rem;
+        top: -0.25rem;
+    }
+
+    .aho-topbar-country-flag {
+        height: 1rem;
+        margin-inline: 0.05rem;
+        width: 1.45rem;
+    }
+
+    .aho-locale-switcher {
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        gap: 0;
+        margin: 0;
+        padding-inline: 0;
+    }
+
+    .aho-locale-switcher__label {
+        display: none;
+    }
+
+    .aho-locale-switcher select {
+        border-radius: 6px;
+        font-size: 0.75rem;
+        height: 2.15rem;
+        min-width: 5.25rem;
+        padding-inline: 0.35rem;
+        width: 5.25rem;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: block !important;
+        flex: 1 0 100%;
+        left: auto !important;
+        margin: 0;
+        max-width: none;
+        min-width: 0;
+        order: 3;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-global-search,
+    .fi-topbar .fi-global-search-field {
+        width: 100%;
+    }
+
+    .fi-sidebar {
+        height: auto;
+        max-height: calc(100vh - 4rem);
+        top: 0;
+    }
+
+    .fi-main {
+        padding-inline: 0.5rem !important;
+    }
+
+    .fi-page,
+    .fi-page-content {
+        gap: 0.75rem;
+    }
+
+    .fi-header,
+    .fi-page-header,
+    .fi-ta-header,
+    .fi-ta-header-toolbar,
+    .fi-ta-toolbar {
+        align-items: stretch;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        min-width: 0;
+    }
+
+    .fi-header-heading,
+    .fi-ta-header-heading {
+        font-size: 1.15rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .fi-header-actions,
+    .fi-ta-actions,
+    .fi-ta-header-toolbar > *,
+    .fi-ta-toolbar > * {
+        flex-wrap: wrap;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .fi-btn,
+    .fi-ac-btn-action,
+    .fi-ta-actions .fi-link {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .fi-section,
+    .fi-ta-ctn,
+    .fi-wi-stats-overview-stat {
+        border-radius: 8px;
+    }
+
+    .fi-section-content,
+    .fi-ta-content-ctn {
+        padding: 0.75rem;
+    }
+
+    .fi-fo-grid,
+    .fi-fo-component-ctn,
+    .fi-grid {
+        grid-template-columns: 1fr !important;
+        min-width: 0;
+    }
+
+    .fi-input-wrp,
+    .fi-select-input,
+    .fi-fo-field-wrp,
+    .fi-fo-field-wrp > *,
+    .fi-fo-field-wrp input,
+    .fi-fo-field-wrp select,
+    .fi-fo-field-wrp textarea {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .fi-ta-content {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fi-ta-table {
+        min-width: max-content;
+    }
+
+    .fi-ta-cell,
+    .fi-ta-header-cell {
+        max-width: 14rem;
+        white-space: normal;
+    }
+
+    .fi-page-sub-navigation-sidebar-ctn {
+        position: static;
+        width: 100% !important;
+    }
+
+    .fi-page-sub-navigation-sidebar {
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .fi-page-sub-navigation-sidebar .fi-sidebar-nav {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .aho-footer__inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.45rem;
+        padding: 0.85rem;
+    }
+
+    .aho-footer__meta {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .aho-ai {
+        bottom: 0.75rem;
+        right: 0.75rem;
+    }
+
+    .aho-ai__panel {
+        bottom: 3.75rem;
+        max-height: min(72vh, 32rem);
+        max-width: calc(100vw - 1.5rem);
+        right: 0;
+        width: calc(100vw - 1.5rem);
+    }
+
+    .aho-ai__toggle-label {
+        display: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .aho-topbar-brand__logo {
+        max-width: 5.75rem;
+    }
+
+    .aho-topbar-brand__app {
+        font-size: 0.78rem;
+    }
+
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        height: 2rem;
+        min-height: 2rem;
+        min-width: 2rem;
+        padding-inline: 0.25rem;
+    }
+
+    .aho-locale-switcher select {
+        min-width: 4.75rem;
+        width: 4.75rem;
+    }
+
+    .fi-main {
+        padding-inline: 0.35rem !important;
+    }
+}
+
 /* UHC Clock progress page */
 .aho-uhc-progress {
     color: var(--who-afro-ink);
@@ -2684,7 +3596,7 @@
 
 .aho-uhc-progress__hero {
     align-items: stretch;
-    border-left: 4px solid var(--who-afro-blue);
+    border-left: 1px solid var(--who-afro-panel-border);
     display: flex;
     gap: 1rem;
     justify-content: space-between;
@@ -3753,6 +4665,15 @@ body.aho-uhc-dialog-open {
     line-height: 1.2;
 }
 
+/* Submenu navigation: keep active backgrounds, remove decorative blue side strips. */
+.fi-page-sub-navigation-sidebar .fi-sidebar-item-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-item-active .fi-sidebar-item-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group.fi-active .fi-sidebar-group-btn,
+.fi-page-sub-navigation-sidebar .fi-sidebar-group:has(.fi-sidebar-item-active) .fi-sidebar-group-btn {
+    border-inline-start-color: transparent;
+}
+
 /* Lightweight, non-interactive country context card. */
 .aho-country-card {
     background: white;
@@ -3828,5 +4749,278 @@ body.aho-uhc-dialog-open {
 @media (max-width: 1023px) {
     .aho-country-card {
         margin-inline: 0.75rem;
+    }
+}
+
+/* Final mobile override: this block must stay at the end of the stylesheet. */
+@media (max-width: 1023px) {
+    .fi-topbar-ctn {
+        margin-inline: 0 !important;
+        width: 100% !important;
+    }
+
+    .fi-layout {
+        display: block !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: clip;
+        width: 100% !important;
+    }
+
+    .fi-layout > div:has(> .fi-main-sidebar) {
+        display: contents !important;
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        width: 0 !important;
+    }
+
+    .fi-main-ctn,
+    .fi-main,
+    .fi-page,
+    .fi-page-content {
+        margin-inline: 0 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .fi-main-sidebar {
+        height: 100dvh !important;
+        inset-block: 0 !important;
+        inset-inline-start: 0 !important;
+        max-height: 100dvh !important;
+        max-width: min(19rem, 88vw) !important;
+        position: fixed !important;
+        transform: translateX(-100%);
+        width: min(19rem, 88vw) !important;
+        z-index: 70;
+    }
+
+    .fi-main-sidebar.fi-sidebar-open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 767px) {
+    .fi-topbar,
+    .fi-topbar-start,
+    .fi-topbar-end {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .fi-topbar {
+        align-items: center;
+        display: grid !important;
+        gap: 0.45rem !important;
+        grid-template-areas:
+            "brand brand brand"
+            "search search search"
+            "user flag actions";
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        padding: 0.45rem 0.55rem 0.55rem !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar > .aho-topbar-brand {
+        grid-area: brand;
+    }
+
+    .fi-topbar-open-sidebar-btn,
+    .fi-topbar-close-sidebar-btn {
+        inset-block-start: 0.5rem !important;
+        inset-inline-end: 0.55rem !important;
+        justify-self: end;
+        margin: 0 !important;
+        position: absolute !important;
+    }
+
+    .fi-topbar > .fi-topbar-start {
+        display: none !important;
+    }
+
+    .fi-topbar > .fi-topbar-end {
+        display: contents !important;
+    }
+
+    .aho-topbar-brand {
+        align-items: center !important;
+        gap: 0.45rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-inline-end: 2.75rem !important;
+        padding-inline-start: 0 !important;
+    }
+
+    .aho-topbar-brand__logo {
+        flex: 0 0 auto;
+        height: 2.05rem !important;
+        max-width: 6.75rem !important;
+        min-width: 0;
+    }
+
+    .aho-topbar-brand__label {
+        align-items: flex-start !important;
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        gap: 0.05rem !important;
+        line-height: 1.08 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+    }
+
+    .aho-topbar-brand__app {
+        display: block !important;
+        flex: 0 1 auto !important;
+        font-size: 0.9rem !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .aho-topbar-welcome {
+        color: rgba(255, 255, 255, 0.8) !important;
+        display: flex !important;
+        flex: 0 1 auto !important;
+        font-size: 0.68rem !important;
+        left: auto !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .aho-topbar-welcome__separator {
+        display: none !important;
+    }
+
+    .aho-topbar-welcome__text {
+        color: inherit !important;
+        display: block !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden;
+        text-align: start !important;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        display: block !important;
+        grid-area: search;
+        left: auto !important;
+        margin: 0 !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        order: initial !important;
+        position: static !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-global-search,
+    .fi-topbar .fi-global-search-field,
+    .fi-topbar .fi-input-wrp {
+        width: 100% !important;
+    }
+
+    .fi-topbar .fi-user-menu {
+        grid-area: user;
+        justify-self: start;
+    }
+
+    .fi-topbar .aho-topbar-country-flag {
+        grid-area: flag;
+        justify-self: start;
+    }
+
+    .fi-topbar .fi-topbar-actions {
+        align-items: center !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.3rem !important;
+        grid-area: actions;
+        justify-self: end;
+        min-width: 0 !important;
+    }
+
+    .fi-topbar-notifications {
+        align-items: center !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.25rem !important;
+        min-width: 0 !important;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        align-items: center;
+        height: 2.1rem !important;
+        justify-content: center;
+        min-height: 2.1rem !important;
+        min-width: 2.1rem !important;
+        padding-inline: 0.35rem !important;
+    }
+
+    .aho-locale-switcher {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .aho-locale-switcher__label {
+        display: none !important;
+    }
+
+    .aho-locale-switcher select {
+        font-size: 0.75rem !important;
+        height: 2.1rem !important;
+        min-width: 5rem !important;
+        padding-inline: 0.3rem !important;
+        width: 5rem !important;
+    }
+
+    .fi-main {
+        padding: 0.65rem !important;
+    }
+}
+
+@media (max-width: 390px) {
+    .aho-topbar-brand__logo {
+        max-width: 5.6rem !important;
+    }
+
+    .aho-topbar-brand__app {
+        font-size: 0.82rem !important;
+    }
+
+    .aho-topbar-welcome {
+        font-size: 0.64rem !important;
+    }
+
+    .fi-topbar .fi-user-menu-trigger,
+    .fi-topbar .fi-topbar-item-btn,
+    .fi-topbar .fi-icon-btn {
+        height: 2rem !important;
+        min-height: 2rem !important;
+        min-width: 2rem !important;
+        padding-inline: 0.25rem !important;
+    }
+
+    .aho-locale-switcher select {
+        min-width: 4.65rem !important;
+        width: 4.65rem !important;
     }
 }

@@ -33,6 +33,7 @@ trait ListsFacilityServiceProxyRecords
         return UserCountryAccess::scope(
             HealthFacility::query()
                 ->with(['location.translations', 'type.translations', 'owner.translations'])
+                ->whereHas($relationship)
                 ->withCount($relationship)
                 ->withMax($relationship, 'date_assessed'),
             'location_id',
